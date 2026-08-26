@@ -42,7 +42,16 @@
   },
   "simulado": {
     "title": "Practice test",
-    "empty": "There aren't enough questions yet to generate a practice test."
+    "empty": "There aren't enough questions yet to generate a practice test.",
+    "setup": {
+      "questionCount": "Number of questions",
+      "topics": "Topics",
+      "difficulty": "Difficulty",
+      "difficultyEasy": "Easy",
+      "difficultyMedium": "Medium",
+      "difficultyHard": "Hard",
+      "start": "Generate practice test"
+    }
   },
   "footer": {
     "rights": "Birb Labs. Open source, made with care.",

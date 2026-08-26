@@ -42,7 +42,16 @@
   },
   "simulado": {
     "title": "Simulado",
-    "empty": "Ainda não há questões suficientes para gerar um simulado."
+    "empty": "Ainda não há questões suficientes para gerar um simulado.",
+    "setup": {
+      "questionCount": "Número de questões",
+      "topics": "Tópicos",
+      "difficulty": "Dificuldade",
+      "difficultyEasy": "Fácil",
+      "difficultyMedium": "Médio",
+      "difficultyHard": "Difícil",
+      "start": "Gerar simulado"
+    }
   },
   "footer": {
     "rights": "Birb Labs. Código aberto, feito com carinho.",

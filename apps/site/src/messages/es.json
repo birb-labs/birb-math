@@ -42,7 +42,16 @@
   },
   "simulado": {
     "title": "Simulacro",
-    "empty": "Todavía no hay suficientes preguntas para generar un simulacro."
+    "empty": "Todavía no hay suficientes preguntas para generar un simulacro.",
+    "setup": {
+      "questionCount": "Número de preguntas",
+      "topics": "Temas",
+      "difficulty": "Dificultad",
+      "difficultyEasy": "Fácil",
+      "difficultyMedium": "Media",
+      "difficultyHard": "Difícil",
+      "start": "Generar simulacro"
+    }
   },
   "footer": {
     "rights": "Birb Labs. Código abierto, hecho con cariño.",

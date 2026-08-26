@@ -1,0 +1,129 @@
+'use client';
+
+import { useState } from 'react';
+import { useTranslations } from 'next-intl';
+import type { TopicNode } from '@birb-math/content-schema';
+import styles from './simulado-setup.module.css';
+
+export type Difficulty = 'easy' | 'medium' | 'hard';
+
+export interface SimuladoConfig {
+  questionCount: number;
+  tagIds: number[];
+  difficulties: Difficulty[];
+}
+
+const ALL_DIFFICULTIES: Difficulty[] = ['easy', 'medium', 'hard'];
+
+export function SimuladoSetup({
+  tagTree,
+  onStart = () => {},
+}: {
+  tagTree: TopicNode[];
+  onStart?: (config: SimuladoConfig) => void;
+}) {
+  const t = useTranslations('simulado.setup');
+  const [questionCount, setQuestionCount] = useState(10);
+  const [selectedTagIds, setSelectedTagIds] = useState<Set<number>>(new Set());
+  const [selectedDifficulties, setSelectedDifficulties] = useState<Set<Difficulty>>(
+    new Set(ALL_DIFFICULTIES),
+  );
+
+  function toggleTag(id: number) {
+    setSelectedTagIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function toggleDifficulty(difficulty: Difficulty) {
+    setSelectedDifficulties((prev) => {
+      const next = new Set(prev);
+      if (next.has(difficulty)) next.delete(difficulty);
+      else next.add(difficulty);
+      return next;
+    });
+  }
+
+  function handleSubmit(event: React.FormEvent) {
+    event.preventDefault();
+    onStart({
+      questionCount,
+      tagIds: [...selectedTagIds],
+      difficulties: [...selectedDifficulties],
+    });
+  }
+
+  return (
+    <form className={styles.form} onSubmit={handleSubmit}>
+      <div className={styles.field}>
+        <label htmlFor="question-count">{t('questionCount')}</label>
+        <input
+          id="question-count"
+          className={styles.countInput}
+          type="number"
+          min={1}
+          value={questionCount}
+          onChange={(event) => setQuestionCount(Number(event.target.value))}
+        />
+      </div>
+
+      <div className={styles.field}>
+        <span>{t('topics')}</span>
+        {tagTree.map((topic) => (
+          <div key={topic.id}>
+            <div className={styles.checkboxRow}>
+              <input
+                id={`tag-${topic.id}`}
+                type="checkbox"
+                checked={selectedTagIds.has(topic.id)}
+                onChange={() => toggleTag(topic.id)}
+              />
+              <label htmlFor={`tag-${topic.id}`}>{topic.name}</label>
+            </div>
+            {topic.subtopics.length > 0 && (
+              <div className={styles.subtopics}>
+                {topic.subtopics.map((subtopic) => (
+                  <div key={subtopic.id} className={styles.checkboxRow}>
+                    <input
+                      id={`tag-${subtopic.id}`}
+                      type="checkbox"
+                      checked={selectedTagIds.has(subtopic.id)}
+                      onChange={() => toggleTag(subtopic.id)}
+                    />
+                    <label htmlFor={`tag-${subtopic.id}`}>{subtopic.name}</label>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      <div className={styles.field}>
+        <span>{t('difficulty')}</span>
+        <div className={styles.difficultyRow}>
+          {ALL_DIFFICULTIES.map((difficulty) => (
+            <div key={difficulty} className={styles.checkboxRow}>
+              <input
+                id={`difficulty-${difficulty}`}
+                type="checkbox"
+                checked={selectedDifficulties.has(difficulty)}
+                onChange={() => toggleDifficulty(difficulty)}
+              />
+              <label htmlFor={`difficulty-${difficulty}`}>
+                {t(`difficulty${difficulty.charAt(0).toUpperCase()}${difficulty.slice(1)}`)}
+              </label>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <button type="submit" className={styles.startButton}>
+        {t('start')}
+      </button>
+    </form>
+  );
+}
