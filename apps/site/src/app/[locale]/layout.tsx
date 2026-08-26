@@ -5,6 +5,8 @@ import { notFound } from 'next/navigation';
 import { routing } from '@/i18n/routing';
 import { ThemeProvider } from '@birb-math/theme';
 import { HtmlLangSync } from '@/components/html-lang-sync';
+import { Header } from '@/components/header';
+import { Footer } from '@/components/footer';
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
@@ -27,7 +29,9 @@ export default async function LocaleLayout({
     <NextIntlClientProvider>
       <ThemeProvider>
         <HtmlLangSync locale={locale} />
+        <Header />
         {children}
+        <Footer />
       </ThemeProvider>
     </NextIntlClientProvider>
   );
