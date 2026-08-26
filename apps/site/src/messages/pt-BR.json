@@ -1,4 +1,12 @@
 {
+  "language": {
+    "switcherLabel": "Idioma",
+    "locales": {
+      "pt-BR": "Português",
+      "en-US": "English",
+      "es": "Español"
+    }
+  },
   "nav": {
     "home": "Início",
     "content": "Conteúdo",
