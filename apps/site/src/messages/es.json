@@ -54,6 +54,19 @@
     },
     "taking": {
       "finish": "Finalizar simulacro"
+    },
+    "results": {
+      "score": "Acertaste {correct} de {total} preguntas",
+      "correct": "Correcto",
+      "incorrect": "Incorrecto",
+      "yourAnswer": "Tu respuesta",
+      "correctAnswer": "Respuesta correcta",
+      "backToSetup": "Hacer otro simulacro"
+    },
+    "history": {
+      "title": "Simulacros anteriores",
+      "empty": "Todavía no has hecho ningún simulacro.",
+      "viewAttempt": "Ver resultado"
     }
   },
   "footer": {

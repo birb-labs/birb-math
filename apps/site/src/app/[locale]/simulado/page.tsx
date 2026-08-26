@@ -1,6 +1,6 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { getDb, getTagTree } from '@birb-math/content-schema';
-import { SimuladoSetup } from '@/components/simulado-setup';
+import { SimuladoPageClient } from '@/components/simulado-page-client';
 import styles from '@/styles/page.module.css';
 
 export default async function SimuladoPage({
@@ -19,7 +19,7 @@ export default async function SimuladoPage({
       {tagTree.length === 0 ? (
         <p className={styles.description}>{t('empty')}</p>
       ) : (
-        <SimuladoSetup tagTree={tagTree} />
+        <SimuladoPageClient tagTree={tagTree} locale={locale} />
       )}
     </main>
   );

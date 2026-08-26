@@ -1,0 +1,58 @@
+.score {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.question {
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+}
+
+.status {
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.statusCorrect {
+  color: var(--color-accent);
+}
+
+.statusIncorrect {
+  color: var(--color-muted);
+}
+
+.answers {
+  margin-top: 0.75rem;
+  font-size: 0.9rem;
+  color: var(--color-muted);
+}
+
+.answers strong {
+  color: var(--color-foreground);
+  font-weight: 600;
+}
+
+.resolution {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.backButton {
+  margin-top: 2rem;
+  border-radius: 0.25rem;
+  border: 1px solid var(--color-border);
+  background: transparent;
+  color: inherit;
+  padding: 0.5rem 1.5rem;
+  cursor: pointer;
+  font-size: 1rem;
+}

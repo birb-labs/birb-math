@@ -54,6 +54,19 @@
     },
     "taking": {
       "finish": "Finish practice test"
+    },
+    "results": {
+      "score": "You got {correct} of {total} questions right",
+      "correct": "Correct",
+      "incorrect": "Incorrect",
+      "yourAnswer": "Your answer",
+      "correctAnswer": "Correct answer",
+      "backToSetup": "Take another practice test"
+    },
+    "history": {
+      "title": "Previous practice tests",
+      "empty": "You haven't taken any practice tests yet.",
+      "viewAttempt": "View result"
     }
   },
   "footer": {

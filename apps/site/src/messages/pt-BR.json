@@ -54,6 +54,19 @@
     },
     "taking": {
       "finish": "Finalizar simulado"
+    },
+    "results": {
+      "score": "Você acertou {correct} de {total} questões",
+      "correct": "Certo",
+      "incorrect": "Errado",
+      "yourAnswer": "Sua resposta",
+      "correctAnswer": "Resposta correta",
+      "backToSetup": "Fazer outro simulado"
+    },
+    "history": {
+      "title": "Simulados anteriores",
+      "empty": "Você ainda não fez nenhum simulado.",
+      "viewAttempt": "Ver resultado"
     }
   },
   "footer": {
