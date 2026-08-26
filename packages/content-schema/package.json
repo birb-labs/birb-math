@@ -3,5 +3,23 @@
   "version": "0.0.0",
   "private": true,
   "main": "./index.ts",
-  "types": "./index.ts"
+  "types": "./index.ts",
+  "scripts": {
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "tsx src/migrate.ts",
+    "db:seed": "tsx seed/seed.ts",
+    "db:reset": "pnpm run db:migrate && pnpm run db:seed",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "better-sqlite3": "13.0.3",
+    "drizzle-orm": "0.45.2"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "9.6.0",
+    "drizzle-kit": "0.31.10",
+    "tsx": "4.19.2",
+    "typescript": "^6.0.2",
+    "vitest": "^4.1.11"
+  }
 }
