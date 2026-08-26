@@ -53,6 +53,15 @@ pnpm --filter @birb-math/content-schema run db:generate  # generates a new migra
 pnpm --filter @birb-math/content-schema run db:reset     # applies migrations + populates with sample data
 ```
 
+The question bank (used to generate practice tests) lives in the same migrations
+and SQLite database as lesson content. An additional build step (`export-questions`)
+compiles each question to static HTML and generates `apps/site/public/data/questions.json`,
+consumed by the practice test entirely in the browser — there is no practice test backend.
+
+```bash
+pnpm --filter site run export-questions  # generates public/data/questions.json from the current database
+```
+
 ## Contributing
 
 Issues and pull requests are welcome. Code comments and identifier

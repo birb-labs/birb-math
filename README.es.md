@@ -54,6 +54,16 @@ pnpm --filter @birb-math/content-schema run db:generate  # genera una nueva migr
 pnpm --filter @birb-math/content-schema run db:reset     # aplica migraciones + completa con datos de ejemplo
 ```
 
+El banco de preguntas (utilizado para generar simulacros) vive en las mismas
+migraciones y en la misma base de datos SQLite que el contenido de lecciones.
+Un paso adicional de compilación (`export-questions`) compila cada pregunta a HTML
+estático y genera `apps/site/public/data/questions.json`, consumido por el simulacro
+completamente en el navegador — no hay backend de simulacro.
+
+```bash
+pnpm --filter site run export-questions  # genera public/data/questions.json a partir de la base de datos actual
+```
+
 ## Contribuir
 
 Los issues y pull requests son bienvenidos. Los comentarios y los
