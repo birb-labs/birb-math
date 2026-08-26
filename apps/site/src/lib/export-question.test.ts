@@ -1,0 +1,53 @@
+import { describe, expect, it } from 'vitest';
+import { compileQuestionForExport } from './export-question';
+import type { QuestionExport } from '@birb-math/content-schema';
+
+const mcQuestion: QuestionExport = {
+  id: 1,
+  type: 'multiple_choice',
+  difficulty: 'easy',
+  promptMdx: 'Qual é o valor de $1 + 1$?',
+  resolutionMdx: 'A soma vale $2$.',
+  correctAnswer: null,
+  options: [
+    { id: 10, textMdx: '1', isCorrect: false },
+    { id: 11, textMdx: '2', isCorrect: true },
+  ],
+  tagIds: [5],
+};
+
+const numericQuestion: QuestionExport = {
+  id: 2,
+  type: 'numeric',
+  difficulty: 'medium',
+  promptMdx: 'Quanto é $3 \\div 2$?',
+  resolutionMdx: 'A divisão de $3$ por $2$ é igual a $1.5$.',
+  correctAnswer: '1.5',
+  options: [],
+  tagIds: [5, 6],
+};
+
+describe('compileQuestionForExport', () => {
+  it('compiles a multiple-choice question, including all of its options, to HTML', async () => {
+    const exported = await compileQuestionForExport(mcQuestion);
+
+    expect(exported.id).toBe(1);
+    expect(exported.type).toBe('multiple_choice');
+    expect(exported.promptHtml).toContain('class="katex"');
+    expect(exported.resolutionHtml).toContain('class="katex"');
+    expect(exported.options).toHaveLength(2);
+    expect(exported.options[1].isCorrect).toBe(true);
+    expect(exported.options[0].textHtml).toContain('<p>');
+    expect(exported.correctAnswer).toBeNull();
+    expect(exported.tagIds).toEqual([5]);
+  });
+
+  it('compiles a numeric question with no options', async () => {
+    const exported = await compileQuestionForExport(numericQuestion);
+
+    expect(exported.type).toBe('numeric');
+    expect(exported.options).toHaveLength(0);
+    expect(exported.correctAnswer).toBe('1.5');
+    expect(exported.promptHtml).toContain('class="katex"');
+  });
+});

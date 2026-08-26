@@ -2,10 +2,12 @@
   "name": "site",
   "version": "0.0.0",
   "private": true,
+  "type": "module",
   "scripts": {
-    "dev": "pnpm --filter @birb-math/content-schema run db:reset && next dev",
-    "build": "pnpm --filter @birb-math/content-schema run db:reset && next build",
-    "test": "vitest run"
+    "dev": "pnpm --filter @birb-math/content-schema run db:reset && tsx scripts/export-questions.ts && next dev",
+    "build": "pnpm --filter @birb-math/content-schema run db:reset && tsx scripts/export-questions.ts && next build",
+    "test": "vitest run",
+    "export-questions": "tsx scripts/export-questions.ts"
   },
   "dependencies": {
     "@birb-math/content-schema": "workspace:*",
@@ -26,6 +28,7 @@
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
     "jsdom": "^30.0.1",
+    "tsx": "4.19.2",
     "typescript": "^6.0.2",
     "vitest": "^4.1.11"
   }
