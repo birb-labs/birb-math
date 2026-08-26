@@ -16,6 +16,5 @@
     "build": "pnpm --filter site build",
     "dev": "pnpm --filter site dev",
     "test": "pnpm -r test"
-  },
-  "devDependencies": {}
+  }
 }
