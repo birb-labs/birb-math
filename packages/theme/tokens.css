@@ -1,3 +1,11 @@
+html {
+  --color-background: #ffffff;
+  --color-foreground: #1a1a2e;
+  --color-accent: #6366f1;
+  --color-muted: #6b7280;
+  --color-border: #e5e7eb;
+}
+
 html[data-theme="default"][data-mode="light"] {
   --color-background: #ffffff;
   --color-foreground: #1a1a2e;

@@ -6,6 +6,8 @@ import {
   DEFAULT_MODE,
   DEFAULT_THEME,
   MODE_STORAGE_KEY,
+  THEME_MODES,
+  THEME_NAMES,
   THEME_STORAGE_KEY,
   type ResolvedMode,
   type ThemeMode,
@@ -25,12 +27,14 @@ const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 function readStoredTheme(): ThemeName {
   if (typeof window === 'undefined') return DEFAULT_THEME;
-  return (window.localStorage.getItem(THEME_STORAGE_KEY) as ThemeName | null) ?? DEFAULT_THEME;
+  const stored = window.localStorage.getItem(THEME_STORAGE_KEY);
+  return (THEME_NAMES as string[]).includes(stored ?? '') ? (stored as ThemeName) : DEFAULT_THEME;
 }
 
 function readStoredMode(): ThemeMode {
   if (typeof window === 'undefined') return DEFAULT_MODE;
-  return (window.localStorage.getItem(MODE_STORAGE_KEY) as ThemeMode | null) ?? DEFAULT_MODE;
+  const stored = window.localStorage.getItem(MODE_STORAGE_KEY);
+  return (THEME_MODES as string[]).includes(stored ?? '') ? (stored as ThemeMode) : DEFAULT_MODE;
 }
 
 function prefersDark(): boolean {
@@ -39,15 +43,11 @@ function prefersDark(): boolean {
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setThemeState] = useState<ThemeName>(DEFAULT_THEME);
-  const [mode, setModeState] = useState<ThemeMode>(DEFAULT_MODE);
-  const [systemPrefersDark, setSystemPrefersDark] = useState(false);
+  const [theme, setThemeState] = useState<ThemeName>(() => readStoredTheme());
+  const [mode, setModeState] = useState<ThemeMode>(() => readStoredMode());
+  const [systemPrefersDark, setSystemPrefersDark] = useState<boolean>(() => prefersDark());
 
   useEffect(() => {
-    setThemeState(readStoredTheme());
-    setModeState(readStoredMode());
-    setSystemPrefersDark(prefersDark());
-
     const media = window.matchMedia('(prefers-color-scheme: dark)');
     const listener = (event: MediaQueryListEvent) => setSystemPrefersDark(event.matches);
     media.addEventListener('change', listener);
