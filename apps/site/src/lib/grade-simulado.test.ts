@@ -57,4 +57,10 @@ describe('gradeSimulado', () => {
     expect(result.correctCount).toBe(2);
     expect(result.total).toBe(2);
   });
+
+  it('grades a blank numeric answer as incorrect even when the correct answer is zero', () => {
+    const zeroQuestion: ExportedQuestion = { ...numericQuestion, id: 3, correctAnswer: '0' };
+    const result = gradeSimulado([zeroQuestion], { 3: '' }, 'pt-BR');
+    expect(result.perQuestion[0].isCorrect).toBe(false);
+  });
 });

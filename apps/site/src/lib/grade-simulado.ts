@@ -30,6 +30,8 @@ function isAnswerCorrect(question: ExportedQuestion, userAnswer: string | undefi
   // as a thousands separator and strip it (turning "1.5" into "15"). Only the user's own
   // typed answer needs locale-aware normalization to convert it into canonical form.
   const normalizedUser = normalizeNumericAnswer(userAnswer, locale);
+  if (normalizedUser === '') return false;
+
   const canonicalCorrect = question.correctAnswer.trim().toLowerCase();
   if (normalizedUser === canonicalCorrect) return true;
 
@@ -37,7 +39,9 @@ function isAnswerCorrect(question: ExportedQuestion, userAnswer: string | undefi
   // canonicalize numeric value (e.g. "1.0" vs "1" stay distinct strings). Fall back to
   // exact numeric equality (no tolerance/epsilon) so equivalent values still match; this
   // only applies when both sides actually parse as numbers, so symbolic answers (e.g.
-  // "não existe", "∞") still rely purely on the string comparison above.
+  // "não existe", "∞") still rely purely on the string comparison above. Note: a blank
+  // answer is rejected above, since Number('') is 0, not NaN, and would otherwise match
+  // a correctAnswer of "0".
   const userValue = Number(normalizedUser);
   const correctValue = Number(canonicalCorrect);
   if (Number.isNaN(userValue) || Number.isNaN(correctValue)) return false;
