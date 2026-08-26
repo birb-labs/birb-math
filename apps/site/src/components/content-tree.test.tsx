@@ -70,10 +70,13 @@ describe('ContentTree', () => {
       </NextIntlClientProvider>,
     );
 
-    expect(screen.getByText('0 de 2 lições concluídas')).toBeInTheDocument();
+    // With a single topic and a single section per subject in this fixture,
+    // the "0 de 2" count appears at all three nesting levels (subject, topic,
+    // section) — assert there are exactly three occurrences.
+    expect(screen.getAllByText('0 de 2 lições concluídas')).toHaveLength(3);
   });
 
-  it('reflects a previously completed lesson in the progress count', () => {
+  it('reflects a previously completed lesson in the progress count at every nesting level', () => {
     window.localStorage.setItem('birb-math-reading-progress', JSON.stringify(['licao-1']));
 
     render(
@@ -82,6 +85,53 @@ describe('ContentTree', () => {
       </NextIntlClientProvider>,
     );
 
+    // The section-level count, and — since this fixture has exactly one
+    // topic and one section per subject — the topic- and subject-level
+    // aggregated counts should all read the same "1 de 2" here.
+    expect(screen.getAllByText('1 de 2 lições concluídas')).toHaveLength(3);
+  });
+
+  it('aggregates completed/total counts across multiple sections and topics', () => {
+    const multiSectionTree: ContentTreeData[] = [
+      {
+        slug: 'calculo',
+        name: 'Cálculo',
+        topics: [
+          {
+            slug: 'limites',
+            name: 'Limites',
+            sections: [
+              {
+                slug: 'limites-laterais',
+                name: 'Limites Laterais',
+                lessons: [
+                  { slug: 'licao-1', title: 'Lição Um' },
+                  { slug: 'licao-2', title: 'Lição Dois' },
+                ],
+              },
+              {
+                slug: 'limites-infinitos',
+                name: 'Limites Infinitos',
+                lessons: [{ slug: 'licao-3', title: 'Lição Três' }],
+              },
+            ],
+          },
+        ],
+      },
+    ];
+
+    window.localStorage.setItem('birb-math-reading-progress', JSON.stringify(['licao-1', 'licao-3']));
+
+    render(
+      <NextIntlClientProvider locale="pt-BR" messages={ptBR}>
+        <ContentTree tree={multiSectionTree} />
+      </NextIntlClientProvider>,
+    );
+
+    // Section level: 1 of 2, and 1 of 1.
     expect(screen.getByText('1 de 2 lições concluídas')).toBeInTheDocument();
+    expect(screen.getByText('1 de 1 lições concluídas')).toBeInTheDocument();
+    // Topic and subject level both aggregate to 2 of 3 across both sections.
+    expect(screen.getAllByText('2 de 3 lições concluídas')).toHaveLength(2);
   });
 });
