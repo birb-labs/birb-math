@@ -1,0 +1,21 @@
+{
+  "name": "birb-math",
+  "private": true,
+  "packageManager": "pnpm@11.23.0",
+  "engines": {
+    "node": ">=24"
+  },
+  "devEngines": {
+    "runtime": {
+      "name": "node",
+      "version": "^24.0.0",
+      "onFail": "download"
+    }
+  },
+  "scripts": {
+    "build": "pnpm --filter site build",
+    "dev": "pnpm --filter site dev",
+    "test": "pnpm -r test"
+  },
+  "devDependencies": {}
+}
