@@ -9,6 +9,7 @@ const dbPath = path.resolve(__dirname, '../content.db');
 const migrationsFolder = path.resolve(__dirname, '../drizzle');
 
 const sqlite = new Database(dbPath);
+sqlite.pragma('foreign_keys = ON');
 const db = drizzle(sqlite);
 migrate(db, { migrationsFolder });
 sqlite.close();

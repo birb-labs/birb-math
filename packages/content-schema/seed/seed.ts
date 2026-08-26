@@ -41,3 +41,4 @@ Um exemplo de fórmula matemática: $\\lim_{x \\to 0} \\frac{\\sin x}{x} = 1$.
   .run();
 
 console.log('Seed complete: 1 subject, 1 topic, 1 section, 1 lesson.');
+db.$client.close();

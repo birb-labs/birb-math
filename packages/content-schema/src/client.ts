@@ -12,7 +12,7 @@ let dbInstance: ReturnType<typeof drizzle<typeof schema>> | undefined;
 export function getDb() {
   if (!dbInstance) {
     const sqlite = new Database(DB_PATH);
-    sqlite.pragma('journal_mode = WAL');
+    sqlite.pragma('foreign_keys = ON');
     dbInstance = drizzle(sqlite, { schema });
   }
   return dbInstance;
