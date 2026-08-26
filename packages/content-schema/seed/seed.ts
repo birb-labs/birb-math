@@ -86,9 +86,9 @@ db.insert(questions)
   .values({
     type: 'numeric',
     difficulty: 'medium',
-    promptMdx: 'Calcule $\\lim_{x \\to 0} \\frac{\\sin x}{x}$.',
-    resolutionMdx: 'Este é o limite fundamental trigonométrico, que vale $1$.',
-    correctAnswer: '1',
+    promptMdx: 'Quanto é $3 \\div 2$?',
+    resolutionMdx: 'A divisão de $3$ por $2$ é igual a $1.5$.',
+    correctAnswer: '1.5',
   })
   .run();
 const numericQuestion = db.select().from(questions).all()[1];

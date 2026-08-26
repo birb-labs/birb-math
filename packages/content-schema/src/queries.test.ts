@@ -84,9 +84,9 @@ function seedFixture(db: TestDb) {
     .values({
       type: 'numeric',
       difficulty: 'medium',
-      promptMdx: 'Calcule $\\lim_{x \\to 0} \\frac{\\sin x}{x}$.',
-      resolutionMdx: 'O limite fundamental trigonométrico vale $1$.',
-      correctAnswer: '1',
+      promptMdx: 'Quanto é $3 \\div 2$?',
+      resolutionMdx: 'A divisão de $3$ por $2$ é igual a $1.5$.',
+      correctAnswer: '1.5',
     })
     .run();
   const numericQuestion = db.select().from(schema.questions).all()[1];
@@ -169,7 +169,7 @@ describe('content-schema queries', () => {
     const numeric = exported.find((q) => q.type === 'numeric')!;
     expect(numeric).toBeDefined();
     expect(numeric.options).toHaveLength(0);
-    expect(numeric.correctAnswer).toBe('1');
+    expect(numeric.correctAnswer).toBe('1.5');
     expect(numeric.tagIds).toHaveLength(2);
   });
 });
