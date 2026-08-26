@@ -15,16 +15,3 @@ Object.defineProperty(window, 'matchMedia', {
     dispatchEvent: vi.fn(),
   })),
 });
-
-vi.mock('next-intl/navigation', () => {
-  const React = require('react');
-  return {
-    createNavigation: () => ({
-      Link: ({ href, children, className }: any) =>
-        React.createElement('a', { href, className }, children),
-      redirect: () => {},
-      usePathname: () => '/',
-      useRouter: () => ({}),
-    }),
-  };
-});
