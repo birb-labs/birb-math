@@ -1,0 +1,60 @@
+# Birb Math
+
+Una plataforma gratuita y de código abierto para aprender matemáticas,
+mantenida por [Birb Labs](https://github.com/birb-labs).
+
+🌐 [math.birblabs.com](https://math.birblabs.com) · [🇧🇷 pt-BR](./README.md) ·
+[🇺🇸 English](./README.en-US.md) · 🇪🇸 Español
+
+## Qué es
+
+Lecciones, ejercicios resueltos y simulacros de matemáticas, empezando
+por Cálculo (Límites), con más contenido en camino.
+
+## Stack técnico
+
+- [Next.js](https://nextjs.org) (App Router, exportación estática)
+- CSS Modules simples (sin framework de CSS)
+- [next-intl](https://next-intl.dev) para internacionalización
+- Alojado en [Cloudflare Pages](https://pages.cloudflare.com)
+
+## Cómo ejecutarlo localmente
+
+```bash
+pnpm install
+pnpm --filter site dev
+```
+
+El sitio queda disponible en `http://localhost:3000`.
+
+## Pruebas
+
+```bash
+pnpm -r test
+```
+
+## Estructura del repositorio
+
+```
+apps/site/            # sitio público
+packages/theme/        # sistema de temas
+packages/content-schema/  # tipos de contenido (lecciones/preguntas)
+```
+
+## Contribuir
+
+Los issues y pull requests son bienvenidos. Los comentarios y los
+nombres de identificadores (clases, variables, funciones) deben estar
+en inglés; la documentación puede escribirse en pt-BR, en-US o es.
+
+## Apoya el proyecto
+
+Si Birb Math te ayudó, considera [apoyarlo en Ko-fi](https://ko-fi.com/p4tit0z) — cualquier cantidad ayuda a mantener el proyecto.
+
+## Licencia
+
+[MIT](./LICENSE)
+
+## Contacto
+
+contato@birblabs.com
