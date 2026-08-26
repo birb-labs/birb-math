@@ -51,6 +51,9 @@
       "difficultyMedium": "Media",
       "difficultyHard": "Difícil",
       "start": "Generar simulacro"
+    },
+    "taking": {
+      "finish": "Finalizar simulacro"
     }
   },
   "footer": {

@@ -51,6 +51,9 @@
       "difficultyMedium": "Médio",
       "difficultyHard": "Difícil",
       "start": "Gerar simulado"
+    },
+    "taking": {
+      "finish": "Finalizar simulado"
     }
   },
   "footer": {

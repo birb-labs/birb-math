@@ -51,6 +51,9 @@
       "difficultyMedium": "Medium",
       "difficultyHard": "Hard",
       "start": "Generate practice test"
+    },
+    "taking": {
+      "finish": "Finish practice test"
     }
   },
   "footer": {
