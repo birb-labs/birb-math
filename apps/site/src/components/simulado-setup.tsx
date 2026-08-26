@@ -20,7 +20,7 @@ export function SimuladoSetup({
   onStart = () => {},
 }: {
   tagTree: TopicNode[];
-  onStart?: (config: SimuladoConfig) => void;
+  onStart?: (config: SimuladoConfig) => void | Promise<void>;
 }) {
   const t = useTranslations('simulado.setup');
   const [questionCount, setQuestionCount] = useState(10);
@@ -28,6 +28,7 @@ export function SimuladoSetup({
   const [selectedDifficulties, setSelectedDifficulties] = useState<Set<Difficulty>>(
     new Set(ALL_DIFFICULTIES),
   );
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   function toggleTag(id: number) {
     setSelectedTagIds((prev) => {
@@ -47,13 +48,18 @@ export function SimuladoSetup({
     });
   }
 
-  function handleSubmit(event: React.FormEvent) {
+  async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    onStart({
-      questionCount,
-      tagIds: [...selectedTagIds],
-      difficulties: [...selectedDifficulties],
-    });
+    setIsSubmitting(true);
+    try {
+      await onStart({
+        questionCount,
+        tagIds: [...selectedTagIds],
+        difficulties: [...selectedDifficulties],
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -121,8 +127,8 @@ export function SimuladoSetup({
         </div>
       </div>
 
-      <button type="submit" className={styles.startButton}>
-        {t('start')}
+      <button type="submit" className={styles.startButton} disabled={isSubmitting}>
+        {isSubmitting ? t('loading') : t('start')}
       </button>
     </form>
   );

@@ -50,7 +50,10 @@
       "difficultyEasy": "Easy",
       "difficultyMedium": "Medium",
       "difficultyHard": "Hard",
-      "start": "Generate practice test"
+      "start": "Generate practice test",
+      "loading": "Generating practice test...",
+      "notEnoughQuestions": "Only {available} question(s) are available for the chosen filters (you requested {requested}).",
+      "loadError": "Could not load the question bank. Please try again."
     },
     "taking": {
       "finish": "Finish practice test"

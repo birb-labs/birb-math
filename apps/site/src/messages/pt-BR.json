@@ -50,7 +50,10 @@
       "difficultyEasy": "Fácil",
       "difficultyMedium": "Médio",
       "difficultyHard": "Difícil",
-      "start": "Gerar simulado"
+      "start": "Gerar simulado",
+      "loading": "Gerando simulado...",
+      "notEnoughQuestions": "Só há {available} questão(ões) disponível(eis) para os filtros escolhidos (você pediu {requested}).",
+      "loadError": "Não foi possível carregar o banco de questões. Tente novamente."
     },
     "taking": {
       "finish": "Finalizar simulado"

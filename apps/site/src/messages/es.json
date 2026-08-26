@@ -50,7 +50,10 @@
       "difficultyEasy": "Fácil",
       "difficultyMedium": "Media",
       "difficultyHard": "Difícil",
-      "start": "Generar simulacro"
+      "start": "Generar simulacro",
+      "loading": "Generando simulacro...",
+      "notEnoughQuestions": "Solo hay {available} pregunta(s) disponible(s) para los filtros elegidos (pediste {requested}).",
+      "loadError": "No se pudo cargar el banco de preguntas. Inténtalo de nuevo."
     },
     "taking": {
       "finish": "Finalizar simulacro"

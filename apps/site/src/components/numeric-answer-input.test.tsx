@@ -19,7 +19,7 @@ function Wrapper({ initial = '' }: { initial?: string }) {
 describe('NumericAnswerInput', () => {
   it('renders a text input and a symbol keypad', () => {
     render(<Wrapper />);
-    expect(screen.getByRole('textbox')).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: 'Sua resposta' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '∞' })).toBeInTheDocument();
   });
 
@@ -27,7 +27,7 @@ describe('NumericAnswerInput', () => {
     const user = userEvent.setup();
     render(<Wrapper />);
 
-    await user.type(screen.getByRole('textbox'), '42');
+    await user.type(screen.getByRole('textbox', { name: 'Sua resposta' }), '42');
 
     expect(screen.getByTestId('current-value')).toHaveTextContent('42');
   });

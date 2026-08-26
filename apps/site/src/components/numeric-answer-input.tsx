@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef } from 'react';
+import { useTranslations } from 'next-intl';
 import { SymbolKeypad } from './symbol-keypad';
 import styles from './numeric-answer-input.module.css';
 
@@ -11,6 +12,7 @@ export function NumericAnswerInput({
   value: string;
   onChange: (value: string) => void;
 }) {
+  const t = useTranslations('simulado.results');
   const inputRef = useRef<HTMLInputElement>(null);
 
   function insertSymbol(symbol: string) {
@@ -34,6 +36,7 @@ export function NumericAnswerInput({
         className={styles.input}
         value={value}
         onChange={(event) => onChange(event.target.value)}
+        aria-label={t('yourAnswer')}
       />
       <SymbolKeypad onInsert={insertSymbol} />
     </div>

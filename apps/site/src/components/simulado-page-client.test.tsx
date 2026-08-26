@@ -30,7 +30,7 @@ describe('SimuladoPageClient', () => {
     window.localStorage.clear();
     vi.stubGlobal(
       'fetch',
-      vi.fn().mockResolvedValue({ json: () => Promise.resolve(fixtureQuestions) }),
+      vi.fn().mockResolvedValue({ ok: true, json: () => Promise.resolve(fixtureQuestions) }),
     );
   });
 
@@ -57,5 +57,74 @@ describe('SimuladoPageClient', () => {
     // Results screen: the score and resolution are now visible.
     expect(await screen.findByText('Você acertou 0 de 1 questões')).toBeInTheDocument();
     expect(screen.getByText('É 2.')).toBeInTheDocument();
+  });
+
+  it('stays on the setup screen and shows a message when the selection is empty', async () => {
+    const user = userEvent.setup();
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: () => Promise.resolve([]) }));
+
+    render(
+      <NextIntlClientProvider locale="pt-BR" messages={ptBR}>
+        <SimuladoPageClient tagTree={fixtureTagTree} locale="pt-BR" />
+      </NextIntlClientProvider>,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Gerar simulado' }));
+
+    // Stays on setup: the "Gerar simulado" button (and thus the setup form) is still there.
+    expect(await screen.findByText(/Só há 0 questão\(ões\) disponível\(eis\)/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Gerar simulado' })).toBeInTheDocument();
+  });
+
+  it('proceeds to the taking screen with a notice when fewer questions than requested are available', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <NextIntlClientProvider locale="pt-BR" messages={ptBR}>
+        <SimuladoPageClient tagTree={fixtureTagTree} locale="pt-BR" />
+      </NextIntlClientProvider>,
+    );
+
+    await user.clear(screen.getByLabelText('Número de questões'));
+    await user.type(screen.getByLabelText('Número de questões'), '5');
+    await user.click(screen.getByRole('button', { name: 'Gerar simulado' }));
+
+    expect(await screen.findByText('Quanto é 1+1?')).toBeInTheDocument();
+    expect(screen.getByText(/Só há 1 questão\(ões\) disponível\(eis\)/)).toBeInTheDocument();
+  });
+
+  it('shows an error message and stays usable when the question bank fails to load', async () => {
+    const user = userEvent.setup();
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('network error')));
+
+    render(
+      <NextIntlClientProvider locale="pt-BR" messages={ptBR}>
+        <SimuladoPageClient tagTree={fixtureTagTree} locale="pt-BR" />
+      </NextIntlClientProvider>,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Gerar simulado' }));
+
+    expect(
+      await screen.findByText('Não foi possível carregar o banco de questões. Tente novamente.'),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Gerar simulado' })).toBeInTheDocument();
+  });
+
+  it('shows an error message when the fetch response is not ok', async () => {
+    const user = userEvent.setup();
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 500 }));
+
+    render(
+      <NextIntlClientProvider locale="pt-BR" messages={ptBR}>
+        <SimuladoPageClient tagTree={fixtureTagTree} locale="pt-BR" />
+      </NextIntlClientProvider>,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Gerar simulado' }));
+
+    expect(
+      await screen.findByText('Não foi possível carregar o banco de questões. Tente novamente.'),
+    ).toBeInTheDocument();
   });
 });

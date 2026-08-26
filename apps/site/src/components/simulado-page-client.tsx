@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import type { TopicNode } from '@birb-math/content-schema';
 import { SimuladoSetup, type SimuladoConfig } from './simulado-setup';
 import { SimuladoTaking } from './simulado-taking';
@@ -9,6 +10,7 @@ import { SimuladoHistory } from './simulado-history';
 import { selectQuestions, type ExportedQuestion } from '@/lib/simulado-selection';
 import { gradeSimulado, type GradedResult } from '@/lib/grade-simulado';
 import { useSimuladoHistory, type SimuladoAttempt } from '@/hooks/use-simulado-history';
+import styles from './simulado-page-client.module.css';
 
 type ViewState =
   | { view: 'setup' }
@@ -16,14 +18,39 @@ type ViewState =
   | { view: 'results'; result: GradedResult };
 
 export function SimuladoPageClient({ tagTree, locale }: { tagTree: TopicNode[]; locale: string }) {
+  const t = useTranslations('simulado.setup');
   const [state, setState] = useState<ViewState>({ view: 'setup' });
   const [answers, setAnswers] = useState<Record<number, string>>({});
+  const [notice, setNotice] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const { history, addAttempt } = useSimuladoHistory();
 
   async function handleStart(config: SimuladoConfig) {
-    const response = await fetch('/data/questions.json');
-    const allQuestions: ExportedQuestion[] = await response.json();
+    setLoadError(null);
+    setNotice(null);
+
+    let allQuestions: ExportedQuestion[];
+    try {
+      const response = await fetch('/data/questions.json');
+      if (!response.ok) {
+        throw new Error(`Failed to fetch questions.json: ${response.status}`);
+      }
+      allQuestions = await response.json();
+    } catch {
+      setLoadError(t('loadError'));
+      return;
+    }
+
     const selected = selectQuestions(allQuestions, config);
+
+    if (selected.length < config.questionCount) {
+      setNotice(t('notEnoughQuestions', { available: selected.length, requested: config.questionCount }));
+    }
+
+    if (selected.length === 0) {
+      return;
+    }
+
     setAnswers({});
     setState({ view: 'taking', questions: selected });
   }
@@ -45,12 +72,15 @@ export function SimuladoPageClient({ tagTree, locale }: { tagTree: TopicNode[]; 
 
   if (state.view === 'taking') {
     return (
-      <SimuladoTaking
-        questions={state.questions}
-        answers={answers}
-        onAnswerChange={handleAnswerChange}
-        onFinish={handleFinish}
-      />
+      <>
+        {notice && <p className={styles.notice}>{notice}</p>}
+        <SimuladoTaking
+          questions={state.questions}
+          answers={answers}
+          onAnswerChange={handleAnswerChange}
+          onFinish={handleFinish}
+        />
+      </>
     );
   }
 
@@ -63,6 +93,8 @@ export function SimuladoPageClient({ tagTree, locale }: { tagTree: TopicNode[]; 
   return (
     <>
       <SimuladoHistory history={history} onViewAttempt={handleViewAttempt} />
+      {loadError && <p className={styles.notice}>{loadError}</p>}
+      {notice && <p className={styles.notice}>{notice}</p>}
       <SimuladoSetup tagTree={tagTree} onStart={handleStart} />
     </>
   );
