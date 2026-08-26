@@ -2,10 +2,11 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import Database from 'better-sqlite3';
 import { drizzle } from 'drizzle-orm/better-sqlite3';
 import { migrate } from 'drizzle-orm/better-sqlite3/migrator';
+import { eq } from 'drizzle-orm';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import * as schema from './schema';
-import { getAllLessonSlugs, getContentTree, getLessonBySlug } from './queries';
+import { getAllLessonSlugs, getContentTree, getLessonBySlug, getQuestionsForExport, getTagTree } from './queries';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -48,6 +49,52 @@ function seedFixture(db: TestDb) {
         bodyMdx: '# Exemplo\n\nOutro conteúdo.',
         order: 2,
       },
+    ])
+    .run();
+
+  db.insert(schema.tags).values({ slug: 'limites', name: 'Limites' }).run();
+  const topicTag = db.select().from(schema.tags).all()[0];
+
+  db.insert(schema.tags)
+    .values({ slug: 'limites-laterais', name: 'Limites Laterais', parentTagId: topicTag.id })
+    .run();
+  const subtopicTag = db.select().from(schema.tags).where(eq(schema.tags.slug, 'limites-laterais')).get()!;
+
+  db.insert(schema.questions)
+    .values({
+      type: 'multiple_choice',
+      difficulty: 'easy',
+      promptMdx: 'Qual é o valor de $1 + 1$?',
+      resolutionMdx: 'A soma de $1 + 1$ é $2$.',
+      correctAnswer: null,
+    })
+    .run();
+  const mcQuestion = db.select().from(schema.questions).all()[0];
+
+  db.insert(schema.questionOptions)
+    .values([
+      { questionId: mcQuestion.id, textMdx: '1', isCorrect: false, order: 1 },
+      { questionId: mcQuestion.id, textMdx: '2', isCorrect: true, order: 2 },
+    ])
+    .run();
+
+  db.insert(schema.questionTags).values({ questionId: mcQuestion.id, tagId: topicTag.id }).run();
+
+  db.insert(schema.questions)
+    .values({
+      type: 'numeric',
+      difficulty: 'medium',
+      promptMdx: 'Calcule $\\lim_{x \\to 0} \\frac{\\sin x}{x}$.',
+      resolutionMdx: 'O limite fundamental trigonométrico vale $1$.',
+      correctAnswer: '1',
+    })
+    .run();
+  const numericQuestion = db.select().from(schema.questions).all()[1];
+
+  db.insert(schema.questionTags)
+    .values([
+      { questionId: numericQuestion.id, tagId: topicTag.id },
+      { questionId: numericQuestion.id, tagId: subtopicTag.id },
     ])
     .run();
 }
@@ -96,5 +143,33 @@ describe('content-schema queries', () => {
 
   it('getLessonBySlug returns undefined for an unknown slug', () => {
     expect(getLessonBySlug(db, 'does-not-exist')).toBeUndefined();
+  });
+
+  it('getTagTree returns topics with their subtopics nested', () => {
+    const tree = getTagTree(db);
+
+    expect(tree).toHaveLength(1);
+    expect(tree[0].slug).toBe('limites');
+    expect(tree[0].subtopics).toHaveLength(1);
+    expect(tree[0].subtopics[0].slug).toBe('limites-laterais');
+  });
+
+  it('getQuestionsForExport returns every question with its options and tags', () => {
+    const exported = getQuestionsForExport(db);
+
+    expect(exported).toHaveLength(2);
+
+    const mc = exported.find((q) => q.type === 'multiple_choice')!;
+    expect(mc).toBeDefined();
+    expect(mc.options).toHaveLength(2);
+    expect(mc.options.find((o) => o.isCorrect)?.textMdx).toBe('2');
+    expect(mc.correctAnswer).toBeNull();
+    expect(mc.tagIds).toHaveLength(1);
+
+    const numeric = exported.find((q) => q.type === 'numeric')!;
+    expect(numeric).toBeDefined();
+    expect(numeric.options).toHaveLength(0);
+    expect(numeric.correctAnswer).toBe('1');
+    expect(numeric.tagIds).toHaveLength(2);
   });
 });

@@ -1,6 +1,6 @@
 import { eq } from 'drizzle-orm';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
-import { lessons, sections, subjects, topics } from './schema';
+import { lessons, questionOptions, questions, questionTags, sections, subjects, tags, topics } from './schema';
 
 type Db = BetterSQLite3Database<Record<string, unknown>>;
 
@@ -96,4 +96,66 @@ export function getLessonBySlug(db: Db, slug: string): LessonWithAncestors | und
     topic: { slug: row.topicSlug, name: row.topicName },
     subject: { slug: row.subjectSlug, name: row.subjectName },
   };
+}
+
+export interface TagNode {
+  id: number;
+  slug: string;
+  name: string;
+}
+
+export interface TopicNode extends TagNode {
+  subtopics: TagNode[];
+}
+
+export function getTagTree(db: Db): TopicNode[] {
+  const allTags = db.select().from(tags).all();
+  const topicTags = allTags.filter((tag) => tag.parentTagId === null);
+
+  return topicTags.map((topic) => ({
+    id: topic.id,
+    slug: topic.slug,
+    name: topic.name,
+    subtopics: allTags
+      .filter((tag) => tag.parentTagId === topic.id)
+      .map((tag) => ({ id: tag.id, slug: tag.slug, name: tag.name })),
+  }));
+}
+
+export interface QuestionOptionExport {
+  id: number;
+  textMdx: string;
+  isCorrect: boolean;
+}
+
+export interface QuestionExport {
+  id: number;
+  type: 'multiple_choice' | 'numeric';
+  difficulty: 'easy' | 'medium' | 'hard';
+  promptMdx: string;
+  resolutionMdx: string;
+  correctAnswer: string | null;
+  options: QuestionOptionExport[];
+  tagIds: number[];
+}
+
+export function getQuestionsForExport(db: Db): QuestionExport[] {
+  const allQuestions = db.select().from(questions).all();
+  const allOptions = db.select().from(questionOptions).orderBy(questionOptions.order).all();
+  const allQuestionTags = db.select().from(questionTags).all();
+
+  return allQuestions.map((question) => ({
+    id: question.id,
+    type: question.type,
+    difficulty: question.difficulty,
+    promptMdx: question.promptMdx,
+    resolutionMdx: question.resolutionMdx,
+    correctAnswer: question.correctAnswer,
+    options: allOptions
+      .filter((option) => option.questionId === question.id)
+      .map((option) => ({ id: option.id, textMdx: option.textMdx, isCorrect: option.isCorrect })),
+    tagIds: allQuestionTags
+      .filter((questionTag) => questionTag.questionId === question.id)
+      .map((questionTag) => questionTag.tagId),
+  }));
 }
