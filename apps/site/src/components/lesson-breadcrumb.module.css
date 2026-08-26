@@ -1,0 +1,9 @@
+.breadcrumb {
+  color: var(--color-muted);
+  font-size: 0.875rem;
+  margin-bottom: 1.5rem;
+}
+
+.breadcrumb a {
+  color: inherit;
+}

@@ -36,7 +36,8 @@
   "content": {
     "title": "Content",
     "empty": "No content has been published yet. Check back soon!",
-    "lessonsCompleted": "{completed} of {total} lessons completed"
+    "lessonsCompleted": "{completed} of {total} lessons completed",
+    "breadcrumbSeparator": "›"
   },
   "simulado": {
     "title": "Practice test",

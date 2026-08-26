@@ -1,0 +1,14 @@
+.article {
+  margin: 0 auto;
+  max-width: 42rem;
+  padding: 2rem 1.5rem 4rem;
+}
+
+.article h1 {
+  margin-top: 0;
+}
+
+.article :global(.katex-display) {
+  overflow-x: auto;
+  overflow-y: hidden;
+}
