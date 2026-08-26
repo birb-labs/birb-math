@@ -38,6 +38,17 @@ describe('normalizeNumericAnswer', () => {
     expect(normalizeNumericAnswer('-5', 'en-US')).toBe('-5');
     expect(normalizeNumericAnswer('-1,5', 'pt-BR')).toBe('-1.5');
   });
+
+  it('converts an es decimal comma to a canonical dot, even for short numbers', () => {
+    // Spanish CLDR doesn't group 4-digit integers, so a naive separator probe
+    // using a 4-digit value would misdetect the group separator as "," too.
+    expect(normalizeNumericAnswer('1,5', 'es')).toBe('1.5');
+  });
+
+  it('strips es thousands separators and converts the decimal comma', () => {
+    expect(normalizeNumericAnswer('1.000.000', 'es')).toBe('1000000');
+    expect(normalizeNumericAnswer('1.000.000,5', 'es')).toBe('1000000.5');
+  });
 });
 
 describe('formatNumericAnswerForDisplay', () => {

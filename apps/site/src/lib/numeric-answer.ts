@@ -3,7 +3,11 @@ function escapeRegExp(value: string): string {
 }
 
 function getLocaleSeparators(locale: string): { decimal: string; group: string } {
-  const parts = new Intl.NumberFormat(locale).formatToParts(1234.5);
+  // Probe with a 7-digit value, not 4: some locales (e.g. es, per CLDR's
+  // minimumGroupingDigits: 2) don't group a 4-digit integer at all, so
+  // formatToParts would report no "group" part and the "," fallback below
+  // would collide with the decimal separator, corrupting normalization.
+  const parts = new Intl.NumberFormat(locale).formatToParts(1234567.5);
   const decimal = parts.find((part) => part.type === 'decimal')?.value ?? '.';
   const group = parts.find((part) => part.type === 'group')?.value ?? ',';
   return { decimal, group };

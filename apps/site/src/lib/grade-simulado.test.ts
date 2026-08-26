@@ -63,4 +63,10 @@ describe('gradeSimulado', () => {
     const result = gradeSimulado([zeroQuestion], { 3: '' }, 'pt-BR');
     expect(result.perQuestion[0].isCorrect).toBe(false);
   });
+
+  it('grades a correct decimal numeric answer for the es locale', () => {
+    const decimalQuestion: ExportedQuestion = { ...numericQuestion, id: 4, correctAnswer: '1.5' };
+    const result = gradeSimulado([decimalQuestion], { 4: '1,5' }, 'es');
+    expect(result.perQuestion[0].isCorrect).toBe(true);
+  });
 });
