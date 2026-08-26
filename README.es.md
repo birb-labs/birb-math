@@ -41,6 +41,19 @@ packages/theme/        # sistema de temas
 packages/content-schema/  # tipos de contenido (lecciones/preguntas)
 ```
 
+## Contenido
+
+El contenido (disciplinas, tópicos, secciones y lecciones) vive en una
+base de datos SQLite administrada por `packages/content-schema`, recreada
+desde cero en cada compilación a partir de migraciones versionadas y un
+script de seed — no hay base de datos persistente hasta el panel de
+administración (sub-proyecto 4).
+
+```bash
+pnpm --filter @birb-math/content-schema run db:generate  # genera una nueva migración del esquema
+pnpm --filter @birb-math/content-schema run db:reset     # aplica migraciones + completa con datos de ejemplo
+```
+
 ## Contribuir
 
 Los issues y pull requests son bienvenidos. Los comentarios y los

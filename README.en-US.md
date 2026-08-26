@@ -41,6 +41,18 @@ packages/theme/        # theming system
 packages/content-schema/  # content types (lessons/questions)
 ```
 
+## Content
+
+Content (subjects, topics, sections and lessons) lives in a SQLite
+database managed by `packages/content-schema`, recreated from scratch
+on each build from versioned migrations and a seed script — there is no
+persistent database until the admin panel (sub-project 4).
+
+```bash
+pnpm --filter @birb-math/content-schema run db:generate  # generates a new migration from the schema
+pnpm --filter @birb-math/content-schema run db:reset     # applies migrations + populates with sample data
+```
+
 ## Contributing
 
 Issues and pull requests are welcome. Code comments and identifier
