@@ -16,5 +16,8 @@
     "build": "pnpm --filter site build",
     "dev": "pnpm --filter site dev",
     "test": "pnpm -r test"
+  },
+  "devDependencies": {
+    "wrangler": "4.125.0"
   }
 }
