@@ -1,0 +1,42 @@
+{
+  "nav": {
+    "home": "Home",
+    "content": "Content",
+    "simulado": "Practice test"
+  },
+  "theme": {
+    "themeLabel": "Theme",
+    "appearanceLabel": "Appearance",
+    "themes": {
+      "default": "Default",
+      "solarized": "Solarized",
+      "monokai": "Monokai",
+      "mocha": "Mocha"
+    },
+    "modes": {
+      "light": "Light",
+      "dark": "Dark",
+      "system": "System"
+    }
+  },
+  "home": {
+    "title": "Birb Math",
+    "description": "A free, open-source platform for learning mathematics, from the basics to advanced topics.",
+    "ctaContent": "Browse content",
+    "ctaSimulado": "Take a practice test"
+  },
+  "content": {
+    "title": "Content",
+    "empty": "No content has been published yet. Check back soon!"
+  },
+  "simulado": {
+    "title": "Practice test",
+    "empty": "There aren't enough questions yet to generate a practice test."
+  },
+  "footer": {
+    "rights": "Birb Labs. Open source, made with care.",
+    "contact": "Contact",
+    "sourceCode": "Source code",
+    "donate": "Support the project"
+  }
+}

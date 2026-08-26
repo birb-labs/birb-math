@@ -1,0 +1,42 @@
+{
+  "nav": {
+    "home": "Início",
+    "content": "Conteúdo",
+    "simulado": "Simulado"
+  },
+  "theme": {
+    "themeLabel": "Tema",
+    "appearanceLabel": "Aparência",
+    "themes": {
+      "default": "Padrão",
+      "solarized": "Solarized",
+      "monokai": "Monokai",
+      "mocha": "Mocha"
+    },
+    "modes": {
+      "light": "Claro",
+      "dark": "Escuro",
+      "system": "Sistema"
+    }
+  },
+  "home": {
+    "title": "Birb Math",
+    "description": "Uma plataforma gratuita e open-source para aprender matemática, do zero ao avançado.",
+    "ctaContent": "Ver conteúdos",
+    "ctaSimulado": "Fazer um simulado"
+  },
+  "content": {
+    "title": "Conteúdos",
+    "empty": "Ainda não há conteúdos publicados. Volte em breve!"
+  },
+  "simulado": {
+    "title": "Simulado",
+    "empty": "Ainda não há questões suficientes para gerar um simulado."
+  },
+  "footer": {
+    "rights": "Birb Labs. Código aberto, feito com carinho.",
+    "contact": "Contato",
+    "sourceCode": "Código-fonte",
+    "donate": "Apoie o projeto"
+  }
+}
