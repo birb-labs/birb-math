@@ -21,13 +21,18 @@ export default async function LessonPage({
   const lesson = getLessonBySlug(getDb(), slug);
   if (!lesson) notFound();
 
-  const body = await compileLessonMdx(lesson.bodyMdx);
+  let body;
+  try {
+    body = await compileLessonMdx(lesson.bodyMdx);
+  } catch (cause) {
+    throw new Error(`Failed to compile lesson "${lesson.slug}"`, { cause });
+  }
 
   return (
-    <article className={styles.article}>
+    <main className={styles.article}>
       <LessonBreadcrumb subject={lesson.subject} topic={lesson.topic} section={lesson.section} />
       {body}
       <ReadingProgressTracker lessonSlug={lesson.slug} />
-    </article>
+    </main>
   );
 }

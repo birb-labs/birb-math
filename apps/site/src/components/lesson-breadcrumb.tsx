@@ -13,9 +13,10 @@ export async function LessonBreadcrumb({
 }) {
   const t = await getTranslations('content');
   const sep = t('breadcrumbSeparator');
+  const label = t('breadcrumbLabel');
 
   return (
-    <nav className={styles.breadcrumb} aria-label="breadcrumb">
+    <nav className={styles.breadcrumb} aria-label={label}>
       <Link href="/content">{subject.name}</Link> {sep} {topic.name} {sep} {section.name}
     </nav>
   );

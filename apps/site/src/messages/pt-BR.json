@@ -37,7 +37,8 @@
     "title": "Conteúdos",
     "empty": "Ainda não há conteúdos publicados. Volte em breve!",
     "lessonsCompleted": "{completed} de {total} lições concluídas",
-    "breadcrumbSeparator": "›"
+    "breadcrumbSeparator": "›",
+    "breadcrumbLabel": "Trilha de navegação"
   },
   "simulado": {
     "title": "Simulado",
