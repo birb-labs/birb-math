@@ -16,7 +16,7 @@ function readStoredSlugs(): Set<string> {
 }
 
 export function useReadingProgress() {
-  const [completedSlugs, setCompletedSlugs] = useState<Set<string>>(() => readStoredSlugs());
+  const [completedSlugs, setCompletedSlugs] = useState<Set<string>>(() => new Set());
 
   useEffect(() => {
     setCompletedSlugs(readStoredSlugs());
