@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import type { ReactNode } from 'react';
 import {
   DEFAULT_MODE,
@@ -25,6 +25,18 @@ interface ThemeContextValue {
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
+type Listener = () => void;
+const listeners = new Set<Listener>();
+
+function notify() {
+  listeners.forEach((listener) => listener());
+}
+
+function subscribe(listener: Listener) {
+  listeners.add(listener);
+  return () => listeners.delete(listener);
+}
+
 function readStoredTheme(): ThemeName {
   if (typeof window === 'undefined') return DEFAULT_THEME;
   const stored = window.localStorage.getItem(THEME_STORAGE_KEY);
@@ -42,12 +54,22 @@ function prefersDark(): boolean {
   return window.matchMedia('(prefers-color-scheme: dark)').matches;
 }
 
+function getThemeServerSnapshot(): ThemeName {
+  return DEFAULT_THEME;
+}
+
+function getModeServerSnapshot(): ThemeMode {
+  return DEFAULT_MODE;
+}
+
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setThemeState] = useState<ThemeName>(() => readStoredTheme());
-  const [mode, setModeState] = useState<ThemeMode>(() => readStoredMode());
-  const [systemPrefersDark, setSystemPrefersDark] = useState<boolean>(() => prefersDark());
+  const theme = useSyncExternalStore(subscribe, readStoredTheme, getThemeServerSnapshot);
+  const mode = useSyncExternalStore(subscribe, readStoredMode, getModeServerSnapshot);
+  const [systemPrefersDark, setSystemPrefersDark] = useState(false);
 
   useEffect(() => {
+    setSystemPrefersDark(prefersDark());
+
     const media = window.matchMedia('(prefers-color-scheme: dark)');
     const listener = (event: MediaQueryListEvent) => setSystemPrefersDark(event.matches);
     media.addEventListener('change', listener);
@@ -62,13 +84,13 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   }, [theme, resolvedMode]);
 
   const setTheme = useCallback((next: ThemeName) => {
-    setThemeState(next);
     window.localStorage.setItem(THEME_STORAGE_KEY, next);
+    notify();
   }, []);
 
   const setMode = useCallback((next: ThemeMode) => {
-    setModeState(next);
     window.localStorage.setItem(MODE_STORAGE_KEY, next);
+    notify();
   }, []);
 
   const value = useMemo(

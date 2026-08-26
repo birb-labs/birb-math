@@ -2,7 +2,7 @@ import { DEFAULT_MODE, DEFAULT_THEME, MODE_STORAGE_KEY, THEME_STORAGE_KEY } from
 
 export const noFlashScript = `(function() {
   document.documentElement.setAttribute('data-theme', '${DEFAULT_THEME}');
-  document.documentElement.setAttribute('data-mode', '${DEFAULT_MODE}');
+  document.documentElement.setAttribute('data-mode', 'light');
   try {
     var theme = window.localStorage.getItem('${THEME_STORAGE_KEY}') || '${DEFAULT_THEME}';
     var mode = window.localStorage.getItem('${MODE_STORAGE_KEY}') || '${DEFAULT_MODE}';
