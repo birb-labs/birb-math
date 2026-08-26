@@ -1,0 +1,38 @@
+.subject {
+  margin-bottom: 1.5rem;
+}
+
+.subject > summary {
+  font-size: 1.25rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.topic {
+  margin: 0.5rem 0 0.5rem 1rem;
+}
+
+.topic > summary {
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.section {
+  margin: 0.5rem 0 0.5rem 1rem;
+}
+
+.section > summary {
+  cursor: pointer;
+}
+
+.lessonList {
+  list-style: none;
+  padding-left: 1rem;
+  margin: 0.5rem 0;
+}
+
+.progress {
+  color: var(--color-muted);
+  font-size: 0.875rem;
+  margin-left: 0.5rem;
+}

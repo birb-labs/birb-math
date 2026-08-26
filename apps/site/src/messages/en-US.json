@@ -35,7 +35,8 @@
   },
   "content": {
     "title": "Content",
-    "empty": "No content has been published yet. Check back soon!"
+    "empty": "No content has been published yet. Check back soon!",
+    "lessonsCompleted": "{completed} of {total} lessons completed"
   },
   "simulado": {
     "title": "Practice test",
