@@ -3,8 +3,8 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
+    "dev": "pnpm --filter @birb-math/content-schema run db:reset && next dev",
+    "build": "pnpm --filter @birb-math/content-schema run db:reset && next build",
     "test": "vitest run"
   },
   "dependencies": {
