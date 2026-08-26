@@ -14,6 +14,9 @@ importers:
 
   apps/site:
     dependencies:
+      '@birb-math/content-schema':
+        specifier: workspace:*
+        version: link:../../packages/content-schema
       '@birb-math/theme':
         specifier: workspace:*
         version: link:../../packages/theme

@@ -8,6 +8,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@birb-math/content-schema": "workspace:*",
     "@birb-math/theme": "workspace:*",
     "next": "^16.3.2",
     "next-intl": "^4.13.7",
