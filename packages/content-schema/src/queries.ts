@@ -130,7 +130,7 @@ export interface QuestionOptionExport {
 
 export interface QuestionExport {
   id: number;
-  type: 'multiple_choice' | 'numeric';
+  type: 'multiple_choice' | 'multiple_response' | 'numeric';
   difficulty: 'easy' | 'medium' | 'hard';
   promptMdx: string;
   resolutionMdx: string;

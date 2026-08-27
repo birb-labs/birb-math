@@ -46,7 +46,7 @@ export const lessons = sqliteTable('lessons', {
 
 export const questions = sqliteTable('questions', {
   id: integer('id').primaryKey({ autoIncrement: true }),
-  type: text('type', { enum: ['multiple_choice', 'numeric'] }).notNull(),
+  type: text('type', { enum: ['multiple_choice', 'multiple_response', 'numeric'] }).notNull(),
   difficulty: text('difficulty', { enum: ['easy', 'medium', 'hard'] }).notNull(),
   promptMdx: text('prompt_mdx').notNull(),
   resolutionMdx: text('resolution_mdx').notNull(),

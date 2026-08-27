@@ -100,7 +100,35 @@ db.insert(questionTags)
   ])
   .run();
 
+db.insert(questions)
+  .values({
+    type: 'multiple_response',
+    difficulty: 'hard',
+    promptMdx: 'Quais das afirmações abaixo são verdadeiras?',
+    resolutionMdx:
+      'A afirmação 1 e a afirmação 3 são verdadeiras; a afirmação 2 é falsa.',
+    correctAnswer: null,
+  })
+  .run();
+const multiResponseQuestion = db.select().from(questions).all()[2];
+
+db.insert(questionOptions)
+  .values([
+    { questionId: multiResponseQuestion.id, textMdx: 'Afirmação 1', isCorrect: true, order: 1 },
+    { questionId: multiResponseQuestion.id, textMdx: 'Afirmação 2', isCorrect: false, order: 2 },
+    { questionId: multiResponseQuestion.id, textMdx: 'Afirmação 3', isCorrect: true, order: 3 },
+    { questionId: multiResponseQuestion.id, textMdx: 'Afirmação 4', isCorrect: false, order: 4 },
+  ])
+  .run();
+
+db.insert(questionTags)
+  .values([
+    { questionId: multiResponseQuestion.id, tagId: topicTag.id },
+    { questionId: multiResponseQuestion.id, tagId: subtopicTag.id },
+  ])
+  .run();
+
 console.log(
-  'Seed complete: 1 subject, 1 topic, 1 section, 1 lesson, 2 tags, 2 questions.',
+  'Seed complete: 1 subject, 1 topic, 1 section, 1 lesson, 2 tags, 3 questions.',
 );
 db.$client.close();

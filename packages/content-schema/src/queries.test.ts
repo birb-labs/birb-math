@@ -97,6 +97,27 @@ function seedFixture(db: TestDb) {
       { questionId: numericQuestion.id, tagId: subtopicTag.id },
     ])
     .run();
+
+  db.insert(schema.questions)
+    .values({
+      type: 'multiple_response',
+      difficulty: 'hard',
+      promptMdx: 'Quais das afirmações abaixo são verdadeiras?',
+      resolutionMdx: 'A primeira e a terceira afirmações são verdadeiras.',
+      correctAnswer: null,
+    })
+    .run();
+  const multiResponseQuestion = db.select().from(schema.questions).all()[2];
+
+  db.insert(schema.questionOptions)
+    .values([
+      { questionId: multiResponseQuestion.id, textMdx: 'Afirmação 1', isCorrect: true, order: 1 },
+      { questionId: multiResponseQuestion.id, textMdx: 'Afirmação 2', isCorrect: false, order: 2 },
+      { questionId: multiResponseQuestion.id, textMdx: 'Afirmação 3', isCorrect: true, order: 3 },
+    ])
+    .run();
+
+  db.insert(schema.questionTags).values({ questionId: multiResponseQuestion.id, tagId: topicTag.id }).run();
 }
 
 describe('content-schema queries', () => {
@@ -157,7 +178,7 @@ describe('content-schema queries', () => {
   it('getQuestionsForExport returns every question with its options and tags', () => {
     const exported = getQuestionsForExport(db);
 
-    expect(exported).toHaveLength(2);
+    expect(exported).toHaveLength(3);
 
     const mc = exported.find((q) => q.type === 'multiple_choice')!;
     expect(mc).toBeDefined();
@@ -171,5 +192,12 @@ describe('content-schema queries', () => {
     expect(numeric.options).toHaveLength(0);
     expect(numeric.correctAnswer).toBe('1.5');
     expect(numeric.tagIds).toHaveLength(2);
+
+    const multiResponse = exported.find((q) => q.type === 'multiple_response')!;
+    expect(multiResponse).toBeDefined();
+    expect(multiResponse.options).toHaveLength(3);
+    expect(multiResponse.options.filter((o) => o.isCorrect)).toHaveLength(2);
+    expect(multiResponse.correctAnswer).toBeNull();
+    expect(multiResponse.tagIds).toHaveLength(1);
   });
 });
