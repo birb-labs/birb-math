@@ -30,6 +30,20 @@ const fixtureQuestions: ExportedQuestion[] = [
     resolutionHtml: '<p>Vale 1.</p>',
     tagIds: [],
   },
+  {
+    id: 3,
+    type: 'multiple_response',
+    difficulty: 'hard',
+    promptHtml: '<p>Quais são verdadeiras?</p>',
+    options: [
+      { id: 30, textHtml: '<p>A</p>', isCorrect: true },
+      { id: 31, textHtml: '<p>B</p>', isCorrect: false },
+      { id: 32, textHtml: '<p>C</p>', isCorrect: true },
+    ],
+    correctAnswer: null,
+    resolutionHtml: '<p>A e C.</p>',
+    tagIds: [],
+  },
 ];
 
 describe('SimuladoTaking', () => {
@@ -42,7 +56,9 @@ describe('SimuladoTaking', () => {
 
     expect(screen.getByText('Quanto é 1+1?')).toBeInTheDocument();
     expect(screen.getByText('Calcule o limite.')).toBeInTheDocument();
+    expect(screen.getByText('Quais são verdadeiras?')).toBeInTheDocument();
     expect(screen.getAllByRole('radio')).toHaveLength(2);
+    expect(screen.getAllByRole('checkbox')).toHaveLength(3);
     expect(screen.getByRole('textbox')).toBeInTheDocument();
   });
 
@@ -64,6 +80,36 @@ describe('SimuladoTaking', () => {
     await user.click(screen.getAllByRole('radio')[1]);
 
     expect(onAnswerChange).toHaveBeenCalledExactlyOnceWith(1, '2');
+  });
+
+  it('calls onAnswerChange with the toggled comma-joined option ids when a checkbox is picked', async () => {
+    const user = userEvent.setup();
+    const onAnswerChange = vi.fn();
+
+    render(
+      <NextIntlClientProvider locale="pt-BR" messages={ptBR}>
+        <SimuladoTaking
+          questions={fixtureQuestions}
+          answers={{ 3: '30' }}
+          onAnswerChange={onAnswerChange}
+          onFinish={() => {}}
+        />
+      </NextIntlClientProvider>,
+    );
+
+    await user.click(screen.getAllByRole('checkbox')[2]);
+
+    expect(onAnswerChange).toHaveBeenCalledExactlyOnceWith(3, '30,32');
+  });
+
+  it('shows a "select all that apply" hint only for multiple-response questions', () => {
+    render(
+      <NextIntlClientProvider locale="pt-BR" messages={ptBR}>
+        <SimuladoTaking questions={fixtureQuestions} answers={{}} onAnswerChange={() => {}} onFinish={() => {}} />
+      </NextIntlClientProvider>,
+    );
+
+    expect(screen.getByText('Selecione todas as alternativas corretas')).toBeInTheDocument();
   });
 
   it('calls onFinish when the finish button is clicked', async () => {

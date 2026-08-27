@@ -17,6 +17,12 @@
   margin-top: 0.5rem;
 }
 
+.hint {
+  color: var(--color-muted);
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
+}
+
 .finishButton {
   align-self: flex-start;
   border-radius: 0.25rem;

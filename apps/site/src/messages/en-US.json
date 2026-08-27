@@ -56,6 +56,7 @@
       "loadError": "Could not load the question bank. Please try again."
     },
     "taking": {
+      "selectAllThatApply": "Select all that apply",
       "finish": "Finish practice test"
     },
     "results": {

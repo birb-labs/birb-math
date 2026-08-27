@@ -56,6 +56,7 @@
       "loadError": "No se pudo cargar el banco de preguntas. Inténtalo de nuevo."
     },
     "taking": {
+      "selectAllThatApply": "Selecciona todas las opciones correctas",
       "finish": "Finalizar simulacro"
     },
     "results": {

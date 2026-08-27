@@ -2,6 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 import type { ExportedQuestion } from '@/lib/simulado-selection';
+import { parseSelectedOptionIds, toggleOptionId } from '@/lib/multi-response-answer';
 import { NumericAnswerInput } from './numeric-answer-input';
 import styles from './simulado-taking.module.css';
 
@@ -25,7 +26,7 @@ export function SimuladoTaking({
           {/* eslint-disable-next-line react/no-danger -- pre-rendered at build time from our own MDX, not user input */}
           <div dangerouslySetInnerHTML={{ __html: question.promptHtml }} />
 
-          {question.type === 'multiple_choice' ? (
+          {question.type === 'multiple_choice' &&
             question.options.map((option) => (
               <div key={option.id} className={styles.optionRow}>
                 <input
@@ -41,8 +42,33 @@ export function SimuladoTaking({
                   dangerouslySetInnerHTML={{ __html: option.textHtml }}
                 />
               </div>
-            ))
-          ) : (
+            ))}
+
+          {question.type === 'multiple_response' && (
+            <>
+              <p className={styles.hint}>{t('selectAllThatApply')}</p>
+              {question.options.map((option) => {
+                const selectedIds = parseSelectedOptionIds(answers[question.id]);
+                return (
+                  <div key={option.id} className={styles.optionRow}>
+                    <input
+                      type="checkbox"
+                      id={`q${question.id}-o${option.id}`}
+                      checked={selectedIds.includes(option.id)}
+                      onChange={() => onAnswerChange(question.id, toggleOptionId(answers[question.id], option.id))}
+                    />
+                    <label
+                      htmlFor={`q${question.id}-o${option.id}`}
+                      // eslint-disable-next-line react/no-danger -- pre-rendered at build time from our own MDX
+                      dangerouslySetInnerHTML={{ __html: option.textHtml }}
+                    />
+                  </div>
+                );
+              })}
+            </>
+          )}
+
+          {question.type === 'numeric' && (
             <NumericAnswerInput
               value={answers[question.id] ?? ''}
               onChange={(value) => onAnswerChange(question.id, value)}
