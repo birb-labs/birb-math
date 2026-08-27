@@ -3,6 +3,7 @@
 import { useTranslations } from 'next-intl';
 import type { GradedQuestionResult, GradedResult } from '@/lib/grade-simulado';
 import { formatNumericAnswerForDisplay } from '@/lib/numeric-answer';
+import { parseSelectedOptionIds } from '@/lib/multi-response-answer';
 import styles from './simulado-results.module.css';
 
 function describeAnswers(
@@ -15,6 +16,16 @@ function describeAnswers(
     return {
       yourAnswerHtml: selected?.textHtml ?? '',
       correctAnswerHtml: correct?.textHtml ?? '',
+    };
+  }
+
+  if (question.type === 'multiple_response') {
+    const selectedIds = parseSelectedOptionIds(userAnswer);
+    const selectedOptions = question.options.filter((option) => selectedIds.includes(option.id));
+    const correctOptions = question.options.filter((option) => option.isCorrect);
+    return {
+      yourAnswerHtml: selectedOptions.map((option) => option.textHtml).join(', '),
+      correctAnswerHtml: correctOptions.map((option) => option.textHtml).join(', '),
     };
   }
 
@@ -56,7 +67,7 @@ export function SimuladoResults({
 
               <p className={styles.answers}>
                 <strong>{t('yourAnswer')}:</strong>{' '}
-                {question.type === 'multiple_choice' ? (
+                {question.type !== 'numeric' ? (
                   // eslint-disable-next-line react/no-danger -- pre-rendered at build time from our own MDX
                   <span dangerouslySetInnerHTML={{ __html: yourAnswerHtml }} />
                 ) : (
@@ -66,7 +77,7 @@ export function SimuladoResults({
               {!isCorrect && (
                 <p className={styles.answers}>
                   <strong>{t('correctAnswer')}:</strong>{' '}
-                  {question.type === 'multiple_choice' ? (
+                  {question.type !== 'numeric' ? (
                     // eslint-disable-next-line react/no-danger -- pre-rendered at build time from our own MDX
                     <span dangerouslySetInnerHTML={{ __html: correctAnswerHtml }} />
                   ) : (

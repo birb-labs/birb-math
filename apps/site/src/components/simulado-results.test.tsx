@@ -7,7 +7,7 @@ import type { GradedResult } from '@/lib/grade-simulado';
 
 const fixtureResult: GradedResult = {
   correctCount: 1,
-  total: 2,
+  total: 3,
   perQuestion: [
     {
       question: {
@@ -40,6 +40,24 @@ const fixtureResult: GradedResult = {
       userAnswer: '2',
       isCorrect: false,
     },
+    {
+      question: {
+        id: 3,
+        type: 'multiple_response',
+        difficulty: 'hard',
+        promptHtml: '<p>Q3</p>',
+        options: [
+          { id: 30, textHtml: '<p>Afirmação A</p>', isCorrect: true },
+          { id: 31, textHtml: '<p>Afirmação B</p>', isCorrect: false },
+          { id: 32, textHtml: '<p>Afirmação C</p>', isCorrect: true },
+        ],
+        correctAnswer: null,
+        resolutionHtml: '<p>Resolution 3</p>',
+        tagIds: [],
+      },
+      userAnswer: '30,31',
+      isCorrect: false,
+    },
   ],
 };
 
@@ -51,7 +69,7 @@ describe('SimuladoResults', () => {
       </NextIntlClientProvider>,
     );
 
-    expect(screen.getByText('Você acertou 1 de 2 questões')).toBeInTheDocument();
+    expect(screen.getByText('Você acertou 1 de 3 questões')).toBeInTheDocument();
   });
 
   it('shows each question with its resolution and correct/incorrect status', () => {
@@ -66,7 +84,7 @@ describe('SimuladoResults', () => {
     expect(screen.getByText('Q2')).toBeInTheDocument();
     expect(screen.getByText('Resolution 2')).toBeInTheDocument();
     expect(screen.getAllByText('Certo')).toHaveLength(1);
-    expect(screen.getAllByText('Errado')).toHaveLength(1);
+    expect(screen.getAllByText('Errado')).toHaveLength(2);
   });
 
   it('shows the user\'s selected option text for a multiple-choice question', () => {
@@ -91,5 +109,19 @@ describe('SimuladoResults', () => {
     expect(screen.getByText('1.000.000')).toBeInTheDocument();
     // The user's own raw input is shown as they typed it, not reformatted.
     expect(screen.getByText('2')).toBeInTheDocument();
+  });
+
+  it('shows every selected and every correct option for a multiple-response question', () => {
+    render(
+      <NextIntlClientProvider locale="pt-BR" messages={ptBR}>
+        <SimuladoResults result={fixtureResult} locale="pt-BR" onBackToSetup={() => {}} />
+      </NextIntlClientProvider>,
+    );
+
+    // User selected A and B (B is wrong); the correct set is A and C.
+    const answersSection = screen.getByText('Q3').closest('div')!.parentElement!;
+    expect(answersSection.textContent).toContain('Afirmação A');
+    expect(answersSection.textContent).toContain('Afirmação B');
+    expect(answersSection.textContent).toContain('Afirmação C');
   });
 });
