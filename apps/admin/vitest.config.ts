@@ -9,5 +9,9 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   test: {
     environment: 'jsdom',
+    // This task adds no test files yet (later tasks do); without this,
+    // Vitest's default "no test files found" behavior exits 1, which
+    // would break the repo-wide `pnpm -r test` (run by CI in deploy.yml).
+    passWithNoTests: true,
   },
 });
