@@ -31,6 +31,21 @@ const numericQuestion: QuestionExport = {
   tagIds: [5, 6],
 };
 
+const multiResponseQuestion: QuestionExport = {
+  id: 3,
+  type: 'multiple_response',
+  difficulty: 'hard',
+  promptMdx: 'Quais afirmações são verdadeiras?',
+  resolutionMdx: 'A primeira e a terceira são verdadeiras.',
+  correctAnswer: null,
+  options: [
+    { id: 20, textMdx: 'Afirmação 1', isCorrect: true },
+    { id: 21, textMdx: 'Afirmação 2', isCorrect: false },
+    { id: 22, textMdx: 'Afirmação 3', isCorrect: true },
+  ],
+  tagIds: [7],
+};
+
 describe('compileQuestionForExport', () => {
   it('compiles a multiple-choice question, including all of its options, to HTML', async () => {
     const exported = await compileQuestionForExport(mcQuestion);
@@ -53,6 +68,16 @@ describe('compileQuestionForExport', () => {
     expect(exported.options).toHaveLength(0);
     expect(exported.correctAnswer).toBe('1.5');
     expect(exported.promptHtml).toContain('class="katex"');
+  });
+
+  it('compiles a multiple-response question, including all of its options, to HTML', async () => {
+    const exported = await compileQuestionForExport(multiResponseQuestion);
+
+    expect(exported.type).toBe('multiple_response');
+    expect(exported.options).toHaveLength(3);
+    expect(exported.options.filter((option) => option.isCorrect)).toHaveLength(2);
+    expect(exported.options[0].textHtml).toContain('<p>');
+    expect(exported.correctAnswer).toBeNull();
   });
 });
 

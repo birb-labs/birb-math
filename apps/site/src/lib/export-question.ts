@@ -10,7 +10,7 @@ export interface ExportedOption {
 
 export interface ExportedQuestion {
   id: number;
-  type: 'multiple_choice' | 'numeric';
+  type: 'multiple_choice' | 'multiple_response' | 'numeric';
   difficulty: 'easy' | 'medium' | 'hard';
   promptHtml: string;
   options: ExportedOption[];
@@ -66,7 +66,7 @@ export async function compileQuestionForExport(question: QuestionExport): Promis
   const resolutionHtml = await compileToHtml(question.resolutionMdx);
 
   const options: ExportedOption[] =
-    question.type === 'multiple_choice'
+    question.type !== 'numeric'
       ? await Promise.all(
           question.options.map(async (option) => ({
             id: option.id,
