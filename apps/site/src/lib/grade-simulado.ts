@@ -1,4 +1,5 @@
 import { normalizeNumericAnswer } from './numeric-answer';
+import { parseSelectedOptionIds } from './multi-response-answer';
 import type { ExportedQuestion } from './simulado-selection';
 
 export interface GradedQuestionResult {
@@ -19,6 +20,13 @@ function isAnswerCorrect(question: ExportedQuestion, userAnswer: string | undefi
   if (question.type === 'multiple_choice') {
     const selected = question.options.find((option) => String(option.id) === userAnswer);
     return selected?.isCorrect ?? false;
+  }
+
+  if (question.type === 'multiple_response') {
+    const selectedIds = new Set(parseSelectedOptionIds(userAnswer));
+    const correctIds = question.options.filter((option) => option.isCorrect).map((option) => option.id);
+    // All-or-nothing: the selected set must match the correct set exactly.
+    return selectedIds.size === correctIds.length && correctIds.every((id) => selectedIds.has(id));
   }
 
   if (question.correctAnswer === null) return false;

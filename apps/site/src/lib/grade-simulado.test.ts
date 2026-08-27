@@ -16,6 +16,21 @@ const mcQuestion: ExportedQuestion = {
   tagIds: [],
 };
 
+const multiResponseQuestion: ExportedQuestion = {
+  id: 5,
+  type: 'multiple_response',
+  difficulty: 'hard',
+  promptHtml: '<p>P</p>',
+  options: [
+    { id: 30, textHtml: '<p>A</p>', isCorrect: true },
+    { id: 31, textHtml: '<p>B</p>', isCorrect: false },
+    { id: 32, textHtml: '<p>C</p>', isCorrect: true },
+  ],
+  correctAnswer: null,
+  resolutionHtml: '<p>R</p>',
+  tagIds: [],
+};
+
 const numericQuestion: ExportedQuestion = {
   id: 2,
   type: 'numeric',
@@ -68,5 +83,30 @@ describe('gradeSimulado', () => {
     const decimalQuestion: ExportedQuestion = { ...numericQuestion, id: 4, correctAnswer: '1.5' };
     const result = gradeSimulado([decimalQuestion], { 4: '1,5' }, 'es');
     expect(result.perQuestion[0].isCorrect).toBe(true);
+  });
+
+  it('grades a multiple-response answer correct only when the exact set of correct options is selected', () => {
+    const result = gradeSimulado([multiResponseQuestion], { 5: '30,32' }, 'pt-BR');
+    expect(result.perQuestion[0].isCorrect).toBe(true);
+  });
+
+  it('grades a multiple-response answer missing a correct option as incorrect', () => {
+    const result = gradeSimulado([multiResponseQuestion], { 5: '30' }, 'pt-BR');
+    expect(result.perQuestion[0].isCorrect).toBe(false);
+  });
+
+  it('grades a multiple-response answer with an extra incorrect option selected as incorrect', () => {
+    const result = gradeSimulado([multiResponseQuestion], { 5: '30,31,32' }, 'pt-BR');
+    expect(result.perQuestion[0].isCorrect).toBe(false);
+  });
+
+  it('grades an unanswered multiple-response question as incorrect, not a crash', () => {
+    const result = gradeSimulado([multiResponseQuestion], {}, 'pt-BR');
+    expect(result.perQuestion[0].isCorrect).toBe(false);
+  });
+
+  it('grades a blank multiple-response answer as incorrect', () => {
+    const result = gradeSimulado([multiResponseQuestion], { 5: '' }, 'pt-BR');
+    expect(result.perQuestion[0].isCorrect).toBe(false);
   });
 });
