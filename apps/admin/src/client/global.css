@@ -1,0 +1,9 @@
+@import '@birb-math/theme/tokens.css';
+@import 'katex/dist/katex.min.css';
+
+body {
+  margin: 0;
+  background: var(--color-background);
+  color: var(--color-foreground);
+  font-family: system-ui, sans-serif;
+}

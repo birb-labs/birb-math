@@ -1,0 +1,20 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "birb-math-admin",
+  "compatibility_date": "2026-08-27",
+  "compatibility_flags": ["nodejs_compat"],
+  "main": "./src/worker/index.ts",
+  "assets": {
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "birb-math-admin",
+      // Filled in with the real database id in Task 18, after `wrangler d1 create`.
+      "database_id": "PLACEHOLDER_UNTIL_TASK_18",
+      "migrations_dir": "../../packages/content-schema/drizzle"
+    }
+  ]
+}
