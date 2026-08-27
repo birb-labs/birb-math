@@ -11,7 +11,7 @@ export default async function SimuladoPage({
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations('simulado');
-  const tagTree = getTagTree(getDb());
+  const tagTree = await getTagTree(getDb());
 
   return (
     <main className={styles.main}>

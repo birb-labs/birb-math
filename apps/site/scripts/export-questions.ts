@@ -9,7 +9,7 @@ const OUTPUT_PATH = path.resolve(__dirname, '../public/data/questions.json');
 
 async function main() {
   const db = getDb();
-  const questions = getQuestionsForExport(db);
+  const questions = await getQuestionsForExport(db);
 
   for (const question of questions) {
     if (question.type === 'numeric') {

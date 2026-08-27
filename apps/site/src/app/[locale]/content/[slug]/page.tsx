@@ -6,8 +6,8 @@ import { LessonBreadcrumb } from '@/components/lesson-breadcrumb';
 import { ReadingProgressTracker } from '@/components/reading-progress-tracker';
 import styles from '@/styles/lesson.module.css';
 
-export function generateStaticParams() {
-  return getAllLessonSlugs(getDb()).map((slug) => ({ slug }));
+export async function generateStaticParams() {
+  return (await getAllLessonSlugs(getDb())).map((slug) => ({ slug }));
 }
 
 export default async function LessonPage({
@@ -18,7 +18,7 @@ export default async function LessonPage({
   const { locale, slug } = await params;
   setRequestLocale(locale);
 
-  const lesson = getLessonBySlug(getDb(), slug);
+  const lesson = await getLessonBySlug(getDb(), slug);
   if (!lesson) notFound();
 
   let body;

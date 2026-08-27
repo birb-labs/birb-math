@@ -11,7 +11,7 @@ export default async function ContentIndexPage({
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations('content');
-  const tree = getContentTree(getDb());
+  const tree = await getContentTree(getDb());
 
   return (
     <main className={styles.main}>

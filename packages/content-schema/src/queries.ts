@@ -18,11 +18,11 @@ export interface ContentTree {
   }[];
 }
 
-export function getContentTree(db: Db): ContentTree[] {
-  const allSubjects = db.select().from(subjects).orderBy(subjects.order).all();
-  const allTopics = db.select().from(topics).orderBy(topics.order).all();
-  const allSections = db.select().from(sections).orderBy(sections.order).all();
-  const allLessons = db
+export async function getContentTree(db: Db): Promise<ContentTree[]> {
+  const allSubjects = await db.select().from(subjects).orderBy(subjects.order).all();
+  const allTopics = await db.select().from(topics).orderBy(topics.order).all();
+  const allSections = await db.select().from(sections).orderBy(sections.order).all();
+  const allLessons = await db
     .select({ id: lessons.id, sectionId: lessons.sectionId, slug: lessons.slug, title: lessons.title, order: lessons.order })
     .from(lessons)
     .orderBy(lessons.order)
@@ -49,12 +49,9 @@ export function getContentTree(db: Db): ContentTree[] {
   }));
 }
 
-export function getAllLessonSlugs(db: Db): string[] {
-  return db
-    .select({ slug: lessons.slug })
-    .from(lessons)
-    .all()
-    .map((row) => row.slug);
+export async function getAllLessonSlugs(db: Db): Promise<string[]> {
+  const rows = await db.select({ slug: lessons.slug }).from(lessons).all();
+  return rows.map((row) => row.slug);
 }
 
 export interface LessonWithAncestors {
@@ -66,8 +63,8 @@ export interface LessonWithAncestors {
   subject: { slug: string; name: string };
 }
 
-export function getLessonBySlug(db: Db, slug: string): LessonWithAncestors | undefined {
-  const row = db
+export async function getLessonBySlug(db: Db, slug: string): Promise<LessonWithAncestors | undefined> {
+  const row = await db
     .select({
       slug: lessons.slug,
       title: lessons.title,
@@ -108,8 +105,8 @@ export interface TopicNode extends TagNode {
   subtopics: TagNode[];
 }
 
-export function getTagTree(db: Db): TopicNode[] {
-  const allTags = db.select().from(tags).all();
+export async function getTagTree(db: Db): Promise<TopicNode[]> {
+  const allTags = await db.select().from(tags).all();
   const topicTags = allTags.filter((tag) => tag.parentTagId === null);
 
   return topicTags.map((topic) => ({
@@ -139,10 +136,10 @@ export interface QuestionExport {
   tagIds: number[];
 }
 
-export function getQuestionsForExport(db: Db): QuestionExport[] {
-  const allQuestions = db.select().from(questions).all();
-  const allOptions = db.select().from(questionOptions).orderBy(questionOptions.order).all();
-  const allQuestionTags = db.select().from(questionTags).all();
+export async function getQuestionsForExport(db: Db): Promise<QuestionExport[]> {
+  const allQuestions = await db.select().from(questions).all();
+  const allOptions = await db.select().from(questionOptions).orderBy(questionOptions.order).all();
+  const allQuestionTags = await db.select().from(questionTags).all();
 
   return allQuestions.map((question) => ({
     id: question.id,

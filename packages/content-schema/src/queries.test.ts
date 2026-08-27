@@ -128,8 +128,8 @@ describe('content-schema queries', () => {
     seedFixture(db);
   });
 
-  it('getContentTree returns the full nested hierarchy', () => {
-    const tree = getContentTree(db);
+  it('getContentTree returns the full nested hierarchy', async () => {
+    const tree = await getContentTree(db);
 
     expect(tree).toHaveLength(1);
     expect(tree[0].slug).toBe('calculo');
@@ -146,13 +146,13 @@ describe('content-schema queries', () => {
     expect(tree[0].topics[0].sections[0].lessons[0]).not.toHaveProperty('bodyMdx');
   });
 
-  it('getAllLessonSlugs returns every lesson slug', () => {
-    const slugs = getAllLessonSlugs(db);
+  it('getAllLessonSlugs returns every lesson slug', async () => {
+    const slugs = await getAllLessonSlugs(db);
     expect(slugs.sort()).toEqual(['definicao-de-limite', 'limites-laterais-exemplo']);
   });
 
-  it('getLessonBySlug returns the lesson with its ancestor chain', () => {
-    const lesson = getLessonBySlug(db, 'definicao-de-limite');
+  it('getLessonBySlug returns the lesson with its ancestor chain', async () => {
+    const lesson = await getLessonBySlug(db, 'definicao-de-limite');
 
     expect(lesson).toBeDefined();
     expect(lesson!.title).toBe('Definição de Limite');
@@ -162,12 +162,12 @@ describe('content-schema queries', () => {
     expect(lesson!.subject).toEqual({ slug: 'calculo', name: 'Cálculo' });
   });
 
-  it('getLessonBySlug returns undefined for an unknown slug', () => {
-    expect(getLessonBySlug(db, 'does-not-exist')).toBeUndefined();
+  it('getLessonBySlug returns undefined for an unknown slug', async () => {
+    expect(await getLessonBySlug(db, 'does-not-exist')).toBeUndefined();
   });
 
-  it('getTagTree returns topics with their subtopics nested', () => {
-    const tree = getTagTree(db);
+  it('getTagTree returns topics with their subtopics nested', async () => {
+    const tree = await getTagTree(db);
 
     expect(tree).toHaveLength(1);
     expect(tree[0].slug).toBe('limites');
@@ -175,8 +175,8 @@ describe('content-schema queries', () => {
     expect(tree[0].subtopics[0].slug).toBe('limites-laterais');
   });
 
-  it('getQuestionsForExport returns every question with its options and tags', () => {
-    const exported = getQuestionsForExport(db);
+  it('getQuestionsForExport returns every question with its options and tags', async () => {
+    const exported = await getQuestionsForExport(db);
 
     expect(exported).toHaveLength(3);
 
