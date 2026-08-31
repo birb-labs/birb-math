@@ -1,3 +1,12 @@
+import { useState } from 'react';
+import { LoginPage } from './pages/LoginPage';
+
 export function App() {
-  return <p>Birb Math Admin — scaffold OK.</p>;
+  const [loggedIn, setLoggedIn] = useState(false);
+
+  if (!loggedIn) {
+    return <LoginPage onLoggedIn={() => setLoggedIn(true)} />;
+  }
+
+  return <p>Autenticado. (Páginas reais chegam nas próximas tarefas.)</p>;
 }
