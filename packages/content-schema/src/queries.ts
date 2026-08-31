@@ -1,8 +1,9 @@
 import { eq } from 'drizzle-orm';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
+import type { DrizzleD1Database } from 'drizzle-orm/d1';
 import { lessons, questionOptions, questions, questionTags, sections, subjects, tags, topics } from './schema';
 
-type Db = BetterSQLite3Database<Record<string, unknown>>;
+type Db = BetterSQLite3Database<Record<string, unknown>> | DrizzleD1Database<Record<string, unknown>>;
 
 export interface ContentTree {
   slug: string;
@@ -19,10 +20,11 @@ export interface ContentTree {
 }
 
 export async function getContentTree(db: Db): Promise<ContentTree[]> {
-  const allSubjects = await db.select().from(subjects).orderBy(subjects.order).all();
-  const allTopics = await db.select().from(topics).orderBy(topics.order).all();
-  const allSections = await db.select().from(sections).orderBy(sections.order).all();
-  const allLessons = await db
+  const typedDb = db as BetterSQLite3Database<Record<string, unknown>>;
+  const allSubjects = await typedDb.select().from(subjects).orderBy(subjects.order).all();
+  const allTopics = await typedDb.select().from(topics).orderBy(topics.order).all();
+  const allSections = await typedDb.select().from(sections).orderBy(sections.order).all();
+  const allLessons = await typedDb
     .select({ id: lessons.id, sectionId: lessons.sectionId, slug: lessons.slug, title: lessons.title, order: lessons.order })
     .from(lessons)
     .orderBy(lessons.order)
@@ -50,7 +52,8 @@ export async function getContentTree(db: Db): Promise<ContentTree[]> {
 }
 
 export async function getAllLessonSlugs(db: Db): Promise<string[]> {
-  const rows = await db.select({ slug: lessons.slug }).from(lessons).all();
+  const typedDb = db as BetterSQLite3Database<Record<string, unknown>>;
+  const rows = await typedDb.select({ slug: lessons.slug }).from(lessons).all();
   return rows.map((row) => row.slug);
 }
 
@@ -64,7 +67,8 @@ export interface LessonWithAncestors {
 }
 
 export async function getLessonBySlug(db: Db, slug: string): Promise<LessonWithAncestors | undefined> {
-  const row = await db
+  const typedDb = db as BetterSQLite3Database<Record<string, unknown>>;
+  const row = await typedDb
     .select({
       slug: lessons.slug,
       title: lessons.title,
@@ -106,7 +110,8 @@ export interface TopicNode extends TagNode {
 }
 
 export async function getTagTree(db: Db): Promise<TopicNode[]> {
-  const allTags = await db.select().from(tags).all();
+  const typedDb = db as BetterSQLite3Database<Record<string, unknown>>;
+  const allTags = await typedDb.select().from(tags).all();
   const topicTags = allTags.filter((tag) => tag.parentTagId === null);
 
   return topicTags.map((topic) => ({
@@ -137,9 +142,10 @@ export interface QuestionExport {
 }
 
 export async function getQuestionsForExport(db: Db): Promise<QuestionExport[]> {
-  const allQuestions = await db.select().from(questions).all();
-  const allOptions = await db.select().from(questionOptions).orderBy(questionOptions.order).all();
-  const allQuestionTags = await db.select().from(questionTags).all();
+  const typedDb = db as BetterSQLite3Database<Record<string, unknown>>;
+  const allQuestions = await typedDb.select().from(questions).all();
+  const allOptions = await typedDb.select().from(questionOptions).orderBy(questionOptions.order).all();
+  const allQuestionTags = await typedDb.select().from(questionTags).all();
 
   return allQuestions.map((question) => ({
     id: question.id,
