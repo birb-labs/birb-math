@@ -11,6 +11,7 @@
     "hash-password": "tsx scripts/hash-password.ts"
   },
   "dependencies": {
+    "drizzle-orm": "0.45.2",
     "hono": "^4.6.0",
     "katex": "0.18.4",
     "react": "^19.2.8",
