@@ -1,11 +1,20 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "birb-math-admin",
-  "compatibility_date": "2026-08-27",
+  // Pinned slightly behind "today" because the installed workerd binary
+  // (pulled in by @cloudflare/vitest-pool-workers) only supports
+  // compatibility dates up to 2026-08-22 as of this task; a later date makes
+  // the Workers-runtime test pool fail to start entirely.
+  "compatibility_date": "2026-08-22",
   "compatibility_flags": ["nodejs_compat"],
   "main": "./src/worker/index.ts",
   "assets": {
     "binding": "ASSETS",
+    // Required by wrangler's config parser (used directly by
+    // @cloudflare/vitest-pool-workers to derive Miniflare options for
+    // tests) even though `vite dev`/`vite build` manage this directory via
+    // @cloudflare/vite-plugin. Matches `vite.config.ts`'s `build.outDir`.
+    "directory": "./dist/client",
     "not_found_handling": "single-page-application"
   },
   "d1_databases": [

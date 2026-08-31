@@ -7,3 +7,4 @@ dist
 .DS_Store
 content.db*
 apps/site/public/data/
+apps/admin/.dev.vars

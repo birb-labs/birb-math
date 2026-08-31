@@ -7,3 +7,15 @@ export interface Env {
   EXPORT_SECRET: string;
   GITHUB_PAT: string;
 }
+
+// Merges `Env` into the ambient `Cloudflare.Env` namespace so that
+// `env` from `cloudflare:test`/`cloudflare:workers` (typed as
+// `Cloudflare.Env` by @cloudflare/vitest-pool-workers) knows about our
+// bindings without needing a generated `worker-configuration.d.ts`.
+type AdminEnv = Env;
+
+declare global {
+  namespace Cloudflare {
+    interface Env extends AdminEnv {}
+  }
+}

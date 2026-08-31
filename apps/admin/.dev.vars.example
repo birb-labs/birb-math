@@ -1,0 +1,5 @@
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD_HASH=pbkdf2$100000$...$...
+SESSION_SECRET=any-random-string-for-local-dev
+EXPORT_SECRET=any-random-string-for-local-dev
+GITHUB_PAT=not-needed-until-task-14
