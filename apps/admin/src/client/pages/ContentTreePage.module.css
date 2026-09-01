@@ -1,0 +1,19 @@
+.tree {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.subject, .topic, .section {
+  margin-left: 1rem;
+}
+
+.lessonLink {
+  background: none;
+  border: none;
+  color: var(--color-accent);
+  cursor: pointer;
+  padding: 0;
+  font: inherit;
+  text-decoration: underline;
+}

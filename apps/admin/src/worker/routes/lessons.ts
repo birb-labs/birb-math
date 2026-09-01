@@ -7,7 +7,22 @@ export const lessonsRoutes = new Hono<{ Bindings: Env }>();
 
 lessonsRoutes.get('/tree', async (c) => {
   const db = getD1Db(c.env.DB);
-  return c.json(await getContentTree(db));
+  const tree = await getContentTree(db);
+  const allLessons = await db.select({ id: lessons.id, slug: lessons.slug }).from(lessons).all();
+  const idBySlug = new Map(allLessons.map((lesson) => [lesson.slug, lesson.id]));
+
+  return c.json(
+    tree.map((subject) => ({
+      ...subject,
+      topics: subject.topics.map((topic) => ({
+        ...topic,
+        sections: topic.sections.map((section) => ({
+          ...section,
+          lessons: section.lessons.map((lesson) => ({ ...lesson, id: idBySlug.get(lesson.slug) })),
+        })),
+      })),
+    })),
+  );
 });
 
 lessonsRoutes.post('/subjects', async (c) => {
