@@ -64,6 +64,13 @@ completamente en el navegador — no hay backend de simulacro.
 pnpm --filter site run export-questions  # genera public/data/questions.json a partir de la base de datos actual
 ```
 
+El contenido y el banco de preguntas se gestionan mediante un panel de
+administración interno (`apps/admin`), alojado por separado en
+Cloudflare (Workers + D1) y protegido por Cloudflare Access además de
+su propio inicio de sesión — no forma parte del sitio público ni de su
+build estático. Publicar un cambio desde el panel dispara el mismo
+pipeline de despliegue de GitHub Actions que ya existía.
+
 ## Contribuir
 
 Los issues y pull requests son bienvenidos. Los comentarios y los

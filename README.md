@@ -59,6 +59,13 @@ O banco de questões (usado para gerar simulados) vive nas mesmas migrations e n
 pnpm --filter site run export-questions  # gera public/data/questions.json a partir do banco atual
 ```
 
+O conteúdo e o banco de questões são gerenciados por um painel
+administrativo interno (`apps/admin`), hospedado separadamente na
+Cloudflare (Workers + D1) e protegido por Cloudflare Access + login
+próprio — não faz parte do site público nem do seu build estático.
+Publicar uma alteração no admin dispara o mesmo pipeline de deploy do
+GitHub Actions que já existia.
+
 ## Contribuindo
 
 Issues e pull requests são bem-vindos. Comentários e nomes de

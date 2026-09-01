@@ -62,6 +62,13 @@ consumed by the practice test entirely in the browser — there is no practice t
 pnpm --filter site run export-questions  # generates public/data/questions.json from the current database
 ```
 
+Content and the question bank are managed by an internal admin panel
+(`apps/admin`), hosted separately on Cloudflare (Workers + D1) and
+gated by Cloudflare Access plus its own login — it's not part of the
+public site or its static build. Publishing a change from the admin
+panel triggers the same GitHub Actions deploy pipeline that already
+existed.
+
 ## Contributing
 
 Issues and pull requests are welcome. Code comments and identifier
