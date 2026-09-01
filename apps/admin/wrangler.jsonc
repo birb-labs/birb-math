@@ -21,8 +21,7 @@
     {
       "binding": "DB",
       "database_name": "birb-math-admin",
-      // Filled in with the real database id in Task 18, after `wrangler d1 create`.
-      "database_id": "PLACEHOLDER_UNTIL_TASK_18",
+      "database_id": "152c6e74-1496-4db1-b88d-70442aaa9d75",
       "migrations_dir": "../../packages/content-schema/drizzle"
     }
   ]
