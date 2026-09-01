@@ -25,7 +25,10 @@ jobs:
 
       - run: pnpm -r test
 
-      - run: pnpm --filter site build
+      - run: pnpm --filter site run build:from-admin
+        env:
+          ADMIN_EXPORT_URL: ${{ secrets.ADMIN_EXPORT_URL }}
+          ADMIN_EXPORT_SECRET: ${{ secrets.ADMIN_EXPORT_SECRET }}
 
       - uses: cloudflare/wrangler-action@v4
         with:

@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "pnpm --filter @birb-math/content-schema run db:reset && tsx scripts/export-questions.ts && next dev",
     "build": "pnpm --filter @birb-math/content-schema run db:reset && tsx scripts/export-questions.ts && next build",
+    "build:from-admin": "pnpm --filter @birb-math/content-schema run db:migrate && tsx scripts/hydrate-from-admin.ts && tsx scripts/export-questions.ts && next build",
     "test": "vitest run",
     "export-questions": "tsx scripts/export-questions.ts"
   },
