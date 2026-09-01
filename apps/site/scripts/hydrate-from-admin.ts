@@ -1,5 +1,4 @@
 import {
-  getDb,
   lessons,
   questionOptions,
   questions,
@@ -9,6 +8,7 @@ import {
   tags,
   topics,
 } from '@birb-math/content-schema';
+import { getDb } from '@birb-math/content-schema/src/client';
 
 interface AdminExport {
   subjects: (typeof subjects.$inferSelect)[];

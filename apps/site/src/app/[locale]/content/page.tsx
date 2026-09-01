@@ -1,5 +1,6 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server';
-import { getContentTree, getDb } from '@birb-math/content-schema';
+import { getContentTree } from '@birb-math/content-schema';
+import { getDb } from '@birb-math/content-schema/src/client';
 import { ContentTree } from '@/components/content-tree';
 import styles from '@/styles/page.module.css';
 

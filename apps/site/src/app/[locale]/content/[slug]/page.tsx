@@ -1,6 +1,7 @@
 import { setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
-import { getAllLessonSlugs, getDb, getLessonBySlug } from '@birb-math/content-schema';
+import { getAllLessonSlugs, getLessonBySlug } from '@birb-math/content-schema';
+import { getDb } from '@birb-math/content-schema/src/client';
 import { compileLessonMdx } from '@/lib/compile-lesson-mdx';
 import { LessonBreadcrumb } from '@/components/lesson-breadcrumb';
 import { ReadingProgressTracker } from '@/components/reading-progress-tracker';

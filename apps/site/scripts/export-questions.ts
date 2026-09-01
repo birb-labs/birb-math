@@ -1,7 +1,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { getDb, getQuestionsForExport } from '@birb-math/content-schema';
+import { getQuestionsForExport } from '@birb-math/content-schema';
+import { getDb } from '@birb-math/content-schema/src/client';
 import { compileQuestionForExport, assertValidNumericCorrectAnswer } from '../src/lib/export-question';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));

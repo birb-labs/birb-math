@@ -26,9 +26,12 @@ describe('LessonEditorPage', () => {
     await user.click(screen.getByRole('button', { name: 'Salvar' }));
 
     expect(onDone).toHaveBeenCalledOnce();
-    expect(fetchSpy).toHaveBeenLastCalledWith(
-      '/api/lessons/lessons/1',
-      expect.objectContaining({ method: 'PATCH' }),
-    );
+    // Matched by URL+method among all calls, not "last call" -- MdxEditor's
+    // own debounced /api/preview fetch (fired on mount from the loaded
+    // bodyMdx) races the Save click's PATCH under real timers, so which
+    // fetch call actually lands last is not deterministic. Same fix already
+    // applied to QuestionEditorPage.test.tsx's POST assertion.
+    const patchCall = fetchSpy.mock.calls.find(([, init]) => (init as RequestInit | undefined)?.method === 'PATCH');
+    expect(patchCall?.[0]).toBe('/api/lessons/lessons/1');
   });
 });
