@@ -36,8 +36,12 @@ async function main() {
 
   // Tags self-reference via parentTagId — parents must be inserted (and
   // committed) before the children that point at them, even within one
-  // exported table, or the foreign key check fails mid-statement.
-  const sortedTags = [...data.tags].sort((a) => (a.parentTagId === null ? -1 : 1));
+  // exported table, or the foreign key check fails mid-statement. This is
+  // a real two-way comparator (unlike a one-argument partition), so it
+  // stays correct if tag nesting ever goes past today's 2 levels.
+  const sortedTags = [...data.tags].sort(
+    (a, b) => Number(a.parentTagId !== null) - Number(b.parentTagId !== null),
+  );
 
   const db = getDb();
   if (data.subjects.length > 0) db.insert(subjects).values(data.subjects).run();

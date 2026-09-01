@@ -7,6 +7,13 @@ import { LessonBreadcrumb } from '@/components/lesson-breadcrumb';
 import { ReadingProgressTracker } from '@/components/reading-progress-tracker';
 import styles from '@/styles/lesson.module.css';
 
+// `output: 'export'` requires this to return at least one entry, or the
+// build fails outright. In production builds (see
+// apps/site/scripts/hydrate-from-admin.ts), the content database is
+// hydrated from the admin panel's live D1 data, which must therefore
+// always contain at least one lesson -- see apps/admin/README.md's
+// "Publishing and the content database" section before ever deleting
+// the last remaining lesson via the admin API.
 export async function generateStaticParams() {
   return (await getAllLessonSlugs(getDb())).map((slug) => ({ slug }));
 }
