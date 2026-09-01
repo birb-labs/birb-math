@@ -8,10 +8,15 @@ function base64UrlEncode(bytes: Uint8Array): string {
   return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 
-function base64UrlDecode(value: string): Uint8Array {
+function base64UrlDecode(value: string): Uint8Array<ArrayBuffer> {
   const padded = value.replace(/-/g, '+').replace(/_/g, '/').padEnd(Math.ceil(value.length / 4) * 4, '=');
   const binary = atob(padded);
-  return Uint8Array.from(binary, (char) => char.charCodeAt(0));
+  // `Uint8Array.from()` infers `Uint8Array<ArrayBufferLike>` (which also
+  // covers SharedArrayBuffer); `SubtleCrypto.verify`'s `BufferSource` wants
+  // the narrower `ArrayBuffer`-backed form. At runtime this is always a
+  // freshly allocated ArrayBuffer -- decoded from a plain string, never
+  // shared memory -- so the cast is safe, not a behavior change.
+  return Uint8Array.from(binary, (char) => char.charCodeAt(0)) as Uint8Array<ArrayBuffer>;
 }
 
 async function hmacKey(secret: string): Promise<CryptoKey> {

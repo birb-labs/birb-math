@@ -10,7 +10,8 @@
     "db:migrate": "tsx src/migrate.ts",
     "db:seed": "tsx seed/seed.ts",
     "db:reset": "pnpm run db:migrate && pnpm run db:seed",
-    "test": "vitest run"
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "better-sqlite3": "13.0.3",

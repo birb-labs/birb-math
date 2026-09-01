@@ -31,7 +31,7 @@ export function ContentTreePage({ onEditLesson }: { onEditLesson: (lessonId: num
 
   useEffect(() => {
     apiFetch('/api/lessons/tree')
-      .then((response) => response.json())
+      .then((response) => response.json<AdminSubject[]>())
       .then(setTree);
   }, []);
 

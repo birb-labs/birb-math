@@ -15,7 +15,8 @@
   "scripts": {
     "build": "pnpm --filter site build",
     "dev": "pnpm --filter site dev",
-    "test": "pnpm -r test"
+    "test": "pnpm -r test",
+    "typecheck": "pnpm -r typecheck"
   },
   "devDependencies": {
     "wrangler": "4.125.0"

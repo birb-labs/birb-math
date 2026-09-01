@@ -25,6 +25,8 @@ jobs:
 
       - run: pnpm -r test
 
+      - run: pnpm -r typecheck
+
       - run: pnpm --filter site run build:from-admin
         env:
           ADMIN_EXPORT_URL: ${{ secrets.ADMIN_EXPORT_URL }}

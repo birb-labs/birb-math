@@ -9,8 +9,8 @@ export function LessonEditorPage({ lessonId, onDone }: { lessonId: number; onDon
 
   useEffect(() => {
     apiFetch(`/api/lessons/lessons/${lessonId}`)
-      .then((response) => response.json())
-      .then((lesson: { title: string; bodyMdx: string }) => {
+      .then((response) => response.json<{ title: string; bodyMdx: string }>())
+      .then((lesson) => {
         setTitle(lesson.title);
         setBodyMdx(lesson.bodyMdx);
       });

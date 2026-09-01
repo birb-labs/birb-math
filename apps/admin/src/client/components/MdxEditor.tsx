@@ -22,8 +22,8 @@ export function MdxEditor({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ mdx: value }),
       })
-        .then((response) => response.json())
-        .then((data: { html: string }) => setHtml(data.html));
+        .then((response) => response.json<{ html: string }>())
+        .then((data) => setHtml(data.html));
     }, PREVIEW_DEBOUNCE_MS);
 
     return () => clearTimeout(timeout);

@@ -24,16 +24,15 @@ export function QuestionEditorPage({ questionId, onDone }: { questionId: number 
 
   useEffect(() => {
     apiFetch('/api/tags')
-      .then((response) => response.json())
+      .then((response) => response.json<TopicNode[]>())
       .then(setTagTree);
   }, []);
 
   useEffect(() => {
     if (questionId === null) return;
     apiFetch(`/api/questions/${questionId}`)
-      .then((response) => response.json())
-      .then(
-        (question: {
+      .then((response) =>
+        response.json<{
           type: QuestionType;
           difficulty: Difficulty;
           promptMdx: string;
@@ -41,7 +40,10 @@ export function QuestionEditorPage({ questionId, onDone }: { questionId: number 
           correctAnswer: string | null;
           options: EditableOption[];
           tagIds: number[];
-        }) => {
+        }>(),
+      )
+      .then(
+        (question) => {
           setType(question.type);
           setDifficulty(question.difficulty);
           setPromptMdx(question.promptMdx);

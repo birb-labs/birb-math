@@ -8,3 +8,4 @@ dist
 content.db*
 apps/site/public/data/
 apps/admin/.dev.vars
+*.tsbuildinfo

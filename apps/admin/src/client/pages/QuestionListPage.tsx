@@ -20,7 +20,7 @@ export function QuestionListPage({
 
   useEffect(() => {
     apiFetch('/api/questions')
-      .then((response) => response.json())
+      .then((response) => response.json<AdminQuestionSummary[]>())
       .then(setQuestionList);
   }, []);
 
