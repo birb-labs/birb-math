@@ -4,6 +4,7 @@ import { authRoutes } from './routes/auth';
 import { exportRoutes } from './routes/export';
 import { lessonsRoutes } from './routes/lessons';
 import { previewRoutes } from './routes/preview';
+import { publishRoutes } from './routes/publish';
 import { questionsRoutes, tagsRoutes } from './routes/questions';
 import { requireSession } from './auth/middleware';
 
@@ -22,6 +23,7 @@ app.use('/api/*', requireSession);
 
 app.route('/api/lessons', lessonsRoutes);
 app.route('/api/preview', previewRoutes);
+app.route('/api/publish', publishRoutes);
 app.route('/api/questions', questionsRoutes);
 app.route('/api/tags', tagsRoutes);
 
