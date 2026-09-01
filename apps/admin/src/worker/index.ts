@@ -3,6 +3,7 @@ import type { Env } from './env';
 import { authRoutes } from './routes/auth';
 import { lessonsRoutes } from './routes/lessons';
 import { previewRoutes } from './routes/preview';
+import { questionsRoutes, tagsRoutes } from './routes/questions';
 import { requireSession } from './auth/middleware';
 
 const app = new Hono<{ Bindings: Env }>();
@@ -16,6 +17,8 @@ app.use('/api/*', requireSession);
 
 app.route('/api/lessons', lessonsRoutes);
 app.route('/api/preview', previewRoutes);
+app.route('/api/questions', questionsRoutes);
+app.route('/api/tags', tagsRoutes);
 
 app.get('*', (c) => c.env.ASSETS.fetch(c.req.raw));
 
