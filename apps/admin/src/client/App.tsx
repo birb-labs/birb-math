@@ -5,6 +5,7 @@ import { ContentTreePage } from './pages/ContentTreePage';
 import { LessonEditorPage } from './pages/LessonEditorPage';
 import { QuestionListPage } from './pages/QuestionListPage';
 import { QuestionEditorPage } from './pages/QuestionEditorPage';
+import { PublishButton } from './components/PublishButton';
 
 type View =
   | { name: 'tree' }
@@ -37,6 +38,7 @@ export function App() {
             modeNames: { light: 'Claro', dark: 'Escuro', system: 'Sistema' },
           }}
         />
+        <PublishButton />
       </nav>
       {view.name === 'tree' && (
         <ContentTreePage onEditLesson={(lessonId) => setView({ name: 'lesson', lessonId })} />
