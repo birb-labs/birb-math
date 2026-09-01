@@ -11,13 +11,19 @@
     "hash-password": "tsx scripts/hash-password.ts"
   },
   "dependencies": {
+    "@birb-math/content-schema": "workspace:*",
+    "@birb-math/theme": "workspace:*",
     "drizzle-orm": "0.45.2",
     "hono": "^4.6.0",
     "katex": "0.18.4",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
-    "@birb-math/content-schema": "workspace:*",
-    "@birb-math/theme": "workspace:*"
+    "rehype-katex": "7.0.1",
+    "rehype-stringify": "^10.0.1",
+    "remark-math": "6.0.0",
+    "remark-parse": "11.0.0",
+    "remark-rehype": "11.1.2",
+    "unified": "11.0.5"
   },
   "devDependencies": {
     "@cloudflare/vite-plugin": "^1.0.0",
@@ -30,8 +36,8 @@
     "@types/react-dom": "^19.2.0",
     "@vitejs/plugin-react": "^5.0.0",
     "jsdom": "^30.0.1",
-    "typescript": "^6.0.2",
     "tsx": "4.19.2",
+    "typescript": "^6.0.2",
     "vite": "^7.0.0",
     "vitest": "^4.1.11",
     "wrangler": "4.127.0"
