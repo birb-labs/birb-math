@@ -1,0 +1,9 @@
+.subtopics {
+  margin-left: 1.5rem;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}

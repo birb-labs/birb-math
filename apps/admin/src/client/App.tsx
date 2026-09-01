@@ -4,6 +4,7 @@ import { LoginPage } from './pages/LoginPage';
 import { ContentTreePage } from './pages/ContentTreePage';
 import { LessonEditorPage } from './pages/LessonEditorPage';
 import { QuestionListPage } from './pages/QuestionListPage';
+import { QuestionEditorPage } from './pages/QuestionEditorPage';
 
 type View =
   | { name: 'tree' }
@@ -49,7 +50,9 @@ export function App() {
           onNewQuestion={() => setView({ name: 'question', questionId: null })}
         />
       )}
-      {view.name === 'question' && <p>Editor de questão (tarefa seguinte). ID: {view.questionId ?? 'nova'}</p>}
+      {view.name === 'question' && (
+        <QuestionEditorPage questionId={view.questionId} onDone={() => setView({ name: 'questions' })} />
+      )}
     </div>
   );
 }

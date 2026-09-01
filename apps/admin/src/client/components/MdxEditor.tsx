@@ -4,7 +4,15 @@ import styles from './MdxEditor.module.css';
 
 const PREVIEW_DEBOUNCE_MS = 300;
 
-export function MdxEditor({ value, onChange }: { value: string; onChange: (value: string) => void }) {
+export function MdxEditor({
+  value,
+  onChange,
+  label,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  label?: string;
+}) {
   const [html, setHtml] = useState('');
 
   useEffect(() => {
@@ -22,10 +30,18 @@ export function MdxEditor({ value, onChange }: { value: string; onChange: (value
   }, [value]);
 
   return (
-    <div className={styles.layout}>
-      <textarea className={styles.textarea} value={value} onChange={(event) => onChange(event.target.value)} />
-      {/* eslint-disable-next-line react/no-danger -- rendered by our own /api/preview endpoint, not third-party input */}
-      <div className={styles.preview} dangerouslySetInnerHTML={{ __html: html }} />
-    </div>
+    <>
+      {label && <label>{label}</label>}
+      <div className={styles.layout}>
+        <textarea
+          className={styles.textarea}
+          aria-label={label}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+        />
+        {/* eslint-disable-next-line react/no-danger -- rendered by our own /api/preview endpoint, not third-party input */}
+        <div className={styles.preview} dangerouslySetInnerHTML={{ __html: html }} />
+      </div>
+    </>
   );
 }
