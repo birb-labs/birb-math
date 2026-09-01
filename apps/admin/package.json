@@ -7,7 +7,8 @@
     "dev": "vite dev",
     "build": "vite build",
     "test": "vitest run --config vitest.config.ts --exclude 'src/client/**' && vitest run --config vitest.client.config.ts",
-    "deploy": "vite build && wrangler deploy",
+    "typecheck": "tsc --noEmit",
+    "deploy": "vite build && wrangler deploy --config dist/client/birb_math_admin/wrangler.json",
     "hash-password": "tsx scripts/hash-password.ts"
   },
   "dependencies": {
