@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { LoginPage } from './pages/LoginPage';
 import { ContentTreePage } from './pages/ContentTreePage';
+import { LessonEditorPage } from './pages/LessonEditorPage';
 
 type View = { name: 'tree' } | { name: 'lesson'; lessonId: number };
 
@@ -16,5 +17,5 @@ export function App() {
     return <ContentTreePage onEditLesson={(lessonId) => setView({ name: 'lesson', lessonId })} />;
   }
 
-  return <p>Editor de lição (tarefa seguinte). ID: {view.lessonId}</p>;
+  return <LessonEditorPage lessonId={view.lessonId} onDone={() => setView({ name: 'tree' })} />;
 }

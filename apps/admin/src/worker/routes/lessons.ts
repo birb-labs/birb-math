@@ -53,6 +53,14 @@ lessonsRoutes.post('/lessons', async (c) => {
   return c.json(row, 201);
 });
 
+lessonsRoutes.get('/lessons/:id', async (c) => {
+  const db = getD1Db(c.env.DB);
+  const id = Number(c.req.param('id'));
+  const row = await db.select().from(lessons).where(eq(lessons.id, id)).get();
+  if (!row) return c.json({ error: 'Not found' }, 404);
+  return c.json(row);
+});
+
 lessonsRoutes.patch('/lessons/:id', async (c) => {
   const db = getD1Db(c.env.DB);
   const id = Number(c.req.param('id'));
