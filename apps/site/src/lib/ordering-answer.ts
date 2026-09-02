@@ -8,6 +8,11 @@ export function parseOrderingAnswer(answer: string | undefined): number[] {
 }
 
 export function isOrderingAnswerCorrect(userAnswer: string | undefined, options: { id: number }[]): boolean {
+  // An ordering question with zero options is never "correctly answered" by
+  // definition — without this guard, an empty `options` and an empty parsed
+  // answer would make `.every(...)` vacuously true below.
+  if (options.length === 0) return false;
+
   const userSequence = parseOrderingAnswer(userAnswer);
   const correctSequence = options.map((option) => option.id);
 

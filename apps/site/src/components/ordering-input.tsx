@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   DndContext,
   KeyboardSensor,
@@ -20,16 +20,8 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import type { ExportedOption } from '@/lib/simulado-selection';
 import { serializeOrderingAnswer } from '@/lib/ordering-answer';
+import { shuffle } from '@/lib/shuffle';
 import styles from './ordering-input.module.css';
-
-function shuffle<T>(items: T[]): T[] {
-  const copy = [...items];
-  for (let i = copy.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [copy[i], copy[j]] = [copy[j], copy[i]];
-  }
-  return copy;
-}
 
 function SortableItem({ id, html }: { id: number; html: string }) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id });
@@ -69,6 +61,17 @@ export function OrderingInput({
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
+
+  // A student who agrees with the initial shuffled order and never drags
+  // anything would otherwise leave the answer `undefined` forever (onChange
+  // is only otherwise called from handleDragEnd), which grades as incorrect
+  // even when that shuffle happened to already be the correct order. Record
+  // it once on mount so an untouched-but-already-correct order is graded
+  // correctly.
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- intentionally mount-only
+  useEffect(() => {
+    onChange(serializeOrderingAnswer(order));
+  }, []);
 
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;

@@ -25,4 +25,12 @@ describe('isOrderingAnswerCorrect', () => {
   it('is incorrect when unanswered', () => {
     expect(isOrderingAnswerCorrect(undefined, options)).toBe(false);
   });
+
+  it('is incorrect for a question with zero options, even with an empty answer (not vacuously true)', () => {
+    // Without an explicit empty-array guard, `[].every(...)` is vacuously
+    // true and both sequences have length 0 for an unanswered question with
+    // no options, which would otherwise grade as "correct".
+    expect(isOrderingAnswerCorrect(undefined, [])).toBe(false);
+    expect(isOrderingAnswerCorrect('', [])).toBe(false);
+  });
 });

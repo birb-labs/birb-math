@@ -67,6 +67,87 @@ const fixtureResult: GradedResult = {
   ],
 };
 
+const newTypesResult: GradedResult = {
+  correctCount: 0,
+  total: 4,
+  perQuestion: [
+    {
+      question: {
+        id: 4,
+        type: 'true_false',
+        difficulty: 'easy',
+        promptHtml: '<p>Q4</p>',
+        options: [],
+        acceptedAnswers: [],
+        matchingPairs: [],
+        correctAnswer: 'true',
+        resolutionHtml: '<p>Resolution 4</p>',
+        tagIds: [],
+      },
+      userAnswer: 'false',
+      isCorrect: false,
+    },
+    {
+      question: {
+        id: 5,
+        type: 'short_text',
+        difficulty: 'medium',
+        promptHtml: '<p>Q5</p>',
+        options: [],
+        acceptedAnswers: [
+          { id: 1, text: 'Teorema do Valor Intermediário' },
+          { id: 2, text: 'TVI' },
+        ],
+        matchingPairs: [],
+        correctAnswer: null,
+        resolutionHtml: '<p>Resolution 5</p>',
+        tagIds: [],
+      },
+      userAnswer: '<b>hacked</b>',
+      isCorrect: false,
+    },
+    {
+      question: {
+        id: 6,
+        type: 'ordering',
+        difficulty: 'medium',
+        promptHtml: '<p>Q6</p>',
+        options: [
+          { id: 60, textHtml: '<p>Fatorar</p>', isCorrect: false },
+          { id: 61, textHtml: '<p>Cancelar</p>', isCorrect: false },
+          { id: 62, textHtml: '<p>Substituir</p>', isCorrect: false },
+        ],
+        acceptedAnswers: [],
+        matchingPairs: [],
+        correctAnswer: null,
+        resolutionHtml: '<p>Resolution 6</p>',
+        tagIds: [],
+      },
+      userAnswer: '61,60,62',
+      isCorrect: false,
+    },
+    {
+      question: {
+        id: 7,
+        type: 'matching',
+        difficulty: 'hard',
+        promptHtml: '<p>Q7</p>',
+        options: [],
+        acceptedAnswers: [],
+        matchingPairs: [
+          { id: 70, leftHtml: '<p>Removível</p>', rightHtml: '<p>Descrição A</p>' },
+          { id: 71, leftHtml: '<p>Salto</p>', rightHtml: '<p>Descrição B</p>' },
+        ],
+        correctAnswer: null,
+        resolutionHtml: '<p>Resolution 7</p>',
+        tagIds: [],
+      },
+      userAnswer: '70:71,71:70',
+      isCorrect: false,
+    },
+  ],
+};
+
 describe('SimuladoResults', () => {
   it('shows the overall score', () => {
     render(
@@ -129,5 +210,64 @@ describe('SimuladoResults', () => {
     expect(answersSection.textContent).toContain('Afirmação A');
     expect(answersSection.textContent).toContain('Afirmação B');
     expect(answersSection.textContent).toContain('Afirmação C');
+  });
+
+  it('translates true_false answers to Verdadeiro/Falso instead of showing the raw literals', () => {
+    render(
+      <NextIntlClientProvider locale="pt-BR" messages={ptBR}>
+        <SimuladoResults result={newTypesResult} locale="pt-BR" onBackToSetup={() => {}} />
+      </NextIntlClientProvider>,
+    );
+
+    const answersSection = screen.getByText('Q4').closest('div')!.parentElement!;
+    expect(answersSection.textContent).toContain('Falso');
+    expect(answersSection.textContent).toContain('Verdadeiro');
+    expect(answersSection.textContent).not.toContain('true');
+    expect(answersSection.textContent).not.toContain('false');
+  });
+
+  it('shows the accepted answers and the user\'s typed text for a short_text question, as plain text', () => {
+    render(
+      <NextIntlClientProvider locale="pt-BR" messages={ptBR}>
+        <SimuladoResults result={newTypesResult} locale="pt-BR" onBackToSetup={() => {}} />
+      </NextIntlClientProvider>,
+    );
+
+    const answersSection = screen.getByText('Q5').closest('div')!.parentElement!;
+    expect(answersSection.textContent).toContain('Teorema do Valor Intermediário / TVI');
+    // The raw, unescaped user-typed text must render as plain text, not HTML
+    // — this is the self-XSS regression guard: no actual <b> element should
+    // exist in the DOM, only its literal source text.
+    expect(answersSection.textContent).toContain('<b>hacked</b>');
+    expect(answersSection.querySelector('b')).toBeNull();
+  });
+
+  it('shows the chosen and correct sequences for an ordering question using option labels, not raw ids', () => {
+    render(
+      <NextIntlClientProvider locale="pt-BR" messages={ptBR}>
+        <SimuladoResults result={newTypesResult} locale="pt-BR" onBackToSetup={() => {}} />
+      </NextIntlClientProvider>,
+    );
+
+    const answersSection = screen.getByText('Q6').closest('div')!.parentElement!;
+    expect(answersSection.textContent).not.toContain('61,60,62');
+    expect(answersSection.textContent).toContain('Cancelar');
+    expect(answersSection.textContent).toContain('Fatorar');
+    expect(answersSection.textContent).toContain('Substituir');
+  });
+
+  it('shows the chosen and correct pairings for a matching question using pair labels, not raw ids', () => {
+    render(
+      <NextIntlClientProvider locale="pt-BR" messages={ptBR}>
+        <SimuladoResults result={newTypesResult} locale="pt-BR" onBackToSetup={() => {}} />
+      </NextIntlClientProvider>,
+    );
+
+    const answersSection = screen.getByText('Q7').closest('div')!.parentElement!;
+    expect(answersSection.textContent).not.toContain('70:71,71:70');
+    expect(answersSection.textContent).toContain('Removível');
+    expect(answersSection.textContent).toContain('Salto');
+    expect(answersSection.textContent).toContain('Descrição A');
+    expect(answersSection.textContent).toContain('Descrição B');
   });
 });

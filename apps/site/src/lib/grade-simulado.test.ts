@@ -203,4 +203,21 @@ describe('gradeSimulado', () => {
     expect(gradeSimulado([question], { 13: '1:1,2:2' }, 'pt-BR').perQuestion[0].isCorrect).toBe(true);
     expect(gradeSimulado([question], { 13: '1:2,2:1' }, 'pt-BR').perQuestion[0].isCorrect).toBe(false);
   });
+
+  it('grades a numeric question explicitly, not as a fallthrough default', () => {
+    // Regression guard for the exhaustiveness fix: numeric grading must
+    // still work when reached via its own explicit `if (question.type ===
+    // 'numeric')` branch rather than an implicit catch-all.
+    const result = gradeSimulado([numericQuestion], { 2: '1' }, 'pt-BR');
+    expect(result.perQuestion[0].isCorrect).toBe(true);
+  });
+
+  it('throws instead of silently misgrading an unrecognized question type', () => {
+    // Simulates a future 8th type added to the exported data without a
+    // corresponding branch in `isAnswerCorrect` — the exhaustiveness check
+    // must fail loudly at runtime for such data, matching what TypeScript
+    // would flag at compile time for a real new union member.
+    const unknownQuestion = { ...numericQuestion, type: 'essay' } as unknown as ExportedQuestion;
+    expect(() => gradeSimulado([unknownQuestion], { 2: 'anything' }, 'pt-BR')).toThrow(/essay/);
+  });
 });

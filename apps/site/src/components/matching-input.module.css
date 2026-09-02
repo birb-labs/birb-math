@@ -12,6 +12,15 @@
   flex: 1;
 }
 
+.rightColumnOver {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex: 1;
+  background: var(--color-muted);
+  border-radius: 0.25rem;
+}
+
 .slot {
   border: 1px dashed var(--color-border);
   border-radius: 0.25rem;

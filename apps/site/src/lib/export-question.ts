@@ -46,6 +46,34 @@ async function compileToHtml(source: string): Promise<string> {
 
 export { isValidNumericCorrectAnswer, assertValidNumericCorrectAnswer } from '@birb-math/content-schema';
 
+/**
+ * Throws a descriptive error if a short_text question has no accepted
+ * answers, so a build fails loudly instead of shipping a question that can
+ * never be marked correct (mirrors `assertValidNumericCorrectAnswer`).
+ */
+export function assertValidShortTextAnswer(question: { id: number; acceptedAnswers: unknown[] }): void {
+  if (question.acceptedAnswers.length < 1) {
+    throw new Error(
+      `Question ${question.id}: short_text questions must have at least 1 accepted answer, ` +
+        `otherwise they can never be answered correctly.`,
+    );
+  }
+}
+
+/**
+ * Throws a descriptive error if a matching question has fewer than 2 pairs,
+ * so a build fails loudly instead of shipping an unanswerable question
+ * (mirrors `assertValidNumericCorrectAnswer`).
+ */
+export function assertValidMatchingPairs(question: { id: number; matchingPairs: unknown[] }): void {
+  if (question.matchingPairs.length < 2) {
+    throw new Error(
+      `Question ${question.id}: matching questions must have at least 2 pairs, ` +
+        `otherwise they are unanswerable.`,
+    );
+  }
+}
+
 export async function compileQuestionForExport(question: QuestionExport): Promise<ExportedQuestion> {
   const promptHtml = await compileToHtml(question.promptMdx);
   const resolutionHtml = await compileToHtml(question.resolutionMdx);

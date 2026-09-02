@@ -3,6 +3,8 @@ import {
   compileQuestionForExport,
   isValidNumericCorrectAnswer,
   assertValidNumericCorrectAnswer,
+  assertValidShortTextAnswer,
+  assertValidMatchingPairs,
 } from './export-question';
 import type { QuestionExport } from '@birb-math/content-schema';
 
@@ -218,5 +220,36 @@ describe('assertValidNumericCorrectAnswer', () => {
 
   it('does not throw for a valid numeric answer', () => {
     expect(() => assertValidNumericCorrectAnswer({ id: 1, correctAnswer: '1.5' })).not.toThrow();
+  });
+});
+
+describe('assertValidShortTextAnswer', () => {
+  it('throws identifying the question id when there are zero accepted answers', () => {
+    expect(() => assertValidShortTextAnswer({ id: 4, acceptedAnswers: [] })).toThrow(/4/);
+  });
+
+  it('does not throw when at least 1 accepted answer is present', () => {
+    expect(() => assertValidShortTextAnswer({ id: 4, acceptedAnswers: [{ id: 1, text: 'TVI' }] })).not.toThrow();
+  });
+});
+
+describe('assertValidMatchingPairs', () => {
+  it('throws identifying the question id when there are fewer than 2 pairs', () => {
+    expect(() => assertValidMatchingPairs({ id: 6, matchingPairs: [] })).toThrow(/6/);
+    expect(() =>
+      assertValidMatchingPairs({ id: 6, matchingPairs: [{ id: 60, leftMdx: 'Cão', rightMdx: 'Late' }] }),
+    ).toThrow(/6/);
+  });
+
+  it('does not throw when there are at least 2 pairs', () => {
+    expect(() =>
+      assertValidMatchingPairs({
+        id: 6,
+        matchingPairs: [
+          { id: 60, leftMdx: 'Cão', rightMdx: 'Late' },
+          { id: 61, leftMdx: 'Gato', rightMdx: 'Mia' },
+        ],
+      }),
+    ).not.toThrow();
   });
 });

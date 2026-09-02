@@ -169,7 +169,11 @@ describe('SimuladoTaking', () => {
 
     await user.click(screen.getAllByRole('radio')[1]);
 
-    expect(onAnswerChange).toHaveBeenCalledExactlyOnceWith(1, '2');
+    // Not `toHaveBeenCalledExactlyOnceWith`: the page's ordering question
+    // (id 6) also calls `onAnswerChange` once on mount to record its
+    // initial shuffled order (see OrderingInput's mount effect), so the
+    // shared callback receives more than this one call.
+    expect(onAnswerChange).toHaveBeenCalledWith(1, '2');
   });
 
   it('calls onAnswerChange with the toggled comma-joined option ids when a checkbox is picked', async () => {
@@ -189,7 +193,11 @@ describe('SimuladoTaking', () => {
 
     await user.click(screen.getAllByRole('checkbox')[2]);
 
-    expect(onAnswerChange).toHaveBeenCalledExactlyOnceWith(3, '30,32');
+    // Not `toHaveBeenCalledExactlyOnceWith`: the page's ordering question
+    // (id 6) also calls `onAnswerChange` once on mount to record its
+    // initial shuffled order (see OrderingInput's mount effect), so the
+    // shared callback receives more than this one call.
+    expect(onAnswerChange).toHaveBeenCalledWith(3, '30,32');
   });
 
   it('shows a "select all that apply" hint only for multiple-response questions', () => {

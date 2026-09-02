@@ -1,5 +1,7 @@
 import {
   lessons,
+  questionAcceptedAnswers,
+  questionMatchingPairs,
   questionOptions,
   questions,
   questionTags,
@@ -19,6 +21,8 @@ interface AdminExport {
   questions: (typeof questions.$inferSelect)[];
   questionOptions: (typeof questionOptions.$inferSelect)[];
   questionTags: (typeof questionTags.$inferSelect)[];
+  questionAcceptedAnswers: (typeof questionAcceptedAnswers.$inferSelect)[];
+  questionMatchingPairs: (typeof questionMatchingPairs.$inferSelect)[];
 }
 
 async function main() {
@@ -52,6 +56,12 @@ async function main() {
   if (data.questions.length > 0) db.insert(questions).values(data.questions).run();
   if (data.questionOptions.length > 0) db.insert(questionOptions).values(data.questionOptions).run();
   if (data.questionTags.length > 0) db.insert(questionTags).values(data.questionTags).run();
+  if (data.questionAcceptedAnswers.length > 0) {
+    db.insert(questionAcceptedAnswers).values(data.questionAcceptedAnswers).run();
+  }
+  if (data.questionMatchingPairs.length > 0) {
+    db.insert(questionMatchingPairs).values(data.questionMatchingPairs).run();
+  }
 
   console.log(
     `Hydrated from admin: ${data.subjects.length} subjects, ${data.lessons.length} lessons, ${data.questions.length} questions.`,

@@ -2,15 +2,7 @@ export type { ExportedAcceptedAnswer, ExportedOption, ExportedMatchingPair, Expo
 
 import type { SimuladoConfig } from '@/components/simulado-setup';
 import type { ExportedQuestion } from './export-question';
-
-function shuffle<T>(items: T[]): T[] {
-  const result = [...items];
-  for (let i = result.length - 1; i > 0; i -= 1) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [result[i], result[j]] = [result[j], result[i]];
-  }
-  return result;
-}
+import { shuffle } from './shuffle';
 
 export function selectQuestions(all: ExportedQuestion[], config: SimuladoConfig): ExportedQuestion[] {
   const filtered = all.filter((question) => {

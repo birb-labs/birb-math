@@ -2,6 +2,8 @@ import { Hono } from 'hono';
 import {
   getD1Db,
   lessons,
+  questionAcceptedAnswers,
+  questionMatchingPairs,
   questionOptions,
   questions,
   questionTags,
@@ -30,5 +32,7 @@ exportRoutes.get('/', async (c) => {
     questions: await db.select().from(questions).all(),
     questionOptions: await db.select().from(questionOptions).all(),
     questionTags: await db.select().from(questionTags).all(),
+    questionAcceptedAnswers: await db.select().from(questionAcceptedAnswers).all(),
+    questionMatchingPairs: await db.select().from(questionMatchingPairs).all(),
   });
 });

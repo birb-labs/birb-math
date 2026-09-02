@@ -52,31 +52,40 @@ function isAnswerCorrect(question: ExportedQuestion, userAnswer: string | undefi
     return isMatchingAnswerCorrect(userAnswer, question.matchingPairs);
   }
 
-  if (question.correctAnswer === null) return false;
+  if (question.type === 'numeric') {
+    if (question.correctAnswer === null) return false;
 
-  // `question.correctAnswer` is already stored in canonical form (dot-decimal, no
-  // thousands separators) — it is authored data, not locale-formatted user input. It must
-  // NOT be run back through `normalizeNumericAnswer(_, locale)`: for a locale whose group
-  // separator is "." (e.g. pt-BR), doing so would misinterpret the canonical decimal dot
-  // as a thousands separator and strip it (turning "1.5" into "15"). Only the user's own
-  // typed answer needs locale-aware normalization to convert it into canonical form.
-  const normalizedUser = normalizeNumericAnswer(userAnswer, locale);
-  if (normalizedUser === '') return false;
+    // `question.correctAnswer` is already stored in canonical form (dot-decimal, no
+    // thousands separators) — it is authored data, not locale-formatted user input. It must
+    // NOT be run back through `normalizeNumericAnswer(_, locale)`: for a locale whose group
+    // separator is "." (e.g. pt-BR), doing so would misinterpret the canonical decimal dot
+    // as a thousands separator and strip it (turning "1.5" into "15"). Only the user's own
+    // typed answer needs locale-aware normalization to convert it into canonical form.
+    const normalizedUser = normalizeNumericAnswer(userAnswer, locale);
+    if (normalizedUser === '') return false;
 
-  const canonicalCorrect = question.correctAnswer.trim().toLowerCase();
-  if (normalizedUser === canonicalCorrect) return true;
+    const canonicalCorrect = question.correctAnswer.trim().toLowerCase();
+    if (normalizedUser === canonicalCorrect) return true;
 
-  // Normalization converts locale formatting (decimal/group separators) but does not
-  // canonicalize numeric value (e.g. "1.0" vs "1" stay distinct strings). Fall back to
-  // exact numeric equality (no tolerance/epsilon) so equivalent values still match; this
-  // only applies when both sides actually parse as numbers, so symbolic answers (e.g.
-  // "não existe", "∞") still rely purely on the string comparison above. Note: a blank
-  // answer is rejected above, since Number('') is 0, not NaN, and would otherwise match
-  // a correctAnswer of "0".
-  const userValue = Number(normalizedUser);
-  const correctValue = Number(canonicalCorrect);
-  if (Number.isNaN(userValue) || Number.isNaN(correctValue)) return false;
-  return userValue === correctValue;
+    // Normalization converts locale formatting (decimal/group separators) but does not
+    // canonicalize numeric value (e.g. "1.0" vs "1" stay distinct strings). Fall back to
+    // exact numeric equality (no tolerance/epsilon) so equivalent values still match; this
+    // only applies when both sides actually parse as numbers, so symbolic answers (e.g.
+    // "não existe", "∞") still rely purely on the string comparison above. Note: a blank
+    // answer is rejected above, since Number('') is 0, not NaN, and would otherwise match
+    // a correctAnswer of "0".
+    const userValue = Number(normalizedUser);
+    const correctValue = Number(canonicalCorrect);
+    if (Number.isNaN(userValue) || Number.isNaN(correctValue)) return false;
+    return userValue === correctValue;
+  }
+
+  // Exhaustiveness check: if a future question type is added to
+  // `ExportedQuestion['type']` without a corresponding branch above, this
+  // assignment fails to typecheck (rather than silently falling through and
+  // being graded as if it were numeric).
+  const exhaustiveCheck: never = question.type;
+  throw new Error(`Unhandled question type in isAnswerCorrect: ${exhaustiveCheck}`);
 }
 
 export function gradeSimulado(

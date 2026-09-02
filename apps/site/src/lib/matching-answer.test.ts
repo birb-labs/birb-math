@@ -31,4 +31,12 @@ describe('isMatchingAnswerCorrect', () => {
   it('is incorrect when unanswered', () => {
     expect(isMatchingAnswerCorrect(undefined, pairs)).toBe(false);
   });
+
+  it('is incorrect for a question with zero pairs, even with an empty answer (not vacuously true)', () => {
+    // Without an explicit empty-array guard, `[].every(...)` is vacuously
+    // true and `Object.keys({}).length === 0` both hold for an unanswered
+    // question with no pairs, which would otherwise grade as "correct".
+    expect(isMatchingAnswerCorrect(undefined, [])).toBe(false);
+    expect(isMatchingAnswerCorrect('', [])).toBe(false);
+  });
 });
