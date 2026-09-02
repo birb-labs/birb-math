@@ -127,4 +127,39 @@ describe('QuestionEditorPage', () => {
     expect(body.acceptedAnswers).toEqual([]);
     expect(body.matchingPairs).toEqual([]);
   });
+
+  it('creates a new matching question via POST', async () => {
+    const fetchSpy = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(new Response(JSON.stringify([]), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ html: '<p></p>' }), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ html: '<p></p>' }), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ id: 13 }), { status: 201 }));
+
+    const onDone = vi.fn();
+    const user = userEvent.setup();
+
+    render(<QuestionEditorPage questionId={null} onDone={onDone} />);
+
+    await user.selectOptions(await screen.findByLabelText('Tipo'), 'matching');
+    await user.type(screen.getByLabelText('Enunciado'), 'Associe.');
+    await user.type(screen.getByLabelText('Resolução'), 'Ver resolução.');
+    await user.type(screen.getByLabelText('Esquerda 1'), 'Cão');
+    await user.type(screen.getByLabelText('Direita 1'), 'Late');
+    await user.type(screen.getByLabelText('Esquerda 2'), 'Gato');
+    await user.type(screen.getByLabelText('Direita 2'), 'Mia');
+    await user.click(screen.getByRole('button', { name: 'Salvar' }));
+
+    expect(onDone).toHaveBeenCalledOnce();
+    const postCall = fetchSpy.mock.calls.find(
+      ([url, init]) => url === '/api/questions' && (init as RequestInit)?.method === 'POST',
+    );
+    const body = JSON.parse((postCall![1] as RequestInit).body as string);
+    expect(body.matchingPairs).toEqual([
+      { leftMdx: 'Cão', rightMdx: 'Late' },
+      { leftMdx: 'Gato', rightMdx: 'Mia' },
+    ]);
+    expect(body.options).toEqual([]);
+    expect(body.acceptedAnswers).toEqual([]);
+  });
 });

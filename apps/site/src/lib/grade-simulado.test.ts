@@ -182,4 +182,25 @@ describe('gradeSimulado', () => {
     expect(gradeSimulado([question], { 12: '100,101,102' }, 'pt-BR').perQuestion[0].isCorrect).toBe(true);
     expect(gradeSimulado([question], { 12: '101,100,102' }, 'pt-BR').perQuestion[0].isCorrect).toBe(false);
   });
+
+  it('grades a matching question by exact leftId=rightId pairing', () => {
+    const question: ExportedQuestion = {
+      id: 13,
+      type: 'matching',
+      difficulty: 'hard',
+      promptHtml: '<p>P?</p>',
+      options: [],
+      acceptedAnswers: [],
+      matchingPairs: [
+        { id: 1, leftHtml: '<p>Removível</p>', rightHtml: '<p>Descrição A</p>' },
+        { id: 2, leftHtml: '<p>Salto</p>', rightHtml: '<p>Descrição B</p>' },
+      ],
+      correctAnswer: null,
+      resolutionHtml: '<p>R.</p>',
+      tagIds: [],
+    };
+
+    expect(gradeSimulado([question], { 13: '1:1,2:2' }, 'pt-BR').perQuestion[0].isCorrect).toBe(true);
+    expect(gradeSimulado([question], { 13: '1:2,2:1' }, 'pt-BR').perQuestion[0].isCorrect).toBe(false);
+  });
 });

@@ -3,6 +3,7 @@ import { parseSelectedOptionIds } from './multi-response-answer';
 import { isTrueFalseAnswerCorrect } from './true-false-answer';
 import { isAcceptedShortTextAnswer } from './short-text-answer';
 import { isOrderingAnswerCorrect } from './ordering-answer';
+import { isMatchingAnswerCorrect } from './matching-answer';
 import type { ExportedQuestion } from './simulado-selection';
 
 export interface GradedQuestionResult {
@@ -45,6 +46,10 @@ function isAnswerCorrect(question: ExportedQuestion, userAnswer: string | undefi
 
   if (question.type === 'ordering') {
     return isOrderingAnswerCorrect(userAnswer, question.options);
+  }
+
+  if (question.type === 'matching') {
+    return isMatchingAnswerCorrect(userAnswer, question.matchingPairs);
   }
 
   if (question.correctAnswer === null) return false;

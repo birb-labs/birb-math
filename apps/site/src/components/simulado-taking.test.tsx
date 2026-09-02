@@ -93,6 +93,21 @@ const fixtureQuestions: ExportedQuestion[] = [
     resolutionHtml: '<p>Ver resolução.</p>',
     tagIds: [],
   },
+  {
+    id: 7,
+    type: 'matching',
+    difficulty: 'hard',
+    promptHtml: '<p>Associe cada tipo de descontinuidade à sua descrição.</p>',
+    options: [],
+    acceptedAnswers: [],
+    matchingPairs: [
+      { id: 70, leftHtml: '<p>Removível</p>', rightHtml: '<p>Descrição A</p>' },
+      { id: 71, leftHtml: '<p>Salto</p>', rightHtml: '<p>Descrição B</p>' },
+    ],
+    correctAnswer: null,
+    resolutionHtml: '<p>Ver resolução.</p>',
+    tagIds: [],
+  },
 ];
 
 describe('SimuladoTaking', () => {
@@ -198,6 +213,20 @@ describe('SimuladoTaking', () => {
     expect(screen.getByText('Fatorar')).toBeInTheDocument();
     expect(screen.getByText('Cancelar')).toBeInTheDocument();
     expect(screen.getByText('Substituir')).toBeInTheDocument();
+  });
+
+  it('renders a matching question with all left and right items', () => {
+    render(
+      <NextIntlClientProvider locale="pt-BR" messages={ptBR}>
+        <SimuladoTaking questions={fixtureQuestions} answers={{}} onAnswerChange={() => {}} onFinish={() => {}} />
+      </NextIntlClientProvider>,
+    );
+
+    expect(screen.getByText('Associe cada tipo de descontinuidade à sua descrição.')).toBeInTheDocument();
+    expect(screen.getByText('Removível')).toBeInTheDocument();
+    expect(screen.getByText('Salto')).toBeInTheDocument();
+    expect(screen.getByText('Descrição A')).toBeInTheDocument();
+    expect(screen.getByText('Descrição B')).toBeInTheDocument();
   });
 
   it('calls onFinish when the finish button is clicked', async () => {

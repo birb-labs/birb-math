@@ -4,6 +4,7 @@ import { MdxEditor } from '../components/MdxEditor';
 import { OptionsEditor, type EditableOption } from '../components/OptionsEditor';
 import { OrderingItemsEditor } from '../components/OrderingItemsEditor';
 import { AcceptedAnswersEditor } from '../components/AcceptedAnswersEditor';
+import { MatchingPairsEditor, type EditableMatchingPair } from '../components/MatchingPairsEditor';
 import { TagPicker, type TopicNode } from '../components/TagPicker';
 import styles from './QuestionEditorPage.module.css';
 
@@ -28,7 +29,7 @@ export function QuestionEditorPage({ questionId, onDone }: { questionId: number 
     { textMdx: '', isCorrect: false },
   ]);
   const [acceptedAnswers, setAcceptedAnswers] = useState<string[]>(['']);
-  const [matchingPairs, setMatchingPairs] = useState<{ leftMdx: string; rightMdx: string }[]>([
+  const [matchingPairs, setMatchingPairs] = useState<EditableMatchingPair[]>([
     { leftMdx: '', rightMdx: '' },
     { leftMdx: '', rightMdx: '' },
   ]);
@@ -54,7 +55,7 @@ export function QuestionEditorPage({ questionId, onDone }: { questionId: number 
           correctAnswer: string | null;
           options: EditableOption[];
           acceptedAnswers: { text: string }[];
-          matchingPairs: { leftMdx: string; rightMdx: string }[];
+          matchingPairs: EditableMatchingPair[];
           tagIds: number[];
         }>(),
       )
@@ -173,6 +174,8 @@ export function QuestionEditorPage({ questionId, onDone }: { questionId: number 
       )}
 
       {type === 'short_text' && <AcceptedAnswersEditor answers={acceptedAnswers} onChange={setAcceptedAnswers} />}
+
+      {type === 'matching' && <MatchingPairsEditor pairs={matchingPairs} onChange={setMatchingPairs} />}
 
       <TagPicker tagTree={tagTree} selectedTagIds={selectedTagIds} onChange={setSelectedTagIds} />
 

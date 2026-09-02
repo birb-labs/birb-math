@@ -1,0 +1,41 @@
+.columns {
+  display: flex;
+  gap: 2rem;
+  max-width: 32rem;
+}
+
+.leftColumn,
+.rightColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.slot {
+  border: 1px dashed var(--color-border);
+  border-radius: 0.25rem;
+  padding: 0.5rem;
+  min-height: 3rem;
+}
+
+.slotOver {
+  border: 1px dashed var(--color-accent);
+  border-radius: 0.25rem;
+  padding: 0.5rem;
+  min-height: 3rem;
+  background: var(--color-muted);
+}
+
+.dropZone {
+  margin-top: 0.5rem;
+  min-height: 1.5rem;
+}
+
+.draggable {
+  border: 1px solid var(--color-border);
+  border-radius: 0.25rem;
+  padding: 0.5rem;
+  background: var(--color-background);
+  cursor: grab;
+}
