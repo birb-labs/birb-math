@@ -1,6 +1,7 @@
 import type { ReactElement } from 'react';
 import { evaluate } from 'next-mdx-remote-client/rsc';
 import remarkMath from 'remark-math';
+import remarkGfm from 'remark-gfm';
 import rehypeKatex from 'rehype-katex';
 
 /**
@@ -19,7 +20,7 @@ export async function compileLessonMdx(source: string): Promise<ReactElement> {
     source,
     options: {
       mdxOptions: {
-        remarkPlugins: [remarkMath],
+        remarkPlugins: [remarkGfm, remarkMath],
         rehypePlugins: [rehypeKatex],
       },
     },

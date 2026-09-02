@@ -21,4 +21,13 @@ describe('compileLessonMdx', () => {
   it('rejects malformed MDX with a thrown error rather than silently producing empty output', async () => {
     await expect(compileLessonMdx('<Unclosed')).rejects.toThrow();
   });
+
+  it('compiles GFM (pipe) tables into real HTML tables', async () => {
+    const element = await compileLessonMdx('| a | b |\n|---|---|\n| 1 | 2 |\n');
+    const html = renderToStaticMarkup(element);
+
+    expect(html).toContain('<table>');
+    expect(html).toContain('<td>1</td>');
+    expect(html).toContain('<td>2</td>');
+  });
 });

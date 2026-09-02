@@ -31,4 +31,18 @@ describe('POST /api/preview', () => {
     const { html } = await response.json<{ html: string }>();
     expect(html).toContain('class="katex"');
   });
+
+  it('compiles GFM (pipe) tables into real HTML tables', async () => {
+    const cookie = await login();
+    const response = await SELF.fetch('https://admin.test/api/preview', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Cookie: cookie },
+      body: JSON.stringify({ mdx: '| a | b |\n|---|---|\n| 1 | 2 |\n' }),
+    });
+
+    expect(response.status).toBe(200);
+    const { html } = await response.json<{ html: string }>();
+    expect(html).toContain('<table>');
+    expect(html).toContain('<td>1</td>');
+  });
 });
