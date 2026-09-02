@@ -50,6 +50,18 @@ const fixtureQuestions: ExportedQuestion[] = [
     resolutionHtml: '<p>A e C.</p>',
     tagIds: [],
   },
+  {
+    id: 4,
+    type: 'true_false',
+    difficulty: 'easy',
+    promptHtml: '<p>O céu é azul?</p>',
+    options: [],
+    acceptedAnswers: [],
+    matchingPairs: [],
+    correctAnswer: 'true',
+    resolutionHtml: '<p>Sim.</p>',
+    tagIds: [],
+  },
 ];
 
 describe('SimuladoTaking', () => {
@@ -63,9 +75,21 @@ describe('SimuladoTaking', () => {
     expect(screen.getByText('Quanto é 1+1?')).toBeInTheDocument();
     expect(screen.getByText('Calcule o limite.')).toBeInTheDocument();
     expect(screen.getByText('Quais são verdadeiras?')).toBeInTheDocument();
-    expect(screen.getAllByRole('radio')).toHaveLength(2);
+    expect(screen.getAllByRole('radio')).toHaveLength(4);
     expect(screen.getAllByRole('checkbox')).toHaveLength(3);
     expect(screen.getByRole('textbox')).toBeInTheDocument();
+  });
+
+  it('renders a true_false question with Verdadeiro/Falso radios', () => {
+    render(
+      <NextIntlClientProvider locale="pt-BR" messages={ptBR}>
+        <SimuladoTaking questions={fixtureQuestions} answers={{}} onAnswerChange={() => {}} onFinish={() => {}} />
+      </NextIntlClientProvider>,
+    );
+
+    expect(screen.getByText('O céu é azul?')).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: 'Verdadeiro' })).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: 'Falso' })).toBeInTheDocument();
   });
 
   it('calls onAnswerChange with the question id and selected option when a radio is picked', async () => {

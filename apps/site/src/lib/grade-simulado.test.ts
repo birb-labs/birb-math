@@ -115,4 +115,25 @@ describe('gradeSimulado', () => {
     const result = gradeSimulado([multiResponseQuestion], { 5: '' }, 'pt-BR');
     expect(result.perQuestion[0].isCorrect).toBe(false);
   });
+
+  it('grades a true_false question by exact string match', () => {
+    const question: ExportedQuestion = {
+      id: 10,
+      type: 'true_false',
+      difficulty: 'easy',
+      promptHtml: '<p>P?</p>',
+      options: [],
+      acceptedAnswers: [],
+      matchingPairs: [],
+      correctAnswer: 'true',
+      resolutionHtml: '<p>R.</p>',
+      tagIds: [],
+    };
+
+    const result = gradeSimulado([question], { 10: 'true' }, 'pt-BR');
+    expect(result.perQuestion[0].isCorrect).toBe(true);
+
+    const wrongResult = gradeSimulado([question], { 10: 'false' }, 'pt-BR');
+    expect(wrongResult.perQuestion[0].isCorrect).toBe(false);
+  });
 });

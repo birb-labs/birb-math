@@ -57,7 +57,9 @@
     },
     "taking": {
       "selectAllThatApply": "Selecciona todas las opciones correctas",
-      "finish": "Finalizar simulacro"
+      "finish": "Finalizar simulacro",
+      "true": "Verdadero",
+      "false": "Falso"
     },
     "results": {
       "score": "Acertaste {correct} de {total} preguntas",

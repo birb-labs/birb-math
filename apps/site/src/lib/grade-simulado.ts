@@ -1,5 +1,6 @@
 import { normalizeNumericAnswer } from './numeric-answer';
 import { parseSelectedOptionIds } from './multi-response-answer';
+import { isTrueFalseAnswerCorrect } from './true-false-answer';
 import type { ExportedQuestion } from './simulado-selection';
 
 export interface GradedQuestionResult {
@@ -27,6 +28,10 @@ function isAnswerCorrect(question: ExportedQuestion, userAnswer: string | undefi
     const correctIds = question.options.filter((option) => option.isCorrect).map((option) => option.id);
     // All-or-nothing: the selected set must match the correct set exactly.
     return selectedIds.size === correctIds.length && correctIds.every((id) => selectedIds.has(id));
+  }
+
+  if (question.type === 'true_false') {
+    return question.correctAnswer !== null && isTrueFalseAnswerCorrect(userAnswer, question.correctAnswer);
   }
 
   if (question.correctAnswer === null) return false;

@@ -5,7 +5,14 @@ import { OptionsEditor, type EditableOption } from '../components/OptionsEditor'
 import { TagPicker, type TopicNode } from '../components/TagPicker';
 import styles from './QuestionEditorPage.module.css';
 
-type QuestionType = 'multiple_choice' | 'multiple_response' | 'numeric';
+type QuestionType =
+  | 'multiple_choice'
+  | 'multiple_response'
+  | 'numeric'
+  | 'true_false'
+  | 'short_text'
+  | 'ordering'
+  | 'matching';
 type Difficulty = 'easy' | 'medium' | 'hard';
 
 export function QuestionEditorPage({ questionId, onDone }: { questionId: number | null; onDone: () => void }) {
@@ -17,6 +24,11 @@ export function QuestionEditorPage({ questionId, onDone }: { questionId: number 
   const [options, setOptions] = useState<EditableOption[]>([
     { textMdx: '', isCorrect: false },
     { textMdx: '', isCorrect: false },
+  ]);
+  const [acceptedAnswers, setAcceptedAnswers] = useState<string[]>(['']);
+  const [matchingPairs, setMatchingPairs] = useState<{ leftMdx: string; rightMdx: string }[]>([
+    { leftMdx: '', rightMdx: '' },
+    { leftMdx: '', rightMdx: '' },
   ]);
   const [tagTree, setTagTree] = useState<TopicNode[]>([]);
   const [selectedTagIds, setSelectedTagIds] = useState<number[]>([]);
@@ -39,6 +51,8 @@ export function QuestionEditorPage({ questionId, onDone }: { questionId: number 
           resolutionMdx: string;
           correctAnswer: string | null;
           options: EditableOption[];
+          acceptedAnswers: { text: string }[];
+          matchingPairs: { leftMdx: string; rightMdx: string }[];
           tagIds: number[];
         }>(),
       )
@@ -50,6 +64,8 @@ export function QuestionEditorPage({ questionId, onDone }: { questionId: number 
           setResolutionMdx(question.resolutionMdx);
           setCorrectAnswer(question.correctAnswer ?? '');
           setOptions(question.options);
+          setAcceptedAnswers(question.acceptedAnswers.map((a) => a.text));
+          setMatchingPairs(question.matchingPairs);
           setSelectedTagIds(question.tagIds);
         },
       );
@@ -62,8 +78,10 @@ export function QuestionEditorPage({ questionId, onDone }: { questionId: number 
       difficulty,
       promptMdx,
       resolutionMdx,
-      correctAnswer: type === 'numeric' ? correctAnswer : null,
-      options: type === 'numeric' ? [] : options,
+      correctAnswer: type === 'numeric' || type === 'true_false' ? correctAnswer : null,
+      options: type === 'multiple_choice' || type === 'multiple_response' || type === 'ordering' ? options : [],
+      acceptedAnswers: type === 'short_text' ? acceptedAnswers : [],
+      matchingPairs: type === 'matching' ? matchingPairs : [],
       tagIds: selectedTagIds,
     };
 
@@ -101,6 +119,10 @@ export function QuestionEditorPage({ questionId, onDone }: { questionId: number 
         <option value="multiple_choice">Múltipla escolha (uma correta)</option>
         <option value="multiple_response">Múltipla resposta (várias corretas)</option>
         <option value="numeric">Numérica</option>
+        <option value="true_false">Verdadeiro ou falso</option>
+        <option value="short_text">Texto curto</option>
+        <option value="ordering">Ordenação</option>
+        <option value="matching">Associação</option>
       </select>
 
       <label htmlFor="difficulty">Dificuldade</label>
@@ -117,17 +139,32 @@ export function QuestionEditorPage({ questionId, onDone }: { questionId: number 
 
       <MdxEditor label="Enunciado" value={promptMdx} onChange={setPromptMdx} />
 
-      {type !== 'numeric' && <OptionsEditor type={type} options={options} onChange={setOptions} />}
+      {(type === 'multiple_choice' || type === 'multiple_response') && (
+        <OptionsEditor type={type} options={options} onChange={setOptions} />
+      )}
 
-      {type === 'numeric' && (
+      {(type === 'numeric' || type === 'true_false') && (
         <>
           <label htmlFor="correct-answer">Resposta correta</label>
-          <input
-            id="correct-answer"
-            className={styles.textInput}
-            value={correctAnswer}
-            onChange={(event) => setCorrectAnswer(event.target.value)}
-          />
+          {type === 'true_false' ? (
+            <select
+              id="correct-answer"
+              className={styles.select}
+              value={correctAnswer}
+              onChange={(event) => setCorrectAnswer(event.target.value)}
+            >
+              <option value="">Selecione...</option>
+              <option value="true">Verdadeiro</option>
+              <option value="false">Falso</option>
+            </select>
+          ) : (
+            <input
+              id="correct-answer"
+              className={styles.textInput}
+              value={correctAnswer}
+              onChange={(event) => setCorrectAnswer(event.target.value)}
+            />
+          )}
         </>
       )}
 

@@ -1,0 +1,11 @@
+.row {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}

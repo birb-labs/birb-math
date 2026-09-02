@@ -39,4 +39,34 @@ describe('QuestionEditorPage', () => {
     );
     expect(postCall).toBeDefined();
   });
+
+  it('creates a new true_false question via POST', async () => {
+    const fetchSpy = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(new Response(JSON.stringify([]), { status: 200 })) // GET /api/tags
+      .mockResolvedValueOnce(new Response(JSON.stringify({ html: '<p></p>' }), { status: 200 })) // preview (prompt)
+      .mockResolvedValueOnce(new Response(JSON.stringify({ html: '<p></p>' }), { status: 200 })) // preview (resolution)
+      .mockResolvedValueOnce(new Response(JSON.stringify({ id: 10 }), { status: 201 })); // POST /api/questions
+
+    const onDone = vi.fn();
+    const user = userEvent.setup();
+
+    render(<QuestionEditorPage questionId={null} onDone={onDone} />);
+
+    await user.selectOptions(await screen.findByLabelText('Tipo'), 'true_false');
+    await user.type(screen.getByLabelText('Enunciado'), 'O céu é azul?');
+    await user.type(screen.getByLabelText('Resolução'), 'Sim.');
+    await user.selectOptions(screen.getByLabelText('Resposta correta'), 'true');
+    await user.click(screen.getByRole('button', { name: 'Salvar' }));
+
+    expect(onDone).toHaveBeenCalledOnce();
+    const postCall = fetchSpy.mock.calls.find(
+      ([url, init]) => url === '/api/questions' && (init as RequestInit)?.method === 'POST',
+    );
+    expect(postCall).toBeDefined();
+    const body = JSON.parse((postCall![1] as RequestInit).body as string);
+    expect(body.correctAnswer).toBe('true');
+    expect(body.acceptedAnswers).toEqual([]);
+    expect(body.matchingPairs).toEqual([]);
+  });
 });

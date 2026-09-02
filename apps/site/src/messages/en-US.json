@@ -57,7 +57,9 @@
     },
     "taking": {
       "selectAllThatApply": "Select all that apply",
-      "finish": "Finish practice test"
+      "finish": "Finish practice test",
+      "true": "True",
+      "false": "False"
     },
     "results": {
       "score": "You got {correct} of {total} questions right",

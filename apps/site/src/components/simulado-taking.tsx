@@ -4,6 +4,7 @@ import { useTranslations } from 'next-intl';
 import type { ExportedQuestion } from '@/lib/simulado-selection';
 import { parseSelectedOptionIds, toggleOptionId } from '@/lib/multi-response-answer';
 import { NumericAnswerInput } from './numeric-answer-input';
+import { TrueFalseInput } from './true-false-input';
 import styles from './simulado-taking.module.css';
 
 export function SimuladoTaking({
@@ -71,6 +72,14 @@ export function SimuladoTaking({
           {question.type === 'numeric' && (
             <NumericAnswerInput
               value={answers[question.id] ?? ''}
+              onChange={(value) => onAnswerChange(question.id, value)}
+            />
+          )}
+
+          {question.type === 'true_false' && (
+            <TrueFalseInput
+              questionId={question.id}
+              value={answers[question.id]}
               onChange={(value) => onAnswerChange(question.id, value)}
             />
           )}
