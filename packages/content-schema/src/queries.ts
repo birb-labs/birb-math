@@ -1,7 +1,18 @@
 import { eq } from 'drizzle-orm';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import type { DrizzleD1Database } from 'drizzle-orm/d1';
-import { lessons, questionOptions, questions, questionTags, sections, subjects, tags, topics } from './schema';
+import {
+  lessons,
+  questionAcceptedAnswers,
+  questionMatchingPairs,
+  questionOptions,
+  questions,
+  questionTags,
+  sections,
+  subjects,
+  tags,
+  topics,
+} from './schema';
 
 type Db = BetterSQLite3Database<Record<string, unknown>> | DrizzleD1Database<Record<string, unknown>>;
 
@@ -136,6 +147,17 @@ export interface QuestionOptionExport {
   isCorrect: boolean;
 }
 
+export interface QuestionAcceptedAnswerExport {
+  id: number;
+  text: string;
+}
+
+export interface QuestionMatchingPairExport {
+  id: number;
+  leftMdx: string;
+  rightMdx: string;
+}
+
 export interface QuestionExport {
   id: number;
   type:
@@ -151,6 +173,8 @@ export interface QuestionExport {
   resolutionMdx: string;
   correctAnswer: string | null;
   options: QuestionOptionExport[];
+  acceptedAnswers: QuestionAcceptedAnswerExport[];
+  matchingPairs: QuestionMatchingPairExport[];
   tagIds: number[];
 }
 
@@ -158,6 +182,12 @@ export async function getQuestionsForExport(db: Db): Promise<QuestionExport[]> {
   const typedDb = db as BetterSQLite3Database<Record<string, unknown>>;
   const allQuestions = await typedDb.select().from(questions).all();
   const allOptions = await typedDb.select().from(questionOptions).orderBy(questionOptions.order).all();
+  const allAcceptedAnswers = await typedDb.select().from(questionAcceptedAnswers).all();
+  const allMatchingPairs = await typedDb
+    .select()
+    .from(questionMatchingPairs)
+    .orderBy(questionMatchingPairs.order)
+    .all();
   const allQuestionTags = await typedDb.select().from(questionTags).all();
 
   return allQuestions.map((question) => ({
@@ -170,6 +200,12 @@ export async function getQuestionsForExport(db: Db): Promise<QuestionExport[]> {
     options: allOptions
       .filter((option) => option.questionId === question.id)
       .map((option) => ({ id: option.id, textMdx: option.textMdx, isCorrect: option.isCorrect })),
+    acceptedAnswers: allAcceptedAnswers
+      .filter((answer) => answer.questionId === question.id)
+      .map((answer) => ({ id: answer.id, text: answer.text })),
+    matchingPairs: allMatchingPairs
+      .filter((pair) => pair.questionId === question.id)
+      .map((pair) => ({ id: pair.id, leftMdx: pair.leftMdx, rightMdx: pair.rightMdx })),
     tagIds: allQuestionTags
       .filter((questionTag) => questionTag.questionId === question.id)
       .map((questionTag) => questionTag.tagId),

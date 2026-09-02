@@ -118,6 +118,74 @@ function seedFixture(db: TestDb) {
     .run();
 
   db.insert(schema.questionTags).values({ questionId: multiResponseQuestion.id, tagId: topicTag.id }).run();
+
+  db.insert(schema.questions)
+    .values({
+      type: 'true_false',
+      difficulty: 'easy',
+      promptMdx: 'O limite de uma função constante é sempre ela mesma?',
+      resolutionMdx: 'Sim, $\\lim_{x \\to a} c = c$.',
+      correctAnswer: 'true',
+    })
+    .run();
+  const trueFalseQuestion = db.select().from(schema.questions).all()[3];
+
+  db.insert(schema.questionTags).values({ questionId: trueFalseQuestion.id, tagId: topicTag.id }).run();
+
+  db.insert(schema.questions)
+    .values({
+      type: 'short_text',
+      difficulty: 'medium',
+      promptMdx: 'Como se chama o teorema que garante uma raiz entre dois pontos de sinais opostos?',
+      resolutionMdx: 'Teorema do Valor Intermediário.',
+      correctAnswer: null,
+    })
+    .run();
+  const shortTextQuestion = db.select().from(schema.questions).all()[4];
+
+  db.insert(schema.questionAcceptedAnswers)
+    .values([
+      { questionId: shortTextQuestion.id, text: 'Teorema do Valor Intermediário' },
+      { questionId: shortTextQuestion.id, text: 'TVI' },
+    ])
+    .run();
+
+  db.insert(schema.questions)
+    .values({
+      type: 'ordering',
+      difficulty: 'medium',
+      promptMdx: 'Ordene os passos para calcular $\\lim_{x\\to 3}\\frac{x^2-9}{x-3}$.',
+      resolutionMdx: 'Fatorar, cancelar, substituir.',
+      correctAnswer: null,
+    })
+    .run();
+  const orderingQuestion = db.select().from(schema.questions).all()[5];
+
+  db.insert(schema.questionOptions)
+    .values([
+      { questionId: orderingQuestion.id, textMdx: 'Fatorar o numerador', isCorrect: false, order: 1 },
+      { questionId: orderingQuestion.id, textMdx: 'Cancelar o fator comum', isCorrect: false, order: 2 },
+      { questionId: orderingQuestion.id, textMdx: 'Substituir $x=3$', isCorrect: false, order: 3 },
+    ])
+    .run();
+
+  db.insert(schema.questions)
+    .values({
+      type: 'matching',
+      difficulty: 'hard',
+      promptMdx: 'Associe cada tipo de descontinuidade à sua descrição.',
+      resolutionMdx: 'Ver Lição 5.1.',
+      correctAnswer: null,
+    })
+    .run();
+  const matchingQuestion = db.select().from(schema.questions).all()[6];
+
+  db.insert(schema.questionMatchingPairs)
+    .values([
+      { questionId: matchingQuestion.id, leftMdx: 'Removível', rightMdx: 'O limite existe mas difere de $f(a)$', order: 1 },
+      { questionId: matchingQuestion.id, leftMdx: 'Salto', rightMdx: 'Os limites laterais existem mas discordam', order: 2 },
+    ])
+    .run();
 }
 
 describe('content-schema queries', () => {
@@ -181,7 +249,7 @@ describe('content-schema queries', () => {
   it('getQuestionsForExport returns every question with its options and tags', async () => {
     const exported = await getQuestionsForExport(db);
 
-    expect(exported).toHaveLength(3);
+    expect(exported).toHaveLength(7);
 
     const mc = exported.find((q) => q.type === 'multiple_choice')!;
     expect(mc).toBeDefined();
@@ -202,5 +270,49 @@ describe('content-schema queries', () => {
     expect(multiResponse.options.filter((o) => o.isCorrect)).toHaveLength(2);
     expect(multiResponse.correctAnswer).toBeNull();
     expect(multiResponse.tagIds).toHaveLength(1);
+  });
+
+  it('getQuestionsForExport returns a true_false question with its correctAnswer', async () => {
+    const exported = await getQuestionsForExport(db);
+    const trueFalse = exported.find((q) => q.type === 'true_false')!;
+
+    expect(trueFalse).toBeDefined();
+    expect(trueFalse.correctAnswer).toBe('true');
+    expect(trueFalse.options).toHaveLength(0);
+    expect(trueFalse.acceptedAnswers).toHaveLength(0);
+    expect(trueFalse.matchingPairs).toHaveLength(0);
+  });
+
+  it('getQuestionsForExport returns a short_text question with its accepted answers', async () => {
+    const exported = await getQuestionsForExport(db);
+    const shortText = exported.find((q) => q.type === 'short_text')!;
+
+    expect(shortText).toBeDefined();
+    expect(shortText.acceptedAnswers.map((a) => a.text)).toEqual([
+      'Teorema do Valor Intermediário',
+      'TVI',
+    ]);
+  });
+
+  it('getQuestionsForExport returns an ordering question with its options in correct order', async () => {
+    const exported = await getQuestionsForExport(db);
+    const ordering = exported.find((q) => q.type === 'ordering')!;
+
+    expect(ordering).toBeDefined();
+    expect(ordering.options.map((o) => o.textMdx)).toEqual([
+      'Fatorar o numerador',
+      'Cancelar o fator comum',
+      'Substituir $x=3$',
+    ]);
+  });
+
+  it('getQuestionsForExport returns a matching question with its pairs', async () => {
+    const exported = await getQuestionsForExport(db);
+    const matching = exported.find((q) => q.type === 'matching')!;
+
+    expect(matching).toBeDefined();
+    expect(matching.matchingPairs).toHaveLength(2);
+    expect(matching.matchingPairs[0].leftMdx).toBe('Removível');
+    expect(matching.matchingPairs[0].rightMdx).toBe('O limite existe mas difere de $f(a)$');
   });
 });
