@@ -45,4 +45,21 @@ describe('POST /api/preview', () => {
     expect(html).toContain('<table>');
     expect(html).toContain('<td>1</td>');
   });
+
+  it('reports an error for MDX that real MDX rejects but plain Markdown would accept', async () => {
+    // A bare autolink like `<https://example.com>` is valid CommonMark, but
+    // real MDX (which the site's build actually uses) parses `<` as a JSX
+    // tag opener and chokes on the `://`. This preview must catch that,
+    // since it once slipped through and broke a production deploy.
+    const cookie = await login();
+    const response = await SELF.fetch('https://admin.test/api/preview', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Cookie: cookie },
+      body: JSON.stringify({ mdx: 'Fonte: <https://example.com>' }),
+    });
+
+    expect(response.status).toBe(200);
+    const { error } = await response.json<{ error?: string }>();
+    expect(error).toBeTruthy();
+  });
 });
