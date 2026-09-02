@@ -1,6 +1,7 @@
 import { normalizeNumericAnswer } from './numeric-answer';
 import { parseSelectedOptionIds } from './multi-response-answer';
 import { isTrueFalseAnswerCorrect } from './true-false-answer';
+import { isAcceptedShortTextAnswer } from './short-text-answer';
 import type { ExportedQuestion } from './simulado-selection';
 
 export interface GradedQuestionResult {
@@ -32,6 +33,13 @@ function isAnswerCorrect(question: ExportedQuestion, userAnswer: string | undefi
 
   if (question.type === 'true_false') {
     return question.correctAnswer !== null && isTrueFalseAnswerCorrect(userAnswer, question.correctAnswer);
+  }
+
+  if (question.type === 'short_text') {
+    return isAcceptedShortTextAnswer(
+      userAnswer,
+      question.acceptedAnswers.map((answer) => answer.text),
+    );
   }
 
   if (question.correctAnswer === null) return false;

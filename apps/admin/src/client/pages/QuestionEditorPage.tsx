@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { apiFetch } from '../api';
 import { MdxEditor } from '../components/MdxEditor';
 import { OptionsEditor, type EditableOption } from '../components/OptionsEditor';
+import { AcceptedAnswersEditor } from '../components/AcceptedAnswersEditor';
 import { TagPicker, type TopicNode } from '../components/TagPicker';
 import styles from './QuestionEditorPage.module.css';
 
@@ -167,6 +168,8 @@ export function QuestionEditorPage({ questionId, onDone }: { questionId: number 
           )}
         </>
       )}
+
+      {type === 'short_text' && <AcceptedAnswersEditor answers={acceptedAnswers} onChange={setAcceptedAnswers} />}
 
       <TagPicker tagTree={tagTree} selectedTagIds={selectedTagIds} onChange={setSelectedTagIds} />
 

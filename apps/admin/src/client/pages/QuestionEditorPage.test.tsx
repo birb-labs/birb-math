@@ -69,4 +69,34 @@ describe('QuestionEditorPage', () => {
     expect(body.acceptedAnswers).toEqual([]);
     expect(body.matchingPairs).toEqual([]);
   });
+
+  it('creates a new short_text question via POST', async () => {
+    const fetchSpy = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(new Response(JSON.stringify([]), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ html: '<p></p>' }), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ html: '<p></p>' }), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ id: 11 }), { status: 201 }));
+
+    const onDone = vi.fn();
+    const user = userEvent.setup();
+
+    render(<QuestionEditorPage questionId={null} onDone={onDone} />);
+
+    await user.selectOptions(await screen.findByLabelText('Tipo'), 'short_text');
+    await user.type(screen.getByLabelText('Enunciado'), 'Qual gás?');
+    await user.type(screen.getByLabelText('Resolução'), 'Oxigênio.');
+    await user.clear(screen.getAllByRole('textbox')[1]);
+    await user.type(screen.getAllByRole('textbox')[1], 'Oxigênio');
+    await user.click(screen.getByRole('button', { name: 'Salvar' }));
+
+    expect(onDone).toHaveBeenCalledOnce();
+    const postCall = fetchSpy.mock.calls.find(
+      ([url, init]) => url === '/api/questions' && (init as RequestInit)?.method === 'POST',
+    );
+    const body = JSON.parse((postCall![1] as RequestInit).body as string);
+    expect(body.acceptedAnswers).toEqual(['Oxigênio']);
+    expect(body.correctAnswer).toBeNull();
+    expect(body.options).toEqual([]);
+  });
 });

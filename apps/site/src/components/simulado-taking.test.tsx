@@ -62,6 +62,21 @@ const fixtureQuestions: ExportedQuestion[] = [
     resolutionHtml: '<p>Sim.</p>',
     tagIds: [],
   },
+  {
+    id: 5,
+    type: 'short_text',
+    difficulty: 'medium',
+    promptHtml: '<p>Como se chama o teorema que garante uma raiz entre dois pontos de sinais opostos?</p>',
+    options: [],
+    acceptedAnswers: [
+      { id: 1, text: 'Teorema do Valor Intermediário' },
+      { id: 2, text: 'TVI' },
+    ],
+    matchingPairs: [],
+    correctAnswer: null,
+    resolutionHtml: '<p>Teorema do Valor Intermediário.</p>',
+    tagIds: [],
+  },
 ];
 
 describe('SimuladoTaking', () => {
@@ -77,7 +92,7 @@ describe('SimuladoTaking', () => {
     expect(screen.getByText('Quais são verdadeiras?')).toBeInTheDocument();
     expect(screen.getAllByRole('radio')).toHaveLength(4);
     expect(screen.getAllByRole('checkbox')).toHaveLength(3);
-    expect(screen.getByRole('textbox')).toBeInTheDocument();
+    expect(screen.getAllByRole('textbox')).toHaveLength(2);
   });
 
   it('renders a true_false question with Verdadeiro/Falso radios', () => {
@@ -90,6 +105,20 @@ describe('SimuladoTaking', () => {
     expect(screen.getByText('O céu é azul?')).toBeInTheDocument();
     expect(screen.getByRole('radio', { name: 'Verdadeiro' })).toBeInTheDocument();
     expect(screen.getByRole('radio', { name: 'Falso' })).toBeInTheDocument();
+  });
+
+  it('renders a short_text question with a text input', () => {
+    render(
+      <NextIntlClientProvider locale="pt-BR" messages={ptBR}>
+        <SimuladoTaking questions={fixtureQuestions} answers={{}} onAnswerChange={() => {}} onFinish={() => {}} />
+      </NextIntlClientProvider>,
+    );
+
+    expect(
+      screen.getByText('Como se chama o teorema que garante uma raiz entre dois pontos de sinais opostos?'),
+    ).toBeInTheDocument();
+    // 2 textboxes now: the pre-existing numeric-answer textbox (id 2) plus this short_text one.
+    expect(screen.getAllByRole('textbox')).toHaveLength(2);
   });
 
   it('calls onAnswerChange with the question id and selected option when a radio is picked', async () => {

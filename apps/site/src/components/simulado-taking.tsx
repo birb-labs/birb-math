@@ -5,6 +5,7 @@ import type { ExportedQuestion } from '@/lib/simulado-selection';
 import { parseSelectedOptionIds, toggleOptionId } from '@/lib/multi-response-answer';
 import { NumericAnswerInput } from './numeric-answer-input';
 import { TrueFalseInput } from './true-false-input';
+import { ShortTextAnswerInput } from './short-text-answer-input';
 import styles from './simulado-taking.module.css';
 
 export function SimuladoTaking({
@@ -80,6 +81,13 @@ export function SimuladoTaking({
             <TrueFalseInput
               questionId={question.id}
               value={answers[question.id]}
+              onChange={(value) => onAnswerChange(question.id, value)}
+            />
+          )}
+
+          {question.type === 'short_text' && (
+            <ShortTextAnswerInput
+              value={answers[question.id] ?? ''}
               onChange={(value) => onAnswerChange(question.id, value)}
             />
           )}

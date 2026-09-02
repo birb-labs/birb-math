@@ -136,4 +136,28 @@ describe('gradeSimulado', () => {
     const wrongResult = gradeSimulado([question], { 10: 'false' }, 'pt-BR');
     expect(wrongResult.perQuestion[0].isCorrect).toBe(false);
   });
+
+  it('grades a short_text question by normalized, accent-insensitive match', () => {
+    const question: ExportedQuestion = {
+      id: 11,
+      type: 'short_text',
+      difficulty: 'medium',
+      promptHtml: '<p>P?</p>',
+      options: [],
+      acceptedAnswers: [
+        { id: 1, text: 'Teorema do Valor Intermediário' },
+        { id: 2, text: 'TVI' },
+      ],
+      matchingPairs: [],
+      correctAnswer: null,
+      resolutionHtml: '<p>R.</p>',
+      tagIds: [],
+    };
+
+    expect(gradeSimulado([question], { 11: 'tvi' }, 'pt-BR').perQuestion[0].isCorrect).toBe(true);
+    expect(
+      gradeSimulado([question], { 11: 'teorema do valor intermediario' }, 'pt-BR').perQuestion[0].isCorrect,
+    ).toBe(true);
+    expect(gradeSimulado([question], { 11: 'algo errado' }, 'pt-BR').perQuestion[0].isCorrect).toBe(false);
+  });
 });
