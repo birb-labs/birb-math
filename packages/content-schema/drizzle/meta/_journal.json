@@ -15,6 +15,13 @@
       "when": 1787745915280,
       "tag": "0001_fuzzy_ben_grimm",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1788371954322,
+      "tag": "0002_orange_puff_adder",
+      "breakpoints": true
     }
   ]
 }

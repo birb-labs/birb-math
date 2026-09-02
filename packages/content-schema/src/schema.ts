@@ -46,7 +46,17 @@ export const lessons = sqliteTable('lessons', {
 
 export const questions = sqliteTable('questions', {
   id: integer('id').primaryKey({ autoIncrement: true }),
-  type: text('type', { enum: ['multiple_choice', 'multiple_response', 'numeric'] }).notNull(),
+  type: text('type', {
+    enum: [
+      'multiple_choice',
+      'multiple_response',
+      'numeric',
+      'true_false',
+      'short_text',
+      'ordering',
+      'matching',
+    ],
+  }).notNull(),
   difficulty: text('difficulty', { enum: ['easy', 'medium', 'hard'] }).notNull(),
   promptMdx: text('prompt_mdx').notNull(),
   resolutionMdx: text('resolution_mdx').notNull(),
@@ -82,3 +92,21 @@ export const questionTags = sqliteTable(
   },
   (table) => [primaryKey({ columns: [table.questionId, table.tagId] })],
 );
+
+export const questionAcceptedAnswers = sqliteTable('question_accepted_answers', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  questionId: integer('question_id')
+    .notNull()
+    .references(() => questions.id),
+  text: text('text').notNull(),
+});
+
+export const questionMatchingPairs = sqliteTable('question_matching_pairs', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  questionId: integer('question_id')
+    .notNull()
+    .references(() => questions.id),
+  leftMdx: text('left_mdx').notNull(),
+  rightMdx: text('right_mdx').notNull(),
+  order: integer('order').notNull(),
+});

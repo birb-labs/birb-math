@@ -138,7 +138,14 @@ export interface QuestionOptionExport {
 
 export interface QuestionExport {
   id: number;
-  type: 'multiple_choice' | 'multiple_response' | 'numeric';
+  type:
+    | 'multiple_choice'
+    | 'multiple_response'
+    | 'numeric'
+    | 'true_false'
+    | 'short_text'
+    | 'ordering'
+    | 'matching';
   difficulty: 'easy' | 'medium' | 'hard';
   promptMdx: string;
   resolutionMdx: string;
