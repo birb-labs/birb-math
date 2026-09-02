@@ -7,14 +7,17 @@ import type { ContentTree as ContentTreeData } from '@birb-math/content-schema';
 
 const fixtureTree: ContentTreeData[] = [
   {
+    id: 1,
     slug: 'calculo',
     name: 'Cálculo',
     topics: [
       {
+        id: 1,
         slug: 'limites',
         name: 'Limites',
         sections: [
           {
+            id: 1,
             slug: 'limites-laterais',
             name: 'Limites Laterais',
             lessons: [
@@ -94,14 +97,17 @@ describe('ContentTree', () => {
   it('aggregates completed/total counts across multiple sections and topics', () => {
     const multiSectionTree: ContentTreeData[] = [
       {
+        id: 1,
         slug: 'calculo',
         name: 'Cálculo',
         topics: [
           {
+            id: 1,
             slug: 'limites',
             name: 'Limites',
             sections: [
               {
+                id: 1,
                 slug: 'limites-laterais',
                 name: 'Limites Laterais',
                 lessons: [
@@ -110,6 +116,7 @@ describe('ContentTree', () => {
                 ],
               },
               {
+                id: 2,
                 slug: 'limites-infinitos',
                 name: 'Limites Infinitos',
                 lessons: [{ slug: 'licao-3', title: 'Lição Três' }],

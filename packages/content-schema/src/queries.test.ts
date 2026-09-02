@@ -133,10 +133,13 @@ describe('content-schema queries', () => {
 
     expect(tree).toHaveLength(1);
     expect(tree[0].slug).toBe('calculo');
+    expect(typeof tree[0].id).toBe('number');
     expect(tree[0].topics).toHaveLength(1);
     expect(tree[0].topics[0].slug).toBe('limites');
+    expect(typeof tree[0].topics[0].id).toBe('number');
     expect(tree[0].topics[0].sections).toHaveLength(1);
     expect(tree[0].topics[0].sections[0].slug).toBe('limites-laterais');
+    expect(typeof tree[0].topics[0].sections[0].id).toBe('number');
     expect(tree[0].topics[0].sections[0].lessons).toHaveLength(2);
     expect(tree[0].topics[0].sections[0].lessons.map((l) => l.slug)).toEqual([
       'definicao-de-limite',

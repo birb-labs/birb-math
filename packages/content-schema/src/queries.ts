@@ -6,12 +6,15 @@ import { lessons, questionOptions, questions, questionTags, sections, subjects, 
 type Db = BetterSQLite3Database<Record<string, unknown>> | DrizzleD1Database<Record<string, unknown>>;
 
 export interface ContentTree {
+  id: number;
   slug: string;
   name: string;
   topics: {
+    id: number;
     slug: string;
     name: string;
     sections: {
+      id: number;
       slug: string;
       name: string;
       lessons: { slug: string; title: string }[];
@@ -31,16 +34,19 @@ export async function getContentTree(db: Db): Promise<ContentTree[]> {
     .all();
 
   return allSubjects.map((subject) => ({
+    id: subject.id,
     slug: subject.slug,
     name: subject.name,
     topics: allTopics
       .filter((topic) => topic.subjectId === subject.id)
       .map((topic) => ({
+        id: topic.id,
         slug: topic.slug,
         name: topic.name,
         sections: allSections
           .filter((section) => section.topicId === topic.id)
           .map((section) => ({
+            id: section.id,
             slug: section.slug,
             name: section.name,
             lessons: allLessons
