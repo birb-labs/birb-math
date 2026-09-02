@@ -19,6 +19,8 @@ const fixtureQuestions: ExportedQuestion[] = [
       { id: 10, textHtml: '<p>1</p>', isCorrect: false },
       { id: 11, textHtml: '<p>2</p>', isCorrect: true },
     ],
+    acceptedAnswers: [],
+    matchingPairs: [],
     correctAnswer: null,
     resolutionHtml: '<p>É 2.</p>',
     tagIds: [1],

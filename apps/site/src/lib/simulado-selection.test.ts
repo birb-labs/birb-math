@@ -10,6 +10,8 @@ function makeQuestion(overrides: Partial<ExportedQuestion>): ExportedQuestion {
     difficulty: 'easy',
     promptHtml: '<p>prompt</p>',
     options: [],
+    acceptedAnswers: [],
+    matchingPairs: [],
     correctAnswer: '1',
     resolutionHtml: '<p>resolution</p>',
     tagIds: [],

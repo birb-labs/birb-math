@@ -42,6 +42,8 @@ describe('question-bank CRUD', () => {
           { textMdx: 'A', isCorrect: true },
           { textMdx: 'B', isCorrect: true },
         ],
+        acceptedAnswers: [],
+        matchingPairs: [],
         tagIds: [],
       }),
     );
@@ -62,6 +64,8 @@ describe('question-bank CRUD', () => {
           { textMdx: 'B', isCorrect: false },
           { textMdx: 'C', isCorrect: true },
         ],
+        acceptedAnswers: [],
+        matchingPairs: [],
         tagIds: [],
       }),
     );
@@ -85,6 +89,8 @@ describe('question-bank CRUD', () => {
         resolutionMdx: '1.5.',
         correctAnswer: '1,5',
         options: [],
+        acceptedAnswers: [],
+        matchingPairs: [],
         tagIds: [],
       }),
     );
@@ -104,5 +110,201 @@ describe('question-bank CRUD', () => {
     const treeResponse = await SELF.fetch('https://admin.test/api/tags', { headers: { Cookie: cookie } });
     const tree = await treeResponse.json<Array<{ slug: string; subtopics: { slug: string }[] }>>();
     expect(tree.find((t) => t.slug === 'limites')?.subtopics.map((s) => s.slug)).toContain('limites-laterais');
+  });
+
+  it('rejects a true_false question without a "true"/"false" correctAnswer', async () => {
+    const response = await SELF.fetch(
+      'https://admin.test/api/questions',
+      authed({
+        type: 'true_false',
+        difficulty: 'easy',
+        promptMdx: 'P?',
+        resolutionMdx: 'R.',
+        correctAnswer: 'sim',
+        options: [],
+        acceptedAnswers: [],
+        matchingPairs: [],
+        tagIds: [],
+      }),
+    );
+    expect(response.status).toBe(400);
+  });
+
+  it('creates a true_false question and reads it back', async () => {
+    const createResponse = await SELF.fetch(
+      'https://admin.test/api/questions',
+      authed({
+        type: 'true_false',
+        difficulty: 'easy',
+        promptMdx: 'O céu é azul?',
+        resolutionMdx: 'Sim.',
+        correctAnswer: 'true',
+        options: [],
+        acceptedAnswers: [],
+        matchingPairs: [],
+        tagIds: [],
+      }),
+    );
+    expect(createResponse.status).toBe(201);
+    const created = await createResponse.json<{ id: number }>();
+
+    const getResponse = await SELF.fetch(`https://admin.test/api/questions/${created.id}`, {
+      headers: { Cookie: cookie },
+    });
+    const question = await getResponse.json<{ correctAnswer: string }>();
+    expect(question.correctAnswer).toBe('true');
+  });
+
+  it('rejects a short_text question with no accepted answers', async () => {
+    const response = await SELF.fetch(
+      'https://admin.test/api/questions',
+      authed({
+        type: 'short_text',
+        difficulty: 'medium',
+        promptMdx: 'P?',
+        resolutionMdx: 'R.',
+        correctAnswer: null,
+        options: [],
+        acceptedAnswers: [],
+        matchingPairs: [],
+        tagIds: [],
+      }),
+    );
+    expect(response.status).toBe(400);
+  });
+
+  it('creates a short_text question with multiple accepted answers and reads it back', async () => {
+    const createResponse = await SELF.fetch(
+      'https://admin.test/api/questions',
+      authed({
+        type: 'short_text',
+        difficulty: 'medium',
+        promptMdx: 'Qual gás as plantas liberam na fotossíntese?',
+        resolutionMdx: 'Oxigênio.',
+        correctAnswer: null,
+        options: [],
+        acceptedAnswers: ['Oxigênio', 'O2', 'O₂'],
+        matchingPairs: [],
+        tagIds: [],
+      }),
+    );
+    expect(createResponse.status).toBe(201);
+    const created = await createResponse.json<{ id: number }>();
+
+    const getResponse = await SELF.fetch(`https://admin.test/api/questions/${created.id}`, {
+      headers: { Cookie: cookie },
+    });
+    const question = await getResponse.json<{ acceptedAnswers: { text: string }[] }>();
+    expect(question.acceptedAnswers.map((a) => a.text)).toEqual(['Oxigênio', 'O2', 'O₂']);
+  });
+
+  it('creates an ordering question, preserving entry order as the correct order', async () => {
+    const createResponse = await SELF.fetch(
+      'https://admin.test/api/questions',
+      authed({
+        type: 'ordering',
+        difficulty: 'medium',
+        promptMdx: 'Ordene os passos.',
+        resolutionMdx: 'Ver resolução.',
+        correctAnswer: null,
+        options: [
+          { textMdx: 'Primeiro', isCorrect: false },
+          { textMdx: 'Segundo', isCorrect: false },
+          { textMdx: 'Terceiro', isCorrect: false },
+        ],
+        acceptedAnswers: [],
+        matchingPairs: [],
+        tagIds: [],
+      }),
+    );
+    expect(createResponse.status).toBe(201);
+    const created = await createResponse.json<{ id: number }>();
+
+    const getResponse = await SELF.fetch(`https://admin.test/api/questions/${created.id}`, {
+      headers: { Cookie: cookie },
+    });
+    const question = await getResponse.json<{ options: { textMdx: string }[] }>();
+    expect(question.options.map((o) => o.textMdx)).toEqual(['Primeiro', 'Segundo', 'Terceiro']);
+  });
+
+  it('rejects a matching question with fewer than 2 pairs', async () => {
+    const response = await SELF.fetch(
+      'https://admin.test/api/questions',
+      authed({
+        type: 'matching',
+        difficulty: 'hard',
+        promptMdx: 'P?',
+        resolutionMdx: 'R.',
+        correctAnswer: null,
+        options: [],
+        acceptedAnswers: [],
+        matchingPairs: [{ leftMdx: 'A', rightMdx: 'B' }],
+        tagIds: [],
+      }),
+    );
+    expect(response.status).toBe(400);
+  });
+
+  it('creates a matching question with its pairs and reads it back', async () => {
+    const createResponse = await SELF.fetch(
+      'https://admin.test/api/questions',
+      authed({
+        type: 'matching',
+        difficulty: 'hard',
+        promptMdx: 'Associe.',
+        resolutionMdx: 'Ver resolução.',
+        correctAnswer: null,
+        options: [],
+        acceptedAnswers: [],
+        matchingPairs: [
+          { leftMdx: 'Cão', rightMdx: 'Late' },
+          { leftMdx: 'Gato', rightMdx: 'Mia' },
+        ],
+        tagIds: [],
+      }),
+    );
+    expect(createResponse.status).toBe(201);
+    const created = await createResponse.json<{ id: number }>();
+
+    const getResponse = await SELF.fetch(`https://admin.test/api/questions/${created.id}`, {
+      headers: { Cookie: cookie },
+    });
+    const question = await getResponse.json<{ matchingPairs: { leftMdx: string; rightMdx: string }[] }>();
+    expect(question.matchingPairs.map((p) => ({ leftMdx: p.leftMdx, rightMdx: p.rightMdx }))).toEqual([
+      { leftMdx: 'Cão', rightMdx: 'Late' },
+      { leftMdx: 'Gato', rightMdx: 'Mia' },
+    ]);
+  });
+
+  it('deletes a matching question along with its pairs', async () => {
+    const createResponse = await SELF.fetch(
+      'https://admin.test/api/questions',
+      authed({
+        type: 'matching',
+        difficulty: 'hard',
+        promptMdx: 'Associe.',
+        resolutionMdx: 'Ver resolução.',
+        correctAnswer: null,
+        options: [],
+        acceptedAnswers: [],
+        matchingPairs: [
+          { leftMdx: 'A', rightMdx: 'B' },
+          { leftMdx: 'C', rightMdx: 'D' },
+        ],
+        tagIds: [],
+      }),
+    );
+    const created = await createResponse.json<{ id: number }>();
+
+    const deleteResponse = await SELF.fetch(`https://admin.test/api/questions/${created.id}`, {
+      method: 'DELETE',
+      headers: { Cookie: cookie },
+    });
+    expect(deleteResponse.status).toBe(200);
+
+    const getResponse = await SELF.fetch(`https://admin.test/api/questions/${created.id}`, {
+      headers: { Cookie: cookie },
+    });
+    expect(getResponse.status).toBe(404);
   });
 });

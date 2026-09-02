@@ -5,20 +5,31 @@ import {
   getQuestionsForExport,
   getTagTree,
   isValidNumericCorrectAnswer,
-  questions,
+  questionAcceptedAnswers,
+  questionMatchingPairs,
   questionOptions,
+  questions,
   questionTags,
   tags,
 } from '@birb-math/content-schema';
 import type { Env } from '../env';
 
 interface QuestionInput {
-  type: 'multiple_choice' | 'multiple_response' | 'numeric';
+  type:
+    | 'multiple_choice'
+    | 'multiple_response'
+    | 'numeric'
+    | 'true_false'
+    | 'short_text'
+    | 'ordering'
+    | 'matching';
   difficulty: 'easy' | 'medium' | 'hard';
   promptMdx: string;
   resolutionMdx: string;
   correctAnswer: string | null;
   options: { textMdx: string; isCorrect: boolean }[];
+  acceptedAnswers: string[];
+  matchingPairs: { leftMdx: string; rightMdx: string }[];
   tagIds: number[];
 }
 
@@ -30,8 +41,30 @@ function validateQuestionInput(body: QuestionInput): string | null {
     return null;
   }
 
+  if (body.type === 'true_false') {
+    if (body.correctAnswer !== 'true' && body.correctAnswer !== 'false') {
+      return 'Questões de verdadeiro ou falso precisam de uma resposta correta "true" ou "false".';
+    }
+    return null;
+  }
+
+  if (body.type === 'short_text') {
+    if (body.acceptedAnswers.length < 1 || body.acceptedAnswers.some((answer) => answer.trim() === '')) {
+      return 'Questões de texto curto precisam de pelo menos 1 resposta aceita, sem entradas em branco.';
+    }
+    return null;
+  }
+
+  if (body.type === 'matching') {
+    if (body.matchingPairs.length < 2) {
+      return 'Questões de associação precisam de pelo menos 2 pares.';
+    }
+    return null;
+  }
+
+  // multiple_choice, multiple_response, and ordering all store their content in `options`.
   if (body.options.length < 2) {
-    return 'Questões de múltipla escolha ou múltipla resposta precisam de pelo menos 2 alternativas.';
+    return 'Questões de múltipla escolha, múltipla resposta ou ordenação precisam de pelo menos 2 alternativas.';
   }
 
   const correctCount = body.options.filter((option) => option.isCorrect).length;
@@ -89,6 +122,23 @@ questionsRoutes.post('/', async (c) => {
     ).run();
   }
 
+  if (body.acceptedAnswers.length > 0) {
+    await db.insert(questionAcceptedAnswers).values(
+      body.acceptedAnswers.map((text) => ({ questionId: question.id, text })),
+    ).run();
+  }
+
+  if (body.matchingPairs.length > 0) {
+    await db.insert(questionMatchingPairs).values(
+      body.matchingPairs.map((pair, index) => ({
+        questionId: question.id,
+        leftMdx: pair.leftMdx,
+        rightMdx: pair.rightMdx,
+        order: index + 1,
+      })),
+    ).run();
+  }
+
   if (body.tagIds.length > 0) {
     await db.insert(questionTags).values(body.tagIds.map((tagId) => ({ questionId: question.id, tagId }))).run();
   }
@@ -115,10 +165,9 @@ questionsRoutes.patch('/:id', async (c) => {
     .where(eq(questions.id, id))
     .run();
 
-  // Options and tags are replaced wholesale rather than diffed — simplest
-  // correct approach at this data scale (a handful of options/tags per
-  // question), and it sidesteps having to match incoming options back to
-  // existing option ids.
+  // Options, accepted answers, matching pairs, and tags are all replaced
+  // wholesale rather than diffed — simplest correct approach at this data
+  // scale, and it sidesteps having to match incoming rows back to existing ids.
   await db.delete(questionOptions).where(eq(questionOptions.questionId, id)).run();
   if (body.options.length > 0) {
     await db.insert(questionOptions).values(
@@ -126,6 +175,25 @@ questionsRoutes.patch('/:id', async (c) => {
         questionId: id,
         textMdx: option.textMdx,
         isCorrect: option.isCorrect,
+        order: index + 1,
+      })),
+    ).run();
+  }
+
+  await db.delete(questionAcceptedAnswers).where(eq(questionAcceptedAnswers.questionId, id)).run();
+  if (body.acceptedAnswers.length > 0) {
+    await db.insert(questionAcceptedAnswers).values(
+      body.acceptedAnswers.map((text) => ({ questionId: id, text })),
+    ).run();
+  }
+
+  await db.delete(questionMatchingPairs).where(eq(questionMatchingPairs.questionId, id)).run();
+  if (body.matchingPairs.length > 0) {
+    await db.insert(questionMatchingPairs).values(
+      body.matchingPairs.map((pair, index) => ({
+        questionId: id,
+        leftMdx: pair.leftMdx,
+        rightMdx: pair.rightMdx,
         order: index + 1,
       })),
     ).run();
@@ -144,6 +212,8 @@ questionsRoutes.delete('/:id', async (c) => {
   const id = Number(c.req.param('id'));
   await db.delete(questionTags).where(eq(questionTags.questionId, id)).run();
   await db.delete(questionOptions).where(eq(questionOptions.questionId, id)).run();
+  await db.delete(questionAcceptedAnswers).where(eq(questionAcceptedAnswers.questionId, id)).run();
+  await db.delete(questionMatchingPairs).where(eq(questionMatchingPairs.questionId, id)).run();
   await db.delete(questions).where(eq(questions.id, id)).run();
   return c.json({ ok: true });
 });

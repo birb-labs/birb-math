@@ -17,6 +17,8 @@ const mcQuestion: QuestionExport = {
     { id: 10, textMdx: '1', isCorrect: false },
     { id: 11, textMdx: '2', isCorrect: true },
   ],
+  acceptedAnswers: [],
+  matchingPairs: [],
   tagIds: [5],
 };
 
@@ -28,6 +30,8 @@ const numericQuestion: QuestionExport = {
   resolutionMdx: 'A divisão de $3$ por $2$ é igual a $1.5$.',
   correctAnswer: '1.5',
   options: [],
+  acceptedAnswers: [],
+  matchingPairs: [],
   tagIds: [5, 6],
 };
 
@@ -43,7 +47,70 @@ const multiResponseQuestion: QuestionExport = {
     { id: 21, textMdx: 'Afirmação 2', isCorrect: false },
     { id: 22, textMdx: 'Afirmação 3', isCorrect: true },
   ],
+  acceptedAnswers: [],
+  matchingPairs: [],
   tagIds: [7],
+};
+
+const trueFalseQuestion: QuestionExport = {
+  id: 3,
+  type: 'true_false',
+  difficulty: 'easy',
+  promptMdx: 'O céu é azul?',
+  resolutionMdx: 'Sim.',
+  correctAnswer: 'true',
+  options: [],
+  acceptedAnswers: [],
+  matchingPairs: [],
+  tagIds: [],
+};
+
+const shortTextQuestion: QuestionExport = {
+  id: 4,
+  type: 'short_text',
+  difficulty: 'medium',
+  promptMdx: 'Qual gás as plantas liberam na fotossíntese?',
+  resolutionMdx: 'Oxigênio.',
+  correctAnswer: null,
+  options: [],
+  acceptedAnswers: [
+    { id: 1, text: 'Oxigênio' },
+    { id: 2, text: 'O2' },
+  ],
+  matchingPairs: [],
+  tagIds: [],
+};
+
+const orderingQuestion: QuestionExport = {
+  id: 5,
+  type: 'ordering',
+  difficulty: 'medium',
+  promptMdx: 'Ordene os passos.',
+  resolutionMdx: 'Ver resolução.',
+  correctAnswer: null,
+  options: [
+    { id: 50, textMdx: 'Primeiro', isCorrect: false },
+    { id: 51, textMdx: 'Segundo', isCorrect: false },
+  ],
+  acceptedAnswers: [],
+  matchingPairs: [],
+  tagIds: [],
+};
+
+const matchingQuestion: QuestionExport = {
+  id: 6,
+  type: 'matching',
+  difficulty: 'hard',
+  promptMdx: 'Associe.',
+  resolutionMdx: 'Ver resolução.',
+  correctAnswer: null,
+  options: [],
+  acceptedAnswers: [],
+  matchingPairs: [
+    { id: 60, leftMdx: 'Cão', rightMdx: 'Late' },
+    { id: 61, leftMdx: 'Gato', rightMdx: 'Mia' },
+  ],
+  tagIds: [],
 };
 
 describe('compileQuestionForExport', () => {
@@ -78,6 +145,42 @@ describe('compileQuestionForExport', () => {
     expect(exported.options.filter((option) => option.isCorrect)).toHaveLength(2);
     expect(exported.options[0].textHtml).toContain('<p>');
     expect(exported.correctAnswer).toBeNull();
+  });
+
+  it('compiles a true_false question with no options', async () => {
+    const exported = await compileQuestionForExport(trueFalseQuestion);
+
+    expect(exported.type).toBe('true_false');
+    expect(exported.options).toHaveLength(0);
+    expect(exported.correctAnswer).toBe('true');
+  });
+
+  it('passes short_text accepted answers through as plain text, uncompiled', async () => {
+    const exported = await compileQuestionForExport(shortTextQuestion);
+
+    expect(exported.type).toBe('short_text');
+    expect(exported.acceptedAnswers).toEqual([
+      { id: 1, text: 'Oxigênio' },
+      { id: 2, text: 'O2' },
+    ]);
+  });
+
+  it('compiles an ordering question’s options, preserving their order', async () => {
+    const exported = await compileQuestionForExport(orderingQuestion);
+
+    expect(exported.type).toBe('ordering');
+    expect(exported.options).toHaveLength(2);
+    expect(exported.options[0].textHtml).toContain('Primeiro');
+    expect(exported.options[1].textHtml).toContain('Segundo');
+  });
+
+  it('compiles a matching question’s pairs, both sides, to HTML', async () => {
+    const exported = await compileQuestionForExport(matchingQuestion);
+
+    expect(exported.type).toBe('matching');
+    expect(exported.matchingPairs).toHaveLength(2);
+    expect(exported.matchingPairs[0].leftHtml).toContain('Cão');
+    expect(exported.matchingPairs[0].rightHtml).toContain('Late');
   });
 });
 

@@ -1,4 +1,4 @@
-export type { ExportedOption, ExportedQuestion } from './export-question';
+export type { ExportedAcceptedAnswer, ExportedOption, ExportedMatchingPair, ExportedQuestion } from './export-question';
 
 import type { SimuladoConfig } from '@/components/simulado-setup';
 import type { ExportedQuestion } from './export-question';
