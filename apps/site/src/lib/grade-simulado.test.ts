@@ -160,4 +160,26 @@ describe('gradeSimulado', () => {
     ).toBe(true);
     expect(gradeSimulado([question], { 11: 'algo errado' }, 'pt-BR').perQuestion[0].isCorrect).toBe(false);
   });
+
+  it('grades an ordering question by exact sequence match', () => {
+    const question: ExportedQuestion = {
+      id: 12,
+      type: 'ordering',
+      difficulty: 'medium',
+      promptHtml: '<p>P?</p>',
+      options: [
+        { id: 100, textHtml: '<p>Fatorar</p>', isCorrect: false },
+        { id: 101, textHtml: '<p>Cancelar</p>', isCorrect: false },
+        { id: 102, textHtml: '<p>Substituir</p>', isCorrect: false },
+      ],
+      acceptedAnswers: [],
+      matchingPairs: [],
+      correctAnswer: null,
+      resolutionHtml: '<p>R.</p>',
+      tagIds: [],
+    };
+
+    expect(gradeSimulado([question], { 12: '100,101,102' }, 'pt-BR').perQuestion[0].isCorrect).toBe(true);
+    expect(gradeSimulado([question], { 12: '101,100,102' }, 'pt-BR').perQuestion[0].isCorrect).toBe(false);
+  });
 });

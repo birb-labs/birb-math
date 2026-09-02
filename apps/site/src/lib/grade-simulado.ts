@@ -2,6 +2,7 @@ import { normalizeNumericAnswer } from './numeric-answer';
 import { parseSelectedOptionIds } from './multi-response-answer';
 import { isTrueFalseAnswerCorrect } from './true-false-answer';
 import { isAcceptedShortTextAnswer } from './short-text-answer';
+import { isOrderingAnswerCorrect } from './ordering-answer';
 import type { ExportedQuestion } from './simulado-selection';
 
 export interface GradedQuestionResult {
@@ -40,6 +41,10 @@ function isAnswerCorrect(question: ExportedQuestion, userAnswer: string | undefi
       userAnswer,
       question.acceptedAnswers.map((answer) => answer.text),
     );
+  }
+
+  if (question.type === 'ordering') {
+    return isOrderingAnswerCorrect(userAnswer, question.options);
   }
 
   if (question.correctAnswer === null) return false;

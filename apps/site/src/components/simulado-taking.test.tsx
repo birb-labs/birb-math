@@ -77,6 +77,22 @@ const fixtureQuestions: ExportedQuestion[] = [
     resolutionHtml: '<p>Teorema do Valor Intermediário.</p>',
     tagIds: [],
   },
+  {
+    id: 6,
+    type: 'ordering',
+    difficulty: 'medium',
+    promptHtml: '<p>Ordene os passos para calcular o limite.</p>',
+    options: [
+      { id: 60, textHtml: '<p>Fatorar</p>', isCorrect: false },
+      { id: 61, textHtml: '<p>Cancelar</p>', isCorrect: false },
+      { id: 62, textHtml: '<p>Substituir</p>', isCorrect: false },
+    ],
+    acceptedAnswers: [],
+    matchingPairs: [],
+    correctAnswer: null,
+    resolutionHtml: '<p>Ver resolução.</p>',
+    tagIds: [],
+  },
 ];
 
 describe('SimuladoTaking', () => {
@@ -169,6 +185,19 @@ describe('SimuladoTaking', () => {
     );
 
     expect(screen.getByText('Selecione todas as alternativas corretas')).toBeInTheDocument();
+  });
+
+  it('renders an ordering question with all of its items, in some order', () => {
+    render(
+      <NextIntlClientProvider locale="pt-BR" messages={ptBR}>
+        <SimuladoTaking questions={fixtureQuestions} answers={{}} onAnswerChange={() => {}} onFinish={() => {}} />
+      </NextIntlClientProvider>,
+    );
+
+    expect(screen.getByText('Ordene os passos para calcular o limite.')).toBeInTheDocument();
+    expect(screen.getByText('Fatorar')).toBeInTheDocument();
+    expect(screen.getByText('Cancelar')).toBeInTheDocument();
+    expect(screen.getByText('Substituir')).toBeInTheDocument();
   });
 
   it('calls onFinish when the finish button is clicked', async () => {

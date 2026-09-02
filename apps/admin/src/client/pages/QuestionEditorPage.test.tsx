@@ -99,4 +99,32 @@ describe('QuestionEditorPage', () => {
     expect(body.correctAnswer).toBeNull();
     expect(body.options).toEqual([]);
   });
+
+  it('creates a new ordering question via POST', async () => {
+    const fetchSpy = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(new Response(JSON.stringify([]), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ html: '<p></p>' }), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ html: '<p></p>' }), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ id: 12 }), { status: 201 }));
+
+    const onDone = vi.fn();
+    const user = userEvent.setup();
+
+    render(<QuestionEditorPage questionId={null} onDone={onDone} />);
+
+    await user.selectOptions(await screen.findByLabelText('Tipo'), 'ordering');
+    await user.type(screen.getByLabelText('Enunciado'), 'Ordene.');
+    await user.type(screen.getByLabelText('Resolução'), 'Ver resolução.');
+    await user.click(screen.getByRole('button', { name: 'Salvar' }));
+
+    expect(onDone).toHaveBeenCalledOnce();
+    const postCall = fetchSpy.mock.calls.find(
+      ([url, init]) => url === '/api/questions' && (init as RequestInit)?.method === 'POST',
+    );
+    const body = JSON.parse((postCall![1] as RequestInit).body as string);
+    expect(body.options).toHaveLength(2); // the default 2 blank options QuestionEditorPage starts with
+    expect(body.acceptedAnswers).toEqual([]);
+    expect(body.matchingPairs).toEqual([]);
+  });
 });

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { apiFetch } from '../api';
 import { MdxEditor } from '../components/MdxEditor';
 import { OptionsEditor, type EditableOption } from '../components/OptionsEditor';
+import { OrderingItemsEditor } from '../components/OrderingItemsEditor';
 import { AcceptedAnswersEditor } from '../components/AcceptedAnswersEditor';
 import { TagPicker, type TopicNode } from '../components/TagPicker';
 import styles from './QuestionEditorPage.module.css';
@@ -143,6 +144,8 @@ export function QuestionEditorPage({ questionId, onDone }: { questionId: number 
       {(type === 'multiple_choice' || type === 'multiple_response') && (
         <OptionsEditor type={type} options={options} onChange={setOptions} />
       )}
+
+      {type === 'ordering' && <OrderingItemsEditor items={options} onChange={setOptions} />}
 
       {(type === 'numeric' || type === 'true_false') && (
         <>

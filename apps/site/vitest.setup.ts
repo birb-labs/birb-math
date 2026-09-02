@@ -18,3 +18,15 @@ Object.defineProperty(window, 'matchMedia', {
     dispatchEvent: vi.fn(),
   })),
 });
+
+// @dnd-kit/core (used by OrderingInput/MatchingInput) calls ResizeObserver,
+// which jsdom does not implement. A minimal no-op stub is enough — these
+// tests don't assert on actual resize behavior.
+class ResizeObserverStub {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+if (typeof window !== 'undefined' && !window.ResizeObserver) {
+  window.ResizeObserver = ResizeObserverStub as unknown as typeof ResizeObserver;
+}
