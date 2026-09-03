@@ -186,6 +186,22 @@ function seedFixture(db: TestDb) {
       { questionId: matchingQuestion.id, leftMdx: 'Salto', rightMdx: 'Os limites laterais existem mas discordam', order: 2 },
     ])
     .run();
+
+  db.insert(schema.questions)
+    .values({
+      type: 'short_text',
+      difficulty: 'hard',
+      promptMdx: 'Calcule $\\lim_{x \\to 2} (3x + 1)$.',
+      resolutionMdx: 'Substituição direta: $3(2)+1=7$.',
+      correctAnswer: null,
+      answerFormat: 'math',
+    })
+    .run();
+  const mathShortTextQuestion = db.select().from(schema.questions).all()[7];
+
+  db.insert(schema.questionAcceptedAnswers)
+    .values([{ questionId: mathShortTextQuestion.id, text: '7' }])
+    .run();
 }
 
 describe('content-schema queries', () => {
@@ -249,7 +265,7 @@ describe('content-schema queries', () => {
   it('getQuestionsForExport returns every question with its options and tags', async () => {
     const exported = await getQuestionsForExport(db);
 
-    expect(exported).toHaveLength(7);
+    expect(exported).toHaveLength(8);
 
     const mc = exported.find((q) => q.type === 'multiple_choice')!;
     expect(mc).toBeDefined();
@@ -292,6 +308,26 @@ describe('content-schema queries', () => {
       'Teorema do Valor Intermediário',
       'TVI',
     ]);
+  });
+
+  it('getQuestionsForExport returns a math-mode short_text question with answerFormat "math"', async () => {
+    const exported = await getQuestionsForExport(db);
+    const mathShortText = exported.find(
+      (q) => q.type === 'short_text' && q.answerFormat === 'math',
+    );
+
+    expect(mathShortText).toBeDefined();
+    expect(mathShortText!.acceptedAnswers.map((a) => a.text)).toEqual(['7']);
+  });
+
+  it('getQuestionsForExport returns "text" as the default answerFormat for a plain short_text question', async () => {
+    const exported = await getQuestionsForExport(db);
+    const plainShortText = exported.find(
+      (q) => q.type === 'short_text' && q.promptMdx.includes('garante uma raiz'),
+    );
+
+    expect(plainShortText).toBeDefined();
+    expect(plainShortText!.answerFormat).toBe('text');
   });
 
   it('getQuestionsForExport returns an ordering question with its options in correct order', async () => {

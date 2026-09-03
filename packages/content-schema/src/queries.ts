@@ -172,6 +172,7 @@ export interface QuestionExport {
   promptMdx: string;
   resolutionMdx: string;
   correctAnswer: string | null;
+  answerFormat: 'text' | 'math';
   options: QuestionOptionExport[];
   acceptedAnswers: QuestionAcceptedAnswerExport[];
   matchingPairs: QuestionMatchingPairExport[];
@@ -197,6 +198,7 @@ export async function getQuestionsForExport(db: Db): Promise<QuestionExport[]> {
     promptMdx: question.promptMdx,
     resolutionMdx: question.resolutionMdx,
     correctAnswer: question.correctAnswer,
+    answerFormat: question.answerFormat,
     options: allOptions
       .filter((option) => option.questionId === question.id)
       .map((option) => ({ id: option.id, textMdx: option.textMdx, isCorrect: option.isCorrect })),
