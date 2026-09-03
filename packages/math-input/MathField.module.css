@@ -1,0 +1,12 @@
+.container {
+  border: 1px solid var(--color-border);
+  border-radius: 0.25rem;
+  min-height: 2.5rem;
+  padding: 0.25rem;
+}
+
+.field {
+  width: 100%;
+  border: none;
+  outline: none;
+}
