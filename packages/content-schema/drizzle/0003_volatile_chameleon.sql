@@ -1,0 +1,1 @@
+ALTER TABLE `questions` ADD `answer_format` text DEFAULT 'text' NOT NULL;

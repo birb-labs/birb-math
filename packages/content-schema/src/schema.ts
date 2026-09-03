@@ -61,6 +61,7 @@ export const questions = sqliteTable('questions', {
   promptMdx: text('prompt_mdx').notNull(),
   resolutionMdx: text('resolution_mdx').notNull(),
   correctAnswer: text('correct_answer'),
+  answerFormat: text('answer_format', { enum: ['text', 'math'] }).notNull().default('text'),
 });
 
 export const questionOptions = sqliteTable('question_options', {
