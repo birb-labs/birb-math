@@ -22,6 +22,7 @@ export function MathField({
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const fieldRef = useRef<MathfieldLike | null>(null);
+  const inputHandlerRef = useRef<(() => void) | null>(null);
   // Always call the *latest* onChange from the field's real event listener,
   // without re-attaching that listener (and losing no events) every time a
   // parent passes a fresh inline callback.
@@ -52,6 +53,7 @@ export function MathField({
         onChangeRef.current(field.value);
       }
       field.addEventListener('input', handleInput);
+      inputHandlerRef.current = handleInput;
 
       container.appendChild(field);
       fieldRef.current = field;
@@ -59,11 +61,17 @@ export function MathField({
 
     return () => {
       cancelled = true;
-      fieldRef.current?.remove();
+      const field = fieldRef.current;
+      if (field && inputHandlerRef.current) {
+        field.removeEventListener('input', inputHandlerRef.current);
+      }
+      inputHandlerRef.current = null;
+      field?.remove();
       fieldRef.current = null;
     };
-    // Mounts the field exactly once. `value`/`ariaLabel`/`placeholder`/`readOnly`
-    // changes after mount are synced by the effects below, not by remounting.
+    // Mounts the field exactly once. `value` is synced by the effect below;
+    // `ariaLabel`, `placeholder`, and `readOnly` are synced by the effect
+    // below that as well. None of these props trigger a remount.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -73,6 +81,29 @@ export function MathField({
       field.value = value;
     }
   }, [value]);
+
+  useEffect(() => {
+    const field = fieldRef.current;
+    if (!field) return;
+
+    if (ariaLabel) {
+      field.setAttribute('aria-label', ariaLabel);
+    } else {
+      field.removeAttribute('aria-label');
+    }
+
+    if (placeholder) {
+      field.setAttribute('placeholder', placeholder);
+    } else {
+      field.removeAttribute('placeholder');
+    }
+
+    if (readOnly) {
+      field.setAttribute('read-only', 'true');
+    } else {
+      field.removeAttribute('read-only');
+    }
+  }, [ariaLabel, placeholder, readOnly]);
 
   return <div ref={containerRef} className={styles.container} />;
 }

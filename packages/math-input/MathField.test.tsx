@@ -50,6 +50,24 @@ describe('MathField', () => {
     expect(field.getAttribute('read-only')).toBe('true');
   });
 
+  it('re-applies ariaLabel, placeholder, and readOnly when those props change after mount', async () => {
+    const { container, rerender } = render(
+      <MathField value="" onChange={() => {}} ariaLabel="Resposta aceita 2" placeholder="Digite aqui" readOnly />,
+    );
+    await waitFor(() => expect(container.querySelector('math-field')).toBeTruthy());
+
+    rerender(
+      <MathField value="" onChange={() => {}} ariaLabel="Resposta aceita 1" placeholder="Nova resposta" />,
+    );
+
+    await waitFor(() => {
+      const field = getField(container);
+      expect(field.getAttribute('aria-label')).toBe('Resposta aceita 1');
+      expect(field.getAttribute('placeholder')).toBe('Nova resposta');
+      expect(field.getAttribute('read-only')).toBeNull();
+    });
+  });
+
   it('removes the field on unmount', async () => {
     const { container, unmount } = render(<MathField value="" onChange={() => {}} />);
     await waitFor(() => expect(container.querySelector('math-field')).toBeTruthy());
