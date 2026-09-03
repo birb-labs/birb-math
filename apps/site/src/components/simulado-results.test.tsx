@@ -155,6 +155,30 @@ const newTypesResult: GradedResult = {
   ],
 };
 
+const mathShortTextResult: GradedResult = {
+  correctCount: 1,
+  total: 1,
+  perQuestion: [
+    {
+      question: {
+        id: 8,
+        type: 'short_text',
+        difficulty: 'hard',
+        promptHtml: '<p>Q8</p>',
+        options: [],
+        acceptedAnswers: [{ id: 1, text: '\\frac{1}{2}' }],
+        matchingPairs: [],
+        correctAnswer: null,
+        answerFormat: 'math',
+        resolutionHtml: '<p>Resolution 8</p>',
+        tagIds: [],
+      },
+      userAnswer: '\\frac{1}{2}',
+      isCorrect: true,
+    },
+  ],
+};
+
 describe('SimuladoResults', () => {
   it('shows the overall score', () => {
     render(
@@ -276,5 +300,17 @@ describe('SimuladoResults', () => {
     expect(answersSection.textContent).toContain('Salto');
     expect(answersSection.textContent).toContain('Descrição A');
     expect(answersSection.textContent).toContain('Descrição B');
+  });
+
+  it('renders a math-mode short_text answer as a rendered formula, not raw LaTeX text', () => {
+    render(
+      <NextIntlClientProvider locale="pt-BR" messages={ptBR}>
+        <SimuladoResults result={mathShortTextResult} locale="pt-BR" onBackToSetup={() => {}} />
+      </NextIntlClientProvider>,
+    );
+
+    const answersSection = screen.getByText('Q8').closest('div')!.parentElement!;
+    expect(answersSection.textContent).not.toContain('\\frac');
+    expect(answersSection.querySelector('.katex')).toBeInTheDocument();
   });
 });

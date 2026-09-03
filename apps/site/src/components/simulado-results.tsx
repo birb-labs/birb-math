@@ -6,6 +6,7 @@ import { formatNumericAnswerForDisplay } from '@/lib/numeric-answer';
 import { parseSelectedOptionIds } from '@/lib/multi-response-answer';
 import { parseOrderingAnswer } from '@/lib/ordering-answer';
 import { parseMatchingAnswer } from '@/lib/matching-answer';
+import { renderMathAnswer } from '@/lib/render-math-answer';
 import styles from './simulado-results.module.css';
 
 // Question types whose "your answer"/"correct answer" value is pre-compiled,
@@ -15,8 +16,9 @@ import styles from './simulado-results.module.css';
 // raw typed text, which must never be treated as trusted HTML.
 const HTML_ANSWER_TYPES = new Set(['multiple_choice', 'multiple_response', 'ordering', 'matching']);
 
-function isHtmlAnswerType(type: GradedQuestionResult['question']['type']): boolean {
-  return HTML_ANSWER_TYPES.has(type);
+function isHtmlAnswer(question: GradedQuestionResult['question']): boolean {
+  if (HTML_ANSWER_TYPES.has(question.type)) return true;
+  return question.type === 'short_text' && question.answerFormat === 'math';
 }
 
 function describeAnswers(
@@ -56,6 +58,12 @@ function describeAnswers(
   }
 
   if (question.type === 'short_text') {
+    if (question.answerFormat === 'math') {
+      return {
+        yourAnswer: renderMathAnswer(userAnswer ?? ''),
+        correctAnswer: question.acceptedAnswers.map((answer) => renderMathAnswer(answer.text)).join(' &nbsp;/&nbsp; '),
+      };
+    }
     return {
       yourAnswer: userAnswer ?? '',
       correctAnswer: question.acceptedAnswers.map((answer) => answer.text).join(' / '),
@@ -115,7 +123,7 @@ export function SimuladoResults({
         {result.perQuestion.map((entry) => {
           const { question, isCorrect } = entry;
           const { yourAnswer, correctAnswer } = describeAnswers(entry, locale, tTaking);
-          const renderAsHtml = isHtmlAnswerType(question.type);
+          const renderAsHtml = isHtmlAnswer(question);
 
           return (
             <div key={question.id} className={styles.question}>

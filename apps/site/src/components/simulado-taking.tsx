@@ -91,6 +91,7 @@ export function SimuladoTaking({
             <ShortTextAnswerInput
               value={answers[question.id] ?? ''}
               onChange={(value) => onAnswerChange(question.id, value)}
+              answerFormat={question.answerFormat}
             />
           )}
 

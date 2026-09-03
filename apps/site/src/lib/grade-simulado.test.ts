@@ -166,6 +166,28 @@ describe('gradeSimulado', () => {
     expect(gradeSimulado([question], { 11: 'algo errado' }, 'pt-BR').perQuestion[0].isCorrect).toBe(false);
   });
 
+  it('grades a math-mode short_text question case-sensitively and whitespace-insensitively', () => {
+    const question: ExportedQuestion = {
+      id: 20,
+      type: 'short_text',
+      difficulty: 'hard',
+      promptHtml: '<p>P?</p>',
+      options: [],
+      acceptedAnswers: [{ id: 1, text: '3x+1' }],
+      matchingPairs: [],
+      correctAnswer: null,
+      answerFormat: 'math',
+      resolutionHtml: '<p>R.</p>',
+      tagIds: [],
+    };
+
+    const result = gradeSimulado([question], { 20: '3x + 1' }, 'pt-BR');
+    expect(result.perQuestion[0].isCorrect).toBe(true);
+
+    const wrongCase = gradeSimulado([question], { 20: '3X+1' }, 'pt-BR');
+    expect(wrongCase.perQuestion[0].isCorrect).toBe(false);
+  });
+
   it('grades an ordering question by exact sequence match', () => {
     const question: ExportedQuestion = {
       id: 12,

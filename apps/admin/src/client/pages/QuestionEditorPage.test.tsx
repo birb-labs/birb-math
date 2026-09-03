@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, afterEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QuestionEditorPage } from './QuestionEditorPage';
 
@@ -98,6 +98,43 @@ describe('QuestionEditorPage', () => {
     expect(body.acceptedAnswers).toEqual(['Oxigênio']);
     expect(body.correctAnswer).toBeNull();
     expect(body.options).toEqual([]);
+  });
+
+  it('creates a math-mode short_text question with a LaTeX accepted answer', async () => {
+    const fetchSpy = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(new Response(JSON.stringify([]), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ html: '<p></p>' }), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ html: '<p></p>' }), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ id: 12 }), { status: 201 }));
+
+    const onDone = vi.fn();
+    const user = userEvent.setup();
+
+    const { container } = render(<QuestionEditorPage questionId={null} onDone={onDone} />);
+
+    await user.selectOptions(await screen.findByLabelText('Tipo'), 'short_text');
+    await user.type(screen.getByLabelText('Enunciado'), 'Quanto é a derivada de x^2?');
+    await user.type(screen.getByLabelText('Resolução'), '2x.');
+    await user.selectOptions(screen.getByLabelText('Modo de resposta'), 'math');
+
+    const field = await waitFor(() => {
+      const el = container.querySelector('math-field');
+      if (!el) throw new Error('math-field not mounted yet');
+      return el as HTMLElement & { value: string };
+    });
+    field.value = '2x';
+    field.dispatchEvent(new Event('input', { bubbles: true }));
+
+    await user.click(screen.getByRole('button', { name: 'Salvar' }));
+
+    expect(onDone).toHaveBeenCalledOnce();
+    const postCall = fetchSpy.mock.calls.find(
+      ([url, init]) => url === '/api/questions' && (init as RequestInit)?.method === 'POST',
+    );
+    const body = JSON.parse((postCall![1] as RequestInit).body as string);
+    expect(body.answerFormat).toBe('math');
+    expect(body.acceptedAnswers).toEqual(['2x']);
   });
 
   it('creates a new ordering question via POST', async () => {

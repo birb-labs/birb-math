@@ -29,6 +29,7 @@ export function QuestionEditorPage({ questionId, onDone }: { questionId: number 
     { textMdx: '', isCorrect: false },
   ]);
   const [acceptedAnswers, setAcceptedAnswers] = useState<string[]>(['']);
+  const [answerFormat, setAnswerFormat] = useState<'text' | 'math'>('text');
   const [matchingPairs, setMatchingPairs] = useState<EditableMatchingPair[]>([
     { leftMdx: '', rightMdx: '' },
     { leftMdx: '', rightMdx: '' },
@@ -53,6 +54,7 @@ export function QuestionEditorPage({ questionId, onDone }: { questionId: number 
           promptMdx: string;
           resolutionMdx: string;
           correctAnswer: string | null;
+          answerFormat: 'text' | 'math';
           options: EditableOption[];
           acceptedAnswers: { text: string }[];
           matchingPairs: EditableMatchingPair[];
@@ -66,6 +68,7 @@ export function QuestionEditorPage({ questionId, onDone }: { questionId: number 
           setPromptMdx(question.promptMdx);
           setResolutionMdx(question.resolutionMdx);
           setCorrectAnswer(question.correctAnswer ?? '');
+          setAnswerFormat(question.answerFormat);
           setOptions(question.options);
           setAcceptedAnswers(question.acceptedAnswers.map((a) => a.text));
           setMatchingPairs(question.matchingPairs);
@@ -82,6 +85,7 @@ export function QuestionEditorPage({ questionId, onDone }: { questionId: number 
       promptMdx,
       resolutionMdx,
       correctAnswer: type === 'numeric' || type === 'true_false' ? correctAnswer : null,
+      answerFormat: type === 'short_text' ? answerFormat : 'text',
       options: type === 'multiple_choice' || type === 'multiple_response' || type === 'ordering' ? options : [],
       acceptedAnswers: type === 'short_text' ? acceptedAnswers : [],
       matchingPairs: type === 'matching' ? matchingPairs : [],
@@ -173,7 +177,21 @@ export function QuestionEditorPage({ questionId, onDone }: { questionId: number 
         </>
       )}
 
-      {type === 'short_text' && <AcceptedAnswersEditor answers={acceptedAnswers} onChange={setAcceptedAnswers} />}
+      {type === 'short_text' && (
+        <>
+          <label htmlFor="answer-format">Modo de resposta</label>
+          <select
+            id="answer-format"
+            className={styles.select}
+            value={answerFormat}
+            onChange={(event) => setAnswerFormat(event.target.value as 'text' | 'math')}
+          >
+            <option value="text">Texto</option>
+            <option value="math">Matemática</option>
+          </select>
+          <AcceptedAnswersEditor answers={acceptedAnswers} onChange={setAcceptedAnswers} answerFormat={answerFormat} />
+        </>
+      )}
 
       {type === 'matching' && <MatchingPairsEditor pairs={matchingPairs} onChange={setMatchingPairs} />}
 

@@ -41,6 +41,7 @@ function isAnswerCorrect(question: ExportedQuestion, userAnswer: string | undefi
     return isAcceptedShortTextAnswer(
       userAnswer,
       question.acceptedAnswers.map((answer) => answer.text),
+      question.answerFormat,
     );
   }
 
