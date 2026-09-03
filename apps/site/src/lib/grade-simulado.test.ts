@@ -15,6 +15,7 @@ const mcQuestion: ExportedQuestion = {
   matchingPairs: [],
   correctAnswer: null,
   resolutionHtml: '<p>R</p>',
+  answerFormat: 'text',
   tagIds: [],
 };
 
@@ -32,6 +33,7 @@ const multiResponseQuestion: ExportedQuestion = {
   matchingPairs: [],
   correctAnswer: null,
   resolutionHtml: '<p>R</p>',
+  answerFormat: 'text',
   tagIds: [],
 };
 
@@ -45,6 +47,7 @@ const numericQuestion: ExportedQuestion = {
   matchingPairs: [],
   correctAnswer: '1',
   resolutionHtml: '<p>R</p>',
+  answerFormat: 'text',
   tagIds: [],
 };
 
@@ -127,6 +130,7 @@ describe('gradeSimulado', () => {
       matchingPairs: [],
       correctAnswer: 'true',
       resolutionHtml: '<p>R.</p>',
+      answerFormat: 'text',
       tagIds: [],
     };
 
@@ -151,6 +155,7 @@ describe('gradeSimulado', () => {
       matchingPairs: [],
       correctAnswer: null,
       resolutionHtml: '<p>R.</p>',
+      answerFormat: 'text',
       tagIds: [],
     };
 
@@ -176,6 +181,7 @@ describe('gradeSimulado', () => {
       matchingPairs: [],
       correctAnswer: null,
       resolutionHtml: '<p>R.</p>',
+      answerFormat: 'text',
       tagIds: [],
     };
 
@@ -197,6 +203,7 @@ describe('gradeSimulado', () => {
       ],
       correctAnswer: null,
       resolutionHtml: '<p>R.</p>',
+      answerFormat: 'text',
       tagIds: [],
     };
 

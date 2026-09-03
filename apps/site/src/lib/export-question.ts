@@ -35,6 +35,7 @@ export interface ExportedQuestion {
   acceptedAnswers: ExportedAcceptedAnswer[];
   matchingPairs: ExportedMatchingPair[];
   correctAnswer: string | null;
+  answerFormat: 'text' | 'math';
   resolutionHtml: string;
   tagIds: number[];
 }
@@ -116,6 +117,7 @@ export async function compileQuestionForExport(question: QuestionExport): Promis
     acceptedAnswers,
     matchingPairs,
     correctAnswer: question.correctAnswer,
+    answerFormat: question.answerFormat,
     resolutionHtml,
     tagIds: question.tagIds,
   };

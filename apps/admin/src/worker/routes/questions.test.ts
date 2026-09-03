@@ -167,6 +167,7 @@ describe('question-bank CRUD', () => {
         options: [],
         acceptedAnswers: [],
         matchingPairs: [],
+        answerFormat: 'text',
         tagIds: [],
       }),
     );
@@ -185,6 +186,7 @@ describe('question-bank CRUD', () => {
         options: [],
         acceptedAnswers: ['Oxigênio', 'O2', 'O₂'],
         matchingPairs: [],
+        answerFormat: 'text',
         tagIds: [],
       }),
     );
@@ -196,6 +198,51 @@ describe('question-bank CRUD', () => {
     });
     const question = await getResponse.json<{ acceptedAnswers: { text: string }[] }>();
     expect(question.acceptedAnswers.map((a) => a.text)).toEqual(['Oxigênio', 'O2', 'O₂']);
+  });
+
+  it('rejects a short_text question with an invalid answerFormat', async () => {
+    const response = await SELF.fetch(
+      'https://admin.test/api/questions',
+      authed({
+        type: 'short_text',
+        difficulty: 'medium',
+        promptMdx: 'P?',
+        resolutionMdx: 'R.',
+        correctAnswer: null,
+        options: [],
+        acceptedAnswers: ['R'],
+        matchingPairs: [],
+        answerFormat: 'latex',
+        tagIds: [],
+      }),
+    );
+    expect(response.status).toBe(400);
+  });
+
+  it('creates a math-mode short_text question and reads its answerFormat back', async () => {
+    const createResponse = await SELF.fetch(
+      'https://admin.test/api/questions',
+      authed({
+        type: 'short_text',
+        difficulty: 'hard',
+        promptMdx: 'Calcule a derivada de $x^2$.',
+        resolutionMdx: '$2x$.',
+        correctAnswer: null,
+        options: [],
+        acceptedAnswers: ['2x'],
+        matchingPairs: [],
+        answerFormat: 'math',
+        tagIds: [],
+      }),
+    );
+    expect(createResponse.status).toBe(201);
+    const created = await createResponse.json<{ id: number }>();
+
+    const getResponse = await SELF.fetch(`https://admin.test/api/questions/${created.id}`, {
+      headers: { Cookie: cookie },
+    });
+    const question = await getResponse.json<{ answerFormat: string }>();
+    expect(question.answerFormat).toBe('math');
   });
 
   it('creates an ordering question, preserving entry order as the correct order', async () => {

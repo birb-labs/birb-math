@@ -21,6 +21,7 @@ const mcQuestion: QuestionExport = {
   ],
   acceptedAnswers: [],
   matchingPairs: [],
+  answerFormat: 'text',
   tagIds: [5],
 };
 
@@ -34,6 +35,7 @@ const numericQuestion: QuestionExport = {
   options: [],
   acceptedAnswers: [],
   matchingPairs: [],
+  answerFormat: 'text',
   tagIds: [5, 6],
 };
 
@@ -51,6 +53,7 @@ const multiResponseQuestion: QuestionExport = {
   ],
   acceptedAnswers: [],
   matchingPairs: [],
+  answerFormat: 'text',
   tagIds: [7],
 };
 
@@ -64,6 +67,7 @@ const trueFalseQuestion: QuestionExport = {
   options: [],
   acceptedAnswers: [],
   matchingPairs: [],
+  answerFormat: 'text',
   tagIds: [],
 };
 
@@ -79,6 +83,21 @@ const shortTextQuestion: QuestionExport = {
     { id: 1, text: 'Oxigênio' },
     { id: 2, text: 'O2' },
   ],
+  matchingPairs: [],
+  answerFormat: 'text',
+  tagIds: [],
+};
+
+const mathShortTextQuestion: QuestionExport = {
+  id: 7,
+  type: 'short_text',
+  difficulty: 'hard',
+  promptMdx: 'Calcule $\\lim_{x \\to 2} (3x + 1)$.',
+  resolutionMdx: 'Substituição direta.',
+  correctAnswer: null,
+  answerFormat: 'math',
+  options: [],
+  acceptedAnswers: [{ id: 3, text: '7' }],
   matchingPairs: [],
   tagIds: [],
 };
@@ -96,6 +115,7 @@ const orderingQuestion: QuestionExport = {
   ],
   acceptedAnswers: [],
   matchingPairs: [],
+  answerFormat: 'text',
   tagIds: [],
 };
 
@@ -112,6 +132,7 @@ const matchingQuestion: QuestionExport = {
     { id: 60, leftMdx: 'Cão', rightMdx: 'Late' },
     { id: 61, leftMdx: 'Gato', rightMdx: 'Mia' },
   ],
+  answerFormat: 'text',
   tagIds: [],
 };
 
@@ -183,6 +204,19 @@ describe('compileQuestionForExport', () => {
     expect(exported.matchingPairs).toHaveLength(2);
     expect(exported.matchingPairs[0].leftHtml).toContain('Cão');
     expect(exported.matchingPairs[0].rightHtml).toContain('Late');
+  });
+
+  it('passes through answerFormat unchanged for a math-mode short_text question', async () => {
+    const exported = await compileQuestionForExport(mathShortTextQuestion);
+
+    expect(exported.answerFormat).toBe('math');
+    expect(exported.acceptedAnswers).toEqual([{ id: 3, text: '7' }]);
+  });
+
+  it('defaults answerFormat to "text" for a plain short_text question', async () => {
+    const exported = await compileQuestionForExport(shortTextQuestion);
+
+    expect(exported.answerFormat).toBe('text');
   });
 });
 

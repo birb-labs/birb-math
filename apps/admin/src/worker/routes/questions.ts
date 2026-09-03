@@ -27,6 +27,7 @@ interface QuestionInput {
   promptMdx: string;
   resolutionMdx: string;
   correctAnswer: string | null;
+  answerFormat: 'text' | 'math';
   options: { textMdx: string; isCorrect: boolean }[];
   acceptedAnswers: string[];
   matchingPairs: { leftMdx: string; rightMdx: string }[];
@@ -49,6 +50,9 @@ function validateQuestionInput(body: QuestionInput): string | null {
   }
 
   if (body.type === 'short_text') {
+    if (body.answerFormat !== 'text' && body.answerFormat !== 'math') {
+      return 'Questões de texto curto precisam de um modo de resposta "text" ou "math".';
+    }
     if (body.acceptedAnswers.length < 1 || body.acceptedAnswers.some((answer) => answer.trim() === '')) {
       return 'Questões de texto curto precisam de pelo menos 1 resposta aceita, sem entradas em branco.';
     }
@@ -108,6 +112,7 @@ questionsRoutes.post('/', async (c) => {
       promptMdx: body.promptMdx,
       resolutionMdx: body.resolutionMdx,
       correctAnswer: body.correctAnswer,
+      answerFormat: body.answerFormat,
     })
     .returning();
 
@@ -161,6 +166,7 @@ questionsRoutes.patch('/:id', async (c) => {
       promptMdx: body.promptMdx,
       resolutionMdx: body.resolutionMdx,
       correctAnswer: body.correctAnswer,
+      answerFormat: body.answerFormat,
     })
     .where(eq(questions.id, id))
     .run();

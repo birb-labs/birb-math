@@ -23,6 +23,7 @@ const fixtureQuestions: ExportedQuestion[] = [
     matchingPairs: [],
     correctAnswer: null,
     resolutionHtml: '<p>É 2.</p>',
+    answerFormat: 'text',
     tagIds: [1],
   },
 ];

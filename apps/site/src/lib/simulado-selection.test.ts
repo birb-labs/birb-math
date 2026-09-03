@@ -14,6 +14,7 @@ function makeQuestion(overrides: Partial<ExportedQuestion>): ExportedQuestion {
     matchingPairs: [],
     correctAnswer: '1',
     resolutionHtml: '<p>resolution</p>',
+    answerFormat: 'text',
     tagIds: [],
     ...overrides,
   };
