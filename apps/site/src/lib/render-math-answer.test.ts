@@ -14,4 +14,15 @@ describe('renderMathAnswer', () => {
   it('does not throw on invalid LaTeX', () => {
     expect(() => renderMathAnswer('\\frac{1')).not.toThrow();
   });
+
+  it('does not contain the raw LaTeX source in the rendered output', () => {
+    const html = renderMathAnswer('\\frac{1}{2}');
+    expect(html).not.toContain('\\frac');
+  });
+
+  it('retains the semantic MathML tree for screen readers', () => {
+    const html = renderMathAnswer('\\frac{1}{2}');
+    expect(html).toContain('<math');
+    expect(html).toContain('class="katex-mathml"');
+  });
 });
