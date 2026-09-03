@@ -19,3 +19,43 @@
   border-radius: 0.25rem;
   padding: 0.5rem;
 }
+
+.toolbar {
+  display: flex;
+  margin-bottom: 0.25rem;
+}
+
+.toolbarButton {
+  border-radius: 0.25rem;
+  border: 1px solid var(--color-border);
+  background: transparent;
+  color: inherit;
+  padding: 0.4rem 0.8rem;
+  cursor: pointer;
+}
+
+.dialog {
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  max-width: 30rem;
+  background: var(--color-background);
+  color: var(--color-foreground);
+}
+
+.dialog::backdrop {
+  background: rgb(0 0 0 / 40%);
+}
+
+.blockToggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 1rem 0;
+}
+
+.dialogActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
