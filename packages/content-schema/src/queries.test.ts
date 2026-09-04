@@ -20,61 +20,94 @@ function createTestDb() {
 type TestDb = ReturnType<typeof createTestDb>;
 
 function seedFixture(db: TestDb) {
-  db.insert(schema.subjects).values({ slug: 'calculo', name: 'Cálculo', order: 1 }).run();
+  db.insert(schema.subjects).values({ slug: 'calculo', order: 1 }).run();
   const subject = db.select().from(schema.subjects).all()[0];
-
-  db.insert(schema.topics)
-    .values({ subjectId: subject.id, slug: 'limites', name: 'Limites', order: 1 })
+  db.insert(schema.subjectTranslations)
+    .values({ subjectId: subject.id, locale: 'pt-BR', name: 'Cálculo' })
     .run();
+
+  db.insert(schema.topics).values({ subjectId: subject.id, slug: 'limites', order: 1 }).run();
   const topic = db.select().from(schema.topics).all()[0];
+  db.insert(schema.topicTranslations)
+    .values({ topicId: topic.id, locale: 'pt-BR', name: 'Limites' })
+    .run();
 
   db.insert(schema.sections)
-    .values({ topicId: topic.id, slug: 'limites-laterais', name: 'Limites Laterais', order: 1 })
+    .values({ topicId: topic.id, slug: 'limites-laterais', order: 1 })
     .run();
   const section = db.select().from(schema.sections).all()[0];
+  db.insert(schema.sectionTranslations)
+    .values({ sectionId: section.id, locale: 'pt-BR', name: 'Limites Laterais' })
+    .run();
 
   db.insert(schema.lessons)
     .values([
+      { sectionId: section.id, slug: 'definicao-de-limite', order: 1 },
+      { sectionId: section.id, slug: 'limites-laterais-exemplo', order: 2 },
+    ])
+    .run();
+  const lessons = db.select().from(schema.lessons).all();
+  const definicaoLesson = lessons.find((l) => l.slug === 'definicao-de-limite')!;
+  const exemploLesson = lessons.find((l) => l.slug === 'limites-laterais-exemplo')!;
+  db.insert(schema.lessonTranslations)
+    .values([
       {
-        sectionId: section.id,
-        slug: 'definicao-de-limite',
+        lessonId: definicaoLesson.id,
+        locale: 'pt-BR',
         title: 'Definição de Limite',
         bodyMdx: '# Definição\n\nConteúdo de exemplo.',
-        order: 1,
       },
       {
-        sectionId: section.id,
-        slug: 'limites-laterais-exemplo',
+        lessonId: exemploLesson.id,
+        locale: 'pt-BR',
         title: 'Exemplo de Limite Lateral',
         bodyMdx: '# Exemplo\n\nOutro conteúdo.',
-        order: 2,
       },
     ])
     .run();
 
-  db.insert(schema.tags).values({ slug: 'limites', name: 'Limites' }).run();
+  db.insert(schema.tags).values({ slug: 'limites' }).run();
   const topicTag = db.select().from(schema.tags).all()[0];
+  db.insert(schema.tagTranslations)
+    .values({ tagId: topicTag.id, locale: 'pt-BR', name: 'Limites' })
+    .run();
 
   db.insert(schema.tags)
-    .values({ slug: 'limites-laterais', name: 'Limites Laterais', parentTagId: topicTag.id })
+    .values({ slug: 'limites-laterais', parentTagId: topicTag.id })
     .run();
   const subtopicTag = db.select().from(schema.tags).where(eq(schema.tags.slug, 'limites-laterais')).get()!;
+  db.insert(schema.tagTranslations)
+    .values({ tagId: subtopicTag.id, locale: 'pt-BR', name: 'Limites Laterais' })
+    .run();
 
   db.insert(schema.questions)
     .values({
       type: 'multiple_choice',
       difficulty: 'easy',
-      promptMdx: 'Qual é o valor de $1 + 1$?',
-      resolutionMdx: 'A soma de $1 + 1$ é $2$.',
       correctAnswer: null,
     })
     .run();
   const mcQuestion = db.select().from(schema.questions).all()[0];
+  db.insert(schema.questionTranslations)
+    .values({
+      questionId: mcQuestion.id,
+      locale: 'pt-BR',
+      promptMdx: 'Qual é o valor de $1 + 1$?',
+      resolutionMdx: 'A soma de $1 + 1$ é $2$.',
+    })
+    .run();
 
   db.insert(schema.questionOptions)
     .values([
-      { questionId: mcQuestion.id, textMdx: '1', isCorrect: false, order: 1 },
-      { questionId: mcQuestion.id, textMdx: '2', isCorrect: true, order: 2 },
+      { questionId: mcQuestion.id, isCorrect: false, order: 1 },
+      { questionId: mcQuestion.id, isCorrect: true, order: 2 },
+    ])
+    .run();
+  const mcOptions = db.select().from(schema.questionOptions).where(eq(schema.questionOptions.questionId, mcQuestion.id)).all();
+  db.insert(schema.questionOptionTranslations)
+    .values([
+      { optionId: mcOptions[0].id, locale: 'pt-BR', textMdx: '1' },
+      { optionId: mcOptions[1].id, locale: 'pt-BR', textMdx: '2' },
     ])
     .run();
 
@@ -84,12 +117,18 @@ function seedFixture(db: TestDb) {
     .values({
       type: 'numeric',
       difficulty: 'medium',
-      promptMdx: 'Quanto é $3 \\div 2$?',
-      resolutionMdx: 'A divisão de $3$ por $2$ é igual a $1.5$.',
       correctAnswer: '1.5',
     })
     .run();
   const numericQuestion = db.select().from(schema.questions).all()[1];
+  db.insert(schema.questionTranslations)
+    .values({
+      questionId: numericQuestion.id,
+      locale: 'pt-BR',
+      promptMdx: 'Quanto é $3 \\div 2$?',
+      resolutionMdx: 'A divisão de $3$ por $2$ é igual a $1.5$.',
+    })
+    .run();
 
   db.insert(schema.questionTags)
     .values([
@@ -102,18 +141,36 @@ function seedFixture(db: TestDb) {
     .values({
       type: 'multiple_response',
       difficulty: 'hard',
-      promptMdx: 'Quais das afirmações abaixo são verdadeiras?',
-      resolutionMdx: 'A primeira e a terceira afirmações são verdadeiras.',
       correctAnswer: null,
     })
     .run();
   const multiResponseQuestion = db.select().from(schema.questions).all()[2];
+  db.insert(schema.questionTranslations)
+    .values({
+      questionId: multiResponseQuestion.id,
+      locale: 'pt-BR',
+      promptMdx: 'Quais das afirmações abaixo são verdadeiras?',
+      resolutionMdx: 'A primeira e a terceira afirmações são verdadeiras.',
+    })
+    .run();
 
   db.insert(schema.questionOptions)
     .values([
-      { questionId: multiResponseQuestion.id, textMdx: 'Afirmação 1', isCorrect: true, order: 1 },
-      { questionId: multiResponseQuestion.id, textMdx: 'Afirmação 2', isCorrect: false, order: 2 },
-      { questionId: multiResponseQuestion.id, textMdx: 'Afirmação 3', isCorrect: true, order: 3 },
+      { questionId: multiResponseQuestion.id, isCorrect: true, order: 1 },
+      { questionId: multiResponseQuestion.id, isCorrect: false, order: 2 },
+      { questionId: multiResponseQuestion.id, isCorrect: true, order: 3 },
+    ])
+    .run();
+  const multiResponseOptions = db
+    .select()
+    .from(schema.questionOptions)
+    .where(eq(schema.questionOptions.questionId, multiResponseQuestion.id))
+    .all();
+  db.insert(schema.questionOptionTranslations)
+    .values([
+      { optionId: multiResponseOptions[0].id, locale: 'pt-BR', textMdx: 'Afirmação 1' },
+      { optionId: multiResponseOptions[1].id, locale: 'pt-BR', textMdx: 'Afirmação 2' },
+      { optionId: multiResponseOptions[2].id, locale: 'pt-BR', textMdx: 'Afirmação 3' },
     ])
     .run();
 
@@ -123,12 +180,18 @@ function seedFixture(db: TestDb) {
     .values({
       type: 'true_false',
       difficulty: 'easy',
-      promptMdx: 'O limite de uma função constante é sempre ela mesma?',
-      resolutionMdx: 'Sim, $\\lim_{x \\to a} c = c$.',
       correctAnswer: 'true',
     })
     .run();
   const trueFalseQuestion = db.select().from(schema.questions).all()[3];
+  db.insert(schema.questionTranslations)
+    .values({
+      questionId: trueFalseQuestion.id,
+      locale: 'pt-BR',
+      promptMdx: 'O limite de uma função constante é sempre ela mesma?',
+      resolutionMdx: 'Sim, $\\lim_{x \\to a} c = c$.',
+    })
+    .run();
 
   db.insert(schema.questionTags).values({ questionId: trueFalseQuestion.id, tagId: topicTag.id }).run();
 
@@ -136,12 +199,18 @@ function seedFixture(db: TestDb) {
     .values({
       type: 'short_text',
       difficulty: 'medium',
-      promptMdx: 'Como se chama o teorema que garante uma raiz entre dois pontos de sinais opostos?',
-      resolutionMdx: 'Teorema do Valor Intermediário.',
       correctAnswer: null,
     })
     .run();
   const shortTextQuestion = db.select().from(schema.questions).all()[4];
+  db.insert(schema.questionTranslations)
+    .values({
+      questionId: shortTextQuestion.id,
+      locale: 'pt-BR',
+      promptMdx: 'Como se chama o teorema que garante uma raiz entre dois pontos de sinais opostos?',
+      resolutionMdx: 'Teorema do Valor Intermediário.',
+    })
+    .run();
 
   db.insert(schema.questionAcceptedAnswers)
     .values([
@@ -154,18 +223,36 @@ function seedFixture(db: TestDb) {
     .values({
       type: 'ordering',
       difficulty: 'medium',
-      promptMdx: 'Ordene os passos para calcular $\\lim_{x\\to 3}\\frac{x^2-9}{x-3}$.',
-      resolutionMdx: 'Fatorar, cancelar, substituir.',
       correctAnswer: null,
     })
     .run();
   const orderingQuestion = db.select().from(schema.questions).all()[5];
+  db.insert(schema.questionTranslations)
+    .values({
+      questionId: orderingQuestion.id,
+      locale: 'pt-BR',
+      promptMdx: 'Ordene os passos para calcular $\\lim_{x\\to 3}\\frac{x^2-9}{x-3}$.',
+      resolutionMdx: 'Fatorar, cancelar, substituir.',
+    })
+    .run();
 
   db.insert(schema.questionOptions)
     .values([
-      { questionId: orderingQuestion.id, textMdx: 'Fatorar o numerador', isCorrect: false, order: 1 },
-      { questionId: orderingQuestion.id, textMdx: 'Cancelar o fator comum', isCorrect: false, order: 2 },
-      { questionId: orderingQuestion.id, textMdx: 'Substituir $x=3$', isCorrect: false, order: 3 },
+      { questionId: orderingQuestion.id, isCorrect: false, order: 1 },
+      { questionId: orderingQuestion.id, isCorrect: false, order: 2 },
+      { questionId: orderingQuestion.id, isCorrect: false, order: 3 },
+    ])
+    .run();
+  const orderingOptions = db
+    .select()
+    .from(schema.questionOptions)
+    .where(eq(schema.questionOptions.questionId, orderingQuestion.id))
+    .all();
+  db.insert(schema.questionOptionTranslations)
+    .values([
+      { optionId: orderingOptions[0].id, locale: 'pt-BR', textMdx: 'Fatorar o numerador' },
+      { optionId: orderingOptions[1].id, locale: 'pt-BR', textMdx: 'Cancelar o fator comum' },
+      { optionId: orderingOptions[2].id, locale: 'pt-BR', textMdx: 'Substituir $x=3$' },
     ])
     .run();
 
@@ -173,17 +260,44 @@ function seedFixture(db: TestDb) {
     .values({
       type: 'matching',
       difficulty: 'hard',
-      promptMdx: 'Associe cada tipo de descontinuidade à sua descrição.',
-      resolutionMdx: 'Ver Lição 5.1.',
       correctAnswer: null,
     })
     .run();
   const matchingQuestion = db.select().from(schema.questions).all()[6];
+  db.insert(schema.questionTranslations)
+    .values({
+      questionId: matchingQuestion.id,
+      locale: 'pt-BR',
+      promptMdx: 'Associe cada tipo de descontinuidade à sua descrição.',
+      resolutionMdx: 'Ver Lição 5.1.',
+    })
+    .run();
 
   db.insert(schema.questionMatchingPairs)
     .values([
-      { questionId: matchingQuestion.id, leftMdx: 'Removível', rightMdx: 'O limite existe mas difere de $f(a)$', order: 1 },
-      { questionId: matchingQuestion.id, leftMdx: 'Salto', rightMdx: 'Os limites laterais existem mas discordam', order: 2 },
+      { questionId: matchingQuestion.id, order: 1 },
+      { questionId: matchingQuestion.id, order: 2 },
+    ])
+    .run();
+  const matchingPairs = db
+    .select()
+    .from(schema.questionMatchingPairs)
+    .where(eq(schema.questionMatchingPairs.questionId, matchingQuestion.id))
+    .all();
+  db.insert(schema.questionMatchingPairTranslations)
+    .values([
+      {
+        pairId: matchingPairs[0].id,
+        locale: 'pt-BR',
+        leftMdx: 'Removível',
+        rightMdx: 'O limite existe mas difere de $f(a)$',
+      },
+      {
+        pairId: matchingPairs[1].id,
+        locale: 'pt-BR',
+        leftMdx: 'Salto',
+        rightMdx: 'Os limites laterais existem mas discordam',
+      },
     ])
     .run();
 
@@ -191,13 +305,19 @@ function seedFixture(db: TestDb) {
     .values({
       type: 'short_text',
       difficulty: 'hard',
-      promptMdx: 'Calcule $\\lim_{x \\to 2} (3x + 1)$.',
-      resolutionMdx: 'Substituição direta: $3(2)+1=7$.',
       correctAnswer: null,
       answerFormat: 'math',
     })
     .run();
   const mathShortTextQuestion = db.select().from(schema.questions).all()[7];
+  db.insert(schema.questionTranslations)
+    .values({
+      questionId: mathShortTextQuestion.id,
+      locale: 'pt-BR',
+      promptMdx: 'Calcule $\\lim_{x \\to 2} (3x + 1)$.',
+      resolutionMdx: 'Substituição direta: $3(2)+1=7$.',
+    })
+    .run();
 
   db.insert(schema.questionAcceptedAnswers)
     .values([{ questionId: mathShortTextQuestion.id, text: '7' }])
