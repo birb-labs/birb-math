@@ -60,7 +60,8 @@
       "finish": "Finish practice test",
       "grading": "Grading...",
       "true": "True",
-      "false": "False"
+      "false": "False",
+      "gradingError": "Could not grade the practice test. Please try again."
     },
     "results": {
       "score": "You got {correct} of {total} questions right",

@@ -19,6 +19,7 @@ type ViewState =
 
 export function SimuladoPageClient({ tagTree, locale }: { tagTree: TopicNode[]; locale: string }) {
   const t = useTranslations('simulado.setup');
+  const tTaking = useTranslations('simulado.taking');
   const [state, setState] = useState<ViewState>({ view: 'setup' });
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [notice, setNotice] = useState<string | null>(null);
@@ -61,9 +62,14 @@ export function SimuladoPageClient({ tagTree, locale }: { tagTree: TopicNode[]; 
 
   async function handleFinish() {
     if (state.view !== 'taking') return;
-    const result = await gradeSimulado(state.questions, answers, locale);
-    addAttempt(result);
-    setState({ view: 'results', result });
+    setLoadError(null);
+    try {
+      const result = await gradeSimulado(state.questions, answers, locale);
+      addAttempt(result);
+      setState({ view: 'results', result });
+    } catch {
+      setLoadError(tTaking('gradingError'));
+    }
   }
 
   function handleViewAttempt(attempt: SimuladoAttempt) {
@@ -74,6 +80,7 @@ export function SimuladoPageClient({ tagTree, locale }: { tagTree: TopicNode[]; 
     return (
       <>
         {notice && <p className={styles.notice}>{notice}</p>}
+        {loadError && <p className={styles.notice}>{loadError}</p>}
         <SimuladoTaking
           questions={state.questions}
           answers={answers}

@@ -46,6 +46,20 @@ function isZero(expr: BoxedExpression, tolerance = 1e-9): boolean {
 export async function isEquivalentExpression(userLatex: string, acceptedLatex: string): Promise<boolean> {
   if (userLatex.trim() === '' || acceptedLatex.trim() === '') return false;
 
+  // A cheap defense-in-depth guard: pathologically long/deeply-nested LaTeX
+  // (e.g. hundreds of nested \frac) is unlikely to be a real answer and can
+  // make the underlying parser throw a stack-overflow RangeError. This does
+  // NOT fully protect against unbounded computation on SHORT inputs (e.g.
+  // "1000000!"), which is a known, accepted residual risk of any
+  // client-side CAS — self-inflicted (single-user, static site, no
+  // server-side compute) and not solvable without a much larger
+  // architecture change (e.g. moving evaluation to a Web Worker), which is
+  // out of scope here. The comprehensive try/catch below is what prevents
+  // that residual risk from ever destroying a whole graded batch, even
+  // though it can't prevent a slow UI in the meantime.
+  const MAX_LATEX_LENGTH = 200;
+  if (userLatex.length > MAX_LATEX_LENGTH || acceptedLatex.length > MAX_LATEX_LENGTH) return false;
+
   let engine: ComputeEngine;
   try {
     engine = await getSharedEngine();
@@ -53,19 +67,27 @@ export async function isEquivalentExpression(userLatex: string, acceptedLatex: s
     return false;
   }
 
-  const a = engine.parse(userLatex);
-  const b = engine.parse(acceptedLatex);
-  if (!a.isValid || !b.isValid) return false;
+  try {
+    const a = engine.parse(userLatex);
+    const b = engine.parse(acceptedLatex);
+    if (!a.isValid || !b.isValid) return false;
 
-  const direct = a.isEqual(b);
-  if (direct === true) return true;
-  if (direct === false) return false;
+    const direct = a.isEqual(b);
+    if (direct === true) return true;
+    if (direct === false) return false;
 
-  // `isEqual` returned undefined (cannot cheaply decide) — cascade
-  // through two fallbacks, cheapest and most broadly applicable first.
-  const diff = engine.box(['Subtract', a, b]);
+    // `isEqual` returned undefined (cannot cheaply decide) — cascade
+    // through two fallbacks, cheapest and most broadly applicable first.
+    const diff = engine.box(['Subtract', a, b]);
 
-  if (isZero(diff.simplify())) return true;
+    if (isZero(diff.simplify())) return true;
 
-  return isZero(diff.N());
+    return isZero(diff.N());
+  } catch {
+    // Any failure while parsing or evaluating (e.g. a RangeError from
+    // deeply-nested LaTeX exceeding the parser's stack) must grade as
+    // incorrect, never propagate — the same invariant already guaranteed
+    // above for a failed dynamic import.
+    return false;
+  }
 }

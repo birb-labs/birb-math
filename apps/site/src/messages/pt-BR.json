@@ -60,7 +60,8 @@
       "finish": "Finalizar simulado",
       "grading": "Corrigindo...",
       "true": "Verdadeiro",
-      "false": "Falso"
+      "false": "Falso",
+      "gradingError": "Não foi possível corrigir o simulado. Tente novamente."
     },
     "results": {
       "score": "Você acertou {correct} de {total} questões",

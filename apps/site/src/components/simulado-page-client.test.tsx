@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { NextIntlClientProvider } from 'next-intl';
 import ptBR from '@/messages/pt-BR.json';
@@ -24,6 +24,27 @@ const fixtureQuestions: ExportedQuestion[] = [
     correctAnswer: null,
     resolutionHtml: '<p>É 2.</p>',
     answerFormat: 'text',
+    tagIds: [1],
+  },
+];
+
+// Used only by the CAS-regression test below: a math-mode short_text
+// question alongside the ordinary multiple-choice fixture question, so we
+// can confirm a pathological math answer to ONE question never prevents
+// the OTHER question from being graded.
+const mathModeFixtureQuestions: ExportedQuestion[] = [
+  fixtureQuestions[0],
+  {
+    id: 2,
+    type: 'short_text',
+    difficulty: 'easy',
+    promptHtml: '<p>Resolva para x: x + 1 = 2</p>',
+    options: [],
+    acceptedAnswers: [{ id: 20, text: 'x' }],
+    matchingPairs: [],
+    correctAnswer: null,
+    resolutionHtml: '<p>x = 1</p>',
+    answerFormat: 'math',
     tagIds: [1],
   },
 ];
@@ -129,5 +150,74 @@ describe('SimuladoPageClient', () => {
     expect(
       await screen.findByText('Não foi possível carregar o banco de questões. Tente novamente.'),
     ).toBeInTheDocument();
+  });
+
+  it('completes grading (marking the question incorrect) when a math-mode answer is pathologically long, instead of losing the whole result', async () => {
+    const user = userEvent.setup();
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({ ok: true, json: () => Promise.resolve(mathModeFixtureQuestions) }),
+    );
+
+    const { container } = render(
+      <NextIntlClientProvider locale="pt-BR" messages={ptBR}>
+        <SimuladoPageClient tagTree={fixtureTagTree} locale="pt-BR" />
+      </NextIntlClientProvider>,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Gerar simulado' }));
+    expect(await screen.findByText('Quanto é 1+1?')).toBeInTheDocument();
+
+    // Correctly answer the multiple-choice question (the "2" option).
+    await user.click(screen.getAllByRole('radio')[1]);
+
+    // Feed the math-mode question a pathologically long/deeply-nested LaTeX
+    // answer — the exact class of input that, before the Critical fix,
+    // could throw a RangeError out of isEquivalentExpression and reject
+    // gradeSimulado's Promise.all, discarding every question's result, not
+    // just this one.
+    await waitFor(() => expect(container.querySelector('math-field')).toBeTruthy());
+    const field = container.querySelector('math-field') as HTMLElement & { value: string };
+    field.value = '\\frac{1}{'.repeat(300) + '1' + '}'.repeat(300);
+    field.dispatchEvent(new Event('input', { bubbles: true }));
+
+    await user.click(screen.getByRole('button', { name: 'Finalizar simulado' }));
+
+    // Grading completed for BOTH questions instead of the whole batch being
+    // destroyed: the multiple-choice question is marked correct, and the
+    // pathological math-mode answer is marked incorrect rather than
+    // crashing the batch.
+    expect(await screen.findByText('Você acertou 1 de 2 questões')).toBeInTheDocument();
+  }, 20000); // Mounting a real <math-field> (mathlive) plus a real compute-engine grading pass is slower than this file's other, purely-synthetic fixtures — give it more headroom than the default 5s.
+
+  it('shows an error and stays usable if grading fails unexpectedly', async () => {
+    vi.doMock('@/lib/grade-simulado', () => ({
+      gradeSimulado: vi.fn().mockRejectedValue(new Error('simulated grading failure')),
+    }));
+    vi.resetModules();
+
+    const { SimuladoPageClient: SimuladoPageClientWithFailingGrader } = await import('./simulado-page-client');
+
+    const user = userEvent.setup();
+    render(
+      <NextIntlClientProvider locale="pt-BR" messages={ptBR}>
+        <SimuladoPageClientWithFailingGrader tagTree={fixtureTagTree} locale="pt-BR" />
+      </NextIntlClientProvider>,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Gerar simulado' }));
+    expect(await screen.findByText('Quanto é 1+1?')).toBeInTheDocument();
+
+    await user.click(screen.getAllByRole('radio')[0]);
+    await user.click(screen.getByRole('button', { name: 'Finalizar simulado' }));
+
+    expect(
+      await screen.findByText('Não foi possível corrigir o simulado. Tente novamente.'),
+    ).toBeInTheDocument();
+    // Still usable: the finish button is back to normal, not stuck disabled.
+    expect(await screen.findByRole('button', { name: 'Finalizar simulado' })).not.toBeDisabled();
+
+    vi.doUnmock('@/lib/grade-simulado');
+    vi.resetModules();
   });
 });

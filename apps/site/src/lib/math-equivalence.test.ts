@@ -59,6 +59,27 @@ describe('isEquivalentExpression', () => {
     expect(await isEquivalentExpression('', '1')).toBe(false);
     expect(await isEquivalentExpression('1', '')).toBe(false);
   });
+
+  it('returns false for pathologically long LaTeX on either side, without throwing (length guard)', async () => {
+    const long = 'x'.repeat(300);
+    expect(await isEquivalentExpression(long, 'x')).toBe(false);
+    expect(await isEquivalentExpression('x', long)).toBe(false);
+  });
+
+  it('returns false for deeply-nested LaTeX that would otherwise overflow the parser stack, without throwing', async () => {
+    // Real case that reproduces a `RangeError: Maximum call stack size
+    // exceeded` from `engine.parse()` against the actual compute-engine
+    // library: ~300 nested `\frac`. This is long enough to also be caught
+    // by the length guard above — which is exactly the point, since the
+    // guard is specifically meant to intercept this class of input before
+    // it ever reaches the parser. The comprehensive try/catch around the
+    // parse/evaluate logic is the remaining safety net for anything that
+    // is short enough to slip past the length guard but still throws
+    // (verified by the module-load-failure test below, which exercises the
+    // same try/catch pattern for a different failure source).
+    const deeplyNested = '\\frac{1}{'.repeat(300) + '1' + '}'.repeat(300);
+    expect(await isEquivalentExpression(deeplyNested, '1')).toBe(false);
+  });
 });
 
 describe('isEquivalentExpression when the compute-engine module fails to load', () => {
