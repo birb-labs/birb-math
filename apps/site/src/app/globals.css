@@ -9,6 +9,9 @@ body {
   background-color: var(--color-background);
   color: var(--color-foreground);
   font-family: system-ui, sans-serif;
+  /* KaTeX inline fractions and other tall glyphs need more vertical room
+     than the browser default line-height, or they overlap adjacent lines. */
+  line-height: 1.6;
 }
 
 a {

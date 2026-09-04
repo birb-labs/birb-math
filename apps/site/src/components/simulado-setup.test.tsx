@@ -46,8 +46,70 @@ describe('SimuladoSetup', () => {
 
     expect(onStart).toHaveBeenCalledExactlyOnceWith({
       questionCount: 5,
-      tagIds: [1],
+      tagIds: [1, 2],
       difficulties: ['easy', 'medium', 'hard'],
     });
+  });
+
+  it('selecting a topic also selects all of its subtopics', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <NextIntlClientProvider locale="pt-BR" messages={ptBR}>
+        <SimuladoSetup tagTree={fixtureTagTree} onStart={() => {}} />
+      </NextIntlClientProvider>,
+    );
+
+    await user.click(screen.getByRole('checkbox', { name: 'Limites' }));
+
+    expect(screen.getByRole('checkbox', { name: 'Limites' })).toBeChecked();
+    expect(screen.getByRole('checkbox', { name: 'Limites Laterais' })).toBeChecked();
+  });
+
+  it('deselecting a subtopic also deselects its parent topic', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <NextIntlClientProvider locale="pt-BR" messages={ptBR}>
+        <SimuladoSetup tagTree={fixtureTagTree} onStart={() => {}} />
+      </NextIntlClientProvider>,
+    );
+
+    await user.click(screen.getByRole('checkbox', { name: 'Limites' }));
+    await user.click(screen.getByRole('checkbox', { name: 'Limites Laterais' }));
+
+    expect(screen.getByRole('checkbox', { name: 'Limites' })).not.toBeChecked();
+    expect(screen.getByRole('checkbox', { name: 'Limites Laterais' })).not.toBeChecked();
+  });
+
+  it('deselecting a topic also deselects all of its subtopics', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <NextIntlClientProvider locale="pt-BR" messages={ptBR}>
+        <SimuladoSetup tagTree={fixtureTagTree} onStart={() => {}} />
+      </NextIntlClientProvider>,
+    );
+
+    await user.click(screen.getByRole('checkbox', { name: 'Limites' }));
+    await user.click(screen.getByRole('checkbox', { name: 'Limites' }));
+
+    expect(screen.getByRole('checkbox', { name: 'Limites' })).not.toBeChecked();
+    expect(screen.getByRole('checkbox', { name: 'Limites Laterais' })).not.toBeChecked();
+  });
+
+  it('selecting every subtopic individually also selects the parent topic', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <NextIntlClientProvider locale="pt-BR" messages={ptBR}>
+        <SimuladoSetup tagTree={fixtureTagTree} onStart={() => {}} />
+      </NextIntlClientProvider>,
+    );
+
+    await user.click(screen.getByRole('checkbox', { name: 'Limites Laterais' }));
+
+    expect(screen.getByRole('checkbox', { name: 'Limites' })).toBeChecked();
+    expect(screen.getByRole('checkbox', { name: 'Limites Laterais' })).toBeChecked();
   });
 });

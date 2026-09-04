@@ -30,11 +30,32 @@ export function SimuladoSetup({
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  function toggleTag(id: number) {
+  function toggleTopic(topic: TopicNode) {
     setSelectedTagIds((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
+      const ids = [topic.id, ...topic.subtopics.map((subtopic) => subtopic.id)];
+      if (next.has(topic.id)) {
+        ids.forEach((id) => next.delete(id));
+      } else {
+        ids.forEach((id) => next.add(id));
+      }
+      return next;
+    });
+  }
+
+  function toggleSubtopic(topic: TopicNode, subtopicId: number) {
+    setSelectedTagIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(subtopicId)) {
+        next.delete(subtopicId);
+        next.delete(topic.id);
+      } else {
+        next.add(subtopicId);
+        const allSubtopicsSelected = topic.subtopics.every(
+          (subtopic) => subtopic.id === subtopicId || next.has(subtopic.id),
+        );
+        if (allSubtopicsSelected) next.add(topic.id);
+      }
       return next;
     });
   }
@@ -85,7 +106,7 @@ export function SimuladoSetup({
                 id={`tag-${topic.id}`}
                 type="checkbox"
                 checked={selectedTagIds.has(topic.id)}
-                onChange={() => toggleTag(topic.id)}
+                onChange={() => toggleTopic(topic)}
               />
               <label htmlFor={`tag-${topic.id}`}>{topic.name}</label>
             </div>
@@ -97,7 +118,7 @@ export function SimuladoSetup({
                       id={`tag-${subtopic.id}`}
                       type="checkbox"
                       checked={selectedTagIds.has(subtopic.id)}
-                      onChange={() => toggleTag(subtopic.id)}
+                      onChange={() => toggleSubtopic(topic, subtopic.id)}
                     />
                     <label htmlFor={`tag-${subtopic.id}`}>{subtopic.name}</label>
                   </div>
