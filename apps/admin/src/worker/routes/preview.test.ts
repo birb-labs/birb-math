@@ -32,6 +32,21 @@ describe('POST /api/preview', () => {
     expect(html).toContain('class="katex"');
   });
 
+  it('strips the raw-LaTeX annotation element while keeping the MathML accessibility tree', async () => {
+    const cookie = await login();
+    const response = await SELF.fetch('https://admin.test/api/preview', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Cookie: cookie },
+      body: JSON.stringify({ mdx: 'Qual é o valor de $1 + 1$?' }),
+    });
+
+    expect(response.status).toBe(200);
+    const { html } = await response.json<{ html: string }>();
+    expect(html).not.toContain('<annotation');
+    expect(html).not.toContain('1 + 1');
+    expect(html).toContain('class="katex-mathml"');
+  });
+
   it('compiles GFM (pipe) tables into real HTML tables', async () => {
     const cookie = await login();
     const response = await SELF.fetch('https://admin.test/api/preview', {

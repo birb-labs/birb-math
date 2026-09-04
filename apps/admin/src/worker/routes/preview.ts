@@ -11,6 +11,36 @@ import type { Env } from '../env';
 
 export const previewRoutes = new Hono<{ Bindings: Env }>();
 
+interface HastNode {
+  type: string;
+  tagName?: string;
+  children?: HastNode[];
+}
+
+/**
+ * rehype-katex's default output embeds the raw LaTeX source inside a
+ * hidden `<annotation encoding="application/x-tex">` element (part of the
+ * MathML accessibility tree) — that raw source leaks into `textContent`
+ * (and whatever a screen reader does with it), the same bug already found
+ * and fixed once for student-typed math answers (see
+ * apps/site/src/lib/render-math-answer.ts) and for the site's build-time
+ * MDX compiler (see apps/site/src/lib/compile-lesson-mdx.ts). Strip only
+ * the `<annotation>` node here too, keeping the rest of the `<math>` tree
+ * (the part a screen reader actually reads) intact.
+ */
+function stripKatexAnnotations() {
+  return (tree: HastNode) => {
+    function walk(node: HastNode) {
+      if (!node.children) return;
+      node.children = node.children.filter(
+        (child) => !(child.type === 'element' && child.tagName === 'annotation'),
+      );
+      for (const child of node.children) walk(child);
+    }
+    walk(tree);
+  };
+}
+
 /**
  * Compiles raw MDX (well, Markdown + inline LaTeX math, via the same
  * `remark-math`/`rehype-katex` plugins the site's lesson/question export
@@ -47,6 +77,7 @@ const processor = unified()
   .use(remarkMath)
   .use(remarkRehype)
   .use(rehypeKatex)
+  .use(stripKatexAnnotations)
   .use(rehypeStringify);
 
 previewRoutes.post('/', async (c) => {

@@ -18,6 +18,15 @@ describe('compileLessonMdx', () => {
     expect(html).toContain('class="katex"');
   });
 
+  it('strips the raw-LaTeX annotation element while keeping the MathML accessibility tree', async () => {
+    const element = await compileLessonMdx('Fórmula: $x^2$.');
+    const html = renderToStaticMarkup(element);
+
+    expect(html).not.toContain('<annotation');
+    expect(html).not.toContain('x^2');
+    expect(html).toContain('class="katex-mathml"');
+  });
+
   it('rejects malformed MDX with a thrown error rather than silently producing empty output', async () => {
     await expect(compileLessonMdx('<Unclosed')).rejects.toThrow();
   });
