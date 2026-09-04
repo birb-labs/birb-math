@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isAcceptedShortTextAnswer, normalizeMathAnswer, normalizeShortTextAnswer } from './short-text-answer';
+import { isAcceptedShortTextAnswer, normalizeShortTextAnswer } from './short-text-answer';
 
 describe('normalizeShortTextAnswer', () => {
   it('trims and lowercases', () => {
@@ -13,47 +13,39 @@ describe('normalizeShortTextAnswer', () => {
 });
 
 describe('isAcceptedShortTextAnswer', () => {
-  it('accepts a match after normalization on either side', () => {
-    expect(isAcceptedShortTextAnswer('nao existe', ['Não Existe'])).toBe(true);
-    expect(isAcceptedShortTextAnswer('OXIGENIO', ['Oxigênio', 'O2'])).toBe(true);
+  it('accepts a match after normalization on either side', async () => {
+    expect(await isAcceptedShortTextAnswer('nao existe', ['Não Existe'])).toBe(true);
+    expect(await isAcceptedShortTextAnswer('OXIGENIO', ['Oxigênio', 'O2'])).toBe(true);
   });
 
-  it('rejects a non-match', () => {
-    expect(isAcceptedShortTextAnswer('nitrogênio', ['Oxigênio', 'O2'])).toBe(false);
+  it('rejects a non-match', async () => {
+    expect(await isAcceptedShortTextAnswer('nitrogênio', ['Oxigênio', 'O2'])).toBe(false);
   });
 
-  it('rejects an empty or unanswered response', () => {
-    expect(isAcceptedShortTextAnswer('', ['Oxigênio'])).toBe(false);
-    expect(isAcceptedShortTextAnswer(undefined, ['Oxigênio'])).toBe(false);
-  });
-});
-
-describe('normalizeMathAnswer', () => {
-  it('trims leading/trailing whitespace', () => {
-    expect(normalizeMathAnswer('  x^2  ')).toBe('x^2');
-  });
-
-  it('collapses internal whitespace', () => {
-    expect(normalizeMathAnswer('3 x + 1')).toBe('3x+1');
-  });
-
-  it('does not lowercase, unlike normalizeShortTextAnswer — LaTeX is case-sensitive', () => {
-    expect(normalizeMathAnswer('\\Delta')).toBe('\\Delta');
-    expect(normalizeMathAnswer('\\Delta')).not.toBe('\\delta');
+  it('rejects an empty or unanswered response', async () => {
+    expect(await isAcceptedShortTextAnswer('', ['Oxigênio'])).toBe(false);
+    expect(await isAcceptedShortTextAnswer(undefined, ['Oxigênio'])).toBe(false);
   });
 });
 
 describe('isAcceptedShortTextAnswer with answerFormat "math"', () => {
-  it('is correct on a whitespace-insensitive, case-sensitive match', () => {
-    expect(isAcceptedShortTextAnswer('3x + 1', ['3x+1'], 'math')).toBe(true);
-    expect(isAcceptedShortTextAnswer('3x+1', ['  3x + 1  '], 'math')).toBe(true);
+  it('accepts a symbolically equivalent answer, not just a syntactic match', async () => {
+    expect(await isAcceptedShortTextAnswer('1+3x', ['3x+1'], 'math')).toBe(true);
   });
 
-  it('is incorrect when case differs', () => {
-    expect(isAcceptedShortTextAnswer('\\delta', ['\\Delta'], 'math')).toBe(false);
+  it('accepts a match against any one of several accepted answers', async () => {
+    expect(await isAcceptedShortTextAnswer('0.5', ['1/3', '1/2'], 'math')).toBe(true);
   });
 
-  it('defaults to text-mode (lowercase, diacritic-insensitive) comparison when answerFormat is omitted', () => {
-    expect(isAcceptedShortTextAnswer('OXIGÊNIO', ['oxigenio'], undefined)).toBe(true);
+  it('rejects a mathematically different answer', async () => {
+    expect(await isAcceptedShortTextAnswer('3x+2', ['3x+1'], 'math')).toBe(false);
+  });
+
+  it('accepts an equal physical quantity in different units', async () => {
+    expect(await isAcceptedShortTextAnswer('5000\\mathrm{m}', ['5\\mathrm{km}'], 'math')).toBe(true);
+  });
+
+  it('defaults to text-mode (lowercase, diacritic-insensitive) comparison when answerFormat is omitted', async () => {
+    expect(await isAcceptedShortTextAnswer('OXIGÊNIO', ['oxigenio'], undefined)).toBe(true);
   });
 });
