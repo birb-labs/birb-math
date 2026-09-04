@@ -18,7 +18,11 @@ export interface GradedResult {
   perQuestion: GradedQuestionResult[];
 }
 
-function isAnswerCorrect(question: ExportedQuestion, userAnswer: string | undefined, locale: string): boolean {
+async function isAnswerCorrect(
+  question: ExportedQuestion,
+  userAnswer: string | undefined,
+  locale: string,
+): Promise<boolean> {
   if (userAnswer === undefined) return false;
 
   if (question.type === 'multiple_choice') {
@@ -89,19 +93,21 @@ function isAnswerCorrect(question: ExportedQuestion, userAnswer: string | undefi
   throw new Error(`Unhandled question type in isAnswerCorrect: ${exhaustiveCheck}`);
 }
 
-export function gradeSimulado(
+export async function gradeSimulado(
   questions: ExportedQuestion[],
   answers: Record<number, string>,
   locale: string,
-): GradedResult {
-  const perQuestion = questions.map((question) => {
-    const userAnswer = answers[question.id];
-    return {
-      question,
-      userAnswer,
-      isCorrect: isAnswerCorrect(question, userAnswer, locale),
-    };
-  });
+): Promise<GradedResult> {
+  const perQuestion = await Promise.all(
+    questions.map(async (question) => {
+      const userAnswer = answers[question.id];
+      return {
+        question,
+        userAnswer,
+        isCorrect: await isAnswerCorrect(question, userAnswer, locale),
+      };
+    }),
+  );
 
   return {
     correctCount: perQuestion.filter((result) => result.isCorrect).length,

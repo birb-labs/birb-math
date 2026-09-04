@@ -258,4 +258,30 @@ describe('SimuladoTaking', () => {
 
     expect(onFinish).toHaveBeenCalledOnce();
   });
+
+  it('disables the finish button and shows a loading label while onFinish is pending', async () => {
+    const user = userEvent.setup();
+    let resolveFinish: () => void;
+    const onFinish = vi.fn(
+      () =>
+        new Promise<void>((resolve) => {
+          resolveFinish = resolve;
+        }),
+    );
+
+    render(
+      <NextIntlClientProvider locale="pt-BR" messages={ptBR}>
+        <SimuladoTaking questions={fixtureQuestions} answers={{}} onAnswerChange={() => {}} onFinish={onFinish} />
+      </NextIntlClientProvider>,
+    );
+
+    const finishButton = screen.getByRole('button', { name: 'Finalizar simulado' });
+    await user.click(finishButton);
+
+    expect(await screen.findByRole('button', { name: 'Corrigindo...' })).toBeDisabled();
+
+    resolveFinish!();
+
+    expect(await screen.findByRole('button', { name: 'Finalizar simulado' })).not.toBeDisabled();
+  });
 });

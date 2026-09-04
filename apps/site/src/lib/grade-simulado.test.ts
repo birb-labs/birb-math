@@ -52,74 +52,74 @@ const numericQuestion: ExportedQuestion = {
 };
 
 describe('gradeSimulado', () => {
-  it('grades a correct multiple-choice answer', () => {
-    const result = gradeSimulado([mcQuestion], { 1: '11' }, 'pt-BR');
+  it('grades a correct multiple-choice answer', async () => {
+    const result = await gradeSimulado([mcQuestion], { 1: '11' }, 'pt-BR');
     expect(result.correctCount).toBe(1);
     expect(result.total).toBe(1);
     expect(result.perQuestion[0].isCorrect).toBe(true);
   });
 
-  it('grades an incorrect multiple-choice answer', () => {
-    const result = gradeSimulado([mcQuestion], { 1: '10' }, 'pt-BR');
+  it('grades an incorrect multiple-choice answer', async () => {
+    const result = await gradeSimulado([mcQuestion], { 1: '10' }, 'pt-BR');
     expect(result.correctCount).toBe(0);
     expect(result.perQuestion[0].isCorrect).toBe(false);
   });
 
-  it('grades a numeric answer using locale-aware normalization', () => {
-    const result = gradeSimulado([numericQuestion], { 2: '1,0' }, 'pt-BR');
+  it('grades a numeric answer using locale-aware normalization', async () => {
+    const result = await gradeSimulado([numericQuestion], { 2: '1,0' }, 'pt-BR');
     expect(result.perQuestion[0].isCorrect).toBe(true);
   });
 
-  it('grades an unanswered question as incorrect, not a crash', () => {
-    const result = gradeSimulado([mcQuestion, numericQuestion], {}, 'pt-BR');
+  it('grades an unanswered question as incorrect, not a crash', async () => {
+    const result = await gradeSimulado([mcQuestion, numericQuestion], {}, 'pt-BR');
     expect(result.correctCount).toBe(0);
     expect(result.perQuestion.every((q) => !q.isCorrect)).toBe(true);
   });
 
-  it('computes an overall correctCount/total across mixed question types', () => {
-    const result = gradeSimulado([mcQuestion, numericQuestion], { 1: '11', 2: '1' }, 'pt-BR');
+  it('computes an overall correctCount/total across mixed question types', async () => {
+    const result = await gradeSimulado([mcQuestion, numericQuestion], { 1: '11', 2: '1' }, 'pt-BR');
     expect(result.correctCount).toBe(2);
     expect(result.total).toBe(2);
   });
 
-  it('grades a blank numeric answer as incorrect even when the correct answer is zero', () => {
+  it('grades a blank numeric answer as incorrect even when the correct answer is zero', async () => {
     const zeroQuestion: ExportedQuestion = { ...numericQuestion, id: 3, correctAnswer: '0' };
-    const result = gradeSimulado([zeroQuestion], { 3: '' }, 'pt-BR');
+    const result = await gradeSimulado([zeroQuestion], { 3: '' }, 'pt-BR');
     expect(result.perQuestion[0].isCorrect).toBe(false);
   });
 
-  it('grades a correct decimal numeric answer for the es locale', () => {
+  it('grades a correct decimal numeric answer for the es locale', async () => {
     const decimalQuestion: ExportedQuestion = { ...numericQuestion, id: 4, correctAnswer: '1.5' };
-    const result = gradeSimulado([decimalQuestion], { 4: '1,5' }, 'es');
+    const result = await gradeSimulado([decimalQuestion], { 4: '1,5' }, 'es');
     expect(result.perQuestion[0].isCorrect).toBe(true);
   });
 
-  it('grades a multiple-response answer correct only when the exact set of correct options is selected', () => {
-    const result = gradeSimulado([multiResponseQuestion], { 5: '30,32' }, 'pt-BR');
+  it('grades a multiple-response answer correct only when the exact set of correct options is selected', async () => {
+    const result = await gradeSimulado([multiResponseQuestion], { 5: '30,32' }, 'pt-BR');
     expect(result.perQuestion[0].isCorrect).toBe(true);
   });
 
-  it('grades a multiple-response answer missing a correct option as incorrect', () => {
-    const result = gradeSimulado([multiResponseQuestion], { 5: '30' }, 'pt-BR');
+  it('grades a multiple-response answer missing a correct option as incorrect', async () => {
+    const result = await gradeSimulado([multiResponseQuestion], { 5: '30' }, 'pt-BR');
     expect(result.perQuestion[0].isCorrect).toBe(false);
   });
 
-  it('grades a multiple-response answer with an extra incorrect option selected as incorrect', () => {
-    const result = gradeSimulado([multiResponseQuestion], { 5: '30,31,32' }, 'pt-BR');
+  it('grades a multiple-response answer with an extra incorrect option selected as incorrect', async () => {
+    const result = await gradeSimulado([multiResponseQuestion], { 5: '30,31,32' }, 'pt-BR');
     expect(result.perQuestion[0].isCorrect).toBe(false);
   });
 
-  it('grades an unanswered multiple-response question as incorrect, not a crash', () => {
-    const result = gradeSimulado([multiResponseQuestion], {}, 'pt-BR');
+  it('grades an unanswered multiple-response question as incorrect, not a crash', async () => {
+    const result = await gradeSimulado([multiResponseQuestion], {}, 'pt-BR');
     expect(result.perQuestion[0].isCorrect).toBe(false);
   });
 
-  it('grades a blank multiple-response answer as incorrect', () => {
-    const result = gradeSimulado([multiResponseQuestion], { 5: '' }, 'pt-BR');
+  it('grades a blank multiple-response answer as incorrect', async () => {
+    const result = await gradeSimulado([multiResponseQuestion], { 5: '' }, 'pt-BR');
     expect(result.perQuestion[0].isCorrect).toBe(false);
   });
 
-  it('grades a true_false question by exact string match', () => {
+  it('grades a true_false question by exact string match', async () => {
     const question: ExportedQuestion = {
       id: 10,
       type: 'true_false',
@@ -134,14 +134,14 @@ describe('gradeSimulado', () => {
       tagIds: [],
     };
 
-    const result = gradeSimulado([question], { 10: 'true' }, 'pt-BR');
+    const result = await gradeSimulado([question], { 10: 'true' }, 'pt-BR');
     expect(result.perQuestion[0].isCorrect).toBe(true);
 
-    const wrongResult = gradeSimulado([question], { 10: 'false' }, 'pt-BR');
+    const wrongResult = await gradeSimulado([question], { 10: 'false' }, 'pt-BR');
     expect(wrongResult.perQuestion[0].isCorrect).toBe(false);
   });
 
-  it('grades a short_text question by normalized, accent-insensitive match', () => {
+  it('grades a short_text question by normalized, accent-insensitive match', async () => {
     const question: ExportedQuestion = {
       id: 11,
       type: 'short_text',
@@ -159,14 +159,14 @@ describe('gradeSimulado', () => {
       tagIds: [],
     };
 
-    expect(gradeSimulado([question], { 11: 'tvi' }, 'pt-BR').perQuestion[0].isCorrect).toBe(true);
+    expect((await gradeSimulado([question], { 11: 'tvi' }, 'pt-BR')).perQuestion[0].isCorrect).toBe(true);
     expect(
-      gradeSimulado([question], { 11: 'teorema do valor intermediario' }, 'pt-BR').perQuestion[0].isCorrect,
+      (await gradeSimulado([question], { 11: 'teorema do valor intermediario' }, 'pt-BR')).perQuestion[0].isCorrect,
     ).toBe(true);
-    expect(gradeSimulado([question], { 11: 'algo errado' }, 'pt-BR').perQuestion[0].isCorrect).toBe(false);
+    expect((await gradeSimulado([question], { 11: 'algo errado' }, 'pt-BR')).perQuestion[0].isCorrect).toBe(false);
   });
 
-  it('grades a math-mode short_text question case-sensitively and whitespace-insensitively', () => {
+  it('grades a math-mode short_text question case-sensitively and whitespace-insensitively', async () => {
     const question: ExportedQuestion = {
       id: 20,
       type: 'short_text',
@@ -181,14 +181,33 @@ describe('gradeSimulado', () => {
       tagIds: [],
     };
 
-    const result = gradeSimulado([question], { 20: '3x + 1' }, 'pt-BR');
+    const result = await gradeSimulado([question], { 20: '3x + 1' }, 'pt-BR');
     expect(result.perQuestion[0].isCorrect).toBe(true);
 
-    const wrongCase = gradeSimulado([question], { 20: '3X+1' }, 'pt-BR');
+    const wrongCase = await gradeSimulado([question], { 20: '3X+1' }, 'pt-BR');
     expect(wrongCase.perQuestion[0].isCorrect).toBe(false);
   });
 
-  it('grades an ordering question by exact sequence match', () => {
+  it('grades a math-mode short_text answer as correct when symbolically equivalent, not just syntactically identical', async () => {
+    const question: ExportedQuestion = {
+      id: 21,
+      type: 'short_text',
+      difficulty: 'hard',
+      promptHtml: '<p>P?</p>',
+      options: [],
+      acceptedAnswers: [{ id: 1, text: '3x+1' }],
+      matchingPairs: [],
+      correctAnswer: null,
+      answerFormat: 'math',
+      resolutionHtml: '<p>R.</p>',
+      tagIds: [],
+    };
+
+    const result = await gradeSimulado([question], { 21: '1+3x' }, 'pt-BR');
+    expect(result.perQuestion[0].isCorrect).toBe(true);
+  });
+
+  it('grades an ordering question by exact sequence match', async () => {
     const question: ExportedQuestion = {
       id: 12,
       type: 'ordering',
@@ -207,11 +226,11 @@ describe('gradeSimulado', () => {
       tagIds: [],
     };
 
-    expect(gradeSimulado([question], { 12: '100,101,102' }, 'pt-BR').perQuestion[0].isCorrect).toBe(true);
-    expect(gradeSimulado([question], { 12: '101,100,102' }, 'pt-BR').perQuestion[0].isCorrect).toBe(false);
+    expect((await gradeSimulado([question], { 12: '100,101,102' }, 'pt-BR')).perQuestion[0].isCorrect).toBe(true);
+    expect((await gradeSimulado([question], { 12: '101,100,102' }, 'pt-BR')).perQuestion[0].isCorrect).toBe(false);
   });
 
-  it('grades a matching question by exact leftId=rightId pairing', () => {
+  it('grades a matching question by exact leftId=rightId pairing', async () => {
     const question: ExportedQuestion = {
       id: 13,
       type: 'matching',
@@ -229,24 +248,24 @@ describe('gradeSimulado', () => {
       tagIds: [],
     };
 
-    expect(gradeSimulado([question], { 13: '1:1,2:2' }, 'pt-BR').perQuestion[0].isCorrect).toBe(true);
-    expect(gradeSimulado([question], { 13: '1:2,2:1' }, 'pt-BR').perQuestion[0].isCorrect).toBe(false);
+    expect((await gradeSimulado([question], { 13: '1:1,2:2' }, 'pt-BR')).perQuestion[0].isCorrect).toBe(true);
+    expect((await gradeSimulado([question], { 13: '1:2,2:1' }, 'pt-BR')).perQuestion[0].isCorrect).toBe(false);
   });
 
-  it('grades a numeric question explicitly, not as a fallthrough default', () => {
+  it('grades a numeric question explicitly, not as a fallthrough default', async () => {
     // Regression guard for the exhaustiveness fix: numeric grading must
     // still work when reached via its own explicit `if (question.type ===
     // 'numeric')` branch rather than an implicit catch-all.
-    const result = gradeSimulado([numericQuestion], { 2: '1' }, 'pt-BR');
+    const result = await gradeSimulado([numericQuestion], { 2: '1' }, 'pt-BR');
     expect(result.perQuestion[0].isCorrect).toBe(true);
   });
 
-  it('throws instead of silently misgrading an unrecognized question type', () => {
+  it('throws instead of silently misgrading an unrecognized question type', async () => {
     // Simulates a future 8th type added to the exported data without a
     // corresponding branch in `isAnswerCorrect` — the exhaustiveness check
     // must fail loudly at runtime for such data, matching what TypeScript
     // would flag at compile time for a real new union member.
     const unknownQuestion = { ...numericQuestion, type: 'essay' } as unknown as ExportedQuestion;
-    expect(() => gradeSimulado([unknownQuestion], { 2: 'anything' }, 'pt-BR')).toThrow(/essay/);
+    await expect(gradeSimulado([unknownQuestion], { 2: 'anything' }, 'pt-BR')).rejects.toThrow(/essay/);
   });
 });

@@ -59,9 +59,9 @@ export function SimuladoPageClient({ tagTree, locale }: { tagTree: TopicNode[]; 
     setAnswers((prev) => ({ ...prev, [questionId]: value }));
   }
 
-  function handleFinish() {
+  async function handleFinish() {
     if (state.view !== 'taking') return;
-    const result = gradeSimulado(state.questions, answers, locale);
+    const result = await gradeSimulado(state.questions, answers, locale);
     addAttempt(result);
     setState({ view: 'results', result });
   }

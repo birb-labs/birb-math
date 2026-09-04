@@ -58,6 +58,7 @@
     "taking": {
       "selectAllThatApply": "Select all that apply",
       "finish": "Finish practice test",
+      "grading": "Grading...",
       "true": "True",
       "false": "False"
     },

@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import type { ExportedQuestion } from '@/lib/simulado-selection';
 import { parseSelectedOptionIds, toggleOptionId } from '@/lib/multi-response-answer';
@@ -19,9 +20,19 @@ export function SimuladoTaking({
   questions: ExportedQuestion[];
   answers: Record<number, string>;
   onAnswerChange: (questionId: number, value: string) => void;
-  onFinish: () => void;
+  onFinish: () => void | Promise<void>;
 }) {
   const t = useTranslations('simulado.taking');
+  const [isFinishing, setIsFinishing] = useState(false);
+
+  async function handleFinishClick() {
+    setIsFinishing(true);
+    try {
+      await onFinish();
+    } finally {
+      setIsFinishing(false);
+    }
+  }
 
   return (
     <div className={styles.list}>
@@ -111,8 +122,8 @@ export function SimuladoTaking({
         </div>
       ))}
 
-      <button type="button" className={styles.finishButton} onClick={onFinish}>
-        {t('finish')}
+      <button type="button" className={styles.finishButton} onClick={handleFinishClick} disabled={isFinishing}>
+        {isFinishing ? t('grading') : t('finish')}
       </button>
     </div>
   );

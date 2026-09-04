@@ -58,6 +58,7 @@
     "taking": {
       "selectAllThatApply": "Selecciona todas las opciones correctas",
       "finish": "Finalizar simulacro",
+      "grading": "Corrigiendo...",
       "true": "Verdadero",
       "false": "Falso"
     },
