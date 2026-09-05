@@ -6,7 +6,14 @@ import { eq } from 'drizzle-orm';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import * as schema from './schema';
-import { getAllLessonSlugs, getContentTree, getLessonBySlug, getQuestionsForExport, getTagTree } from './queries';
+import {
+  getAllLessonSlugs,
+  getContentTree,
+  getLessonBySlug,
+  getQuestionForAdminEdit,
+  getQuestionsForExport,
+  getTagTree,
+} from './queries';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -529,5 +536,23 @@ describe('content-schema queries', () => {
     expect(matching.matchingPairs).toHaveLength(2);
     expect(matching.matchingPairs[0].leftMdx).toBe('Removível');
     expect(matching.matchingPairs[0].rightMdx).toBe('O limite existe mas difere de $f(a)$');
+  });
+
+  it('getQuestionForAdminEdit returns every locale translation and separates shared vs per-locale accepted answers', async () => {
+    const mcQuestion = db.select().from(schema.questions).all().find((q) => q.type === 'multiple_choice')!;
+    const mathQuestion = db.select().from(schema.questions).all().find((q) => q.answerFormat === 'math')!;
+
+    const mcEdit = await getQuestionForAdminEdit(db, mcQuestion.id);
+    expect(mcEdit).toBeDefined();
+    expect(mcEdit!.translations['pt-BR']!.promptMdx).toBe('Qual é o valor de $1 + 1$?');
+    expect(mcEdit!.translations['pt-BR']!.options).toHaveLength(2);
+
+    const mathEdit = await getQuestionForAdminEdit(db, mathQuestion.id);
+    expect(mathEdit!.acceptedAnswersShared).toEqual(['7']);
+    expect(mathEdit!.acceptedAnswersByLocale).toEqual({});
+  });
+
+  it('getQuestionForAdminEdit returns undefined for an unknown id', async () => {
+    expect(await getQuestionForAdminEdit(db, 999999)).toBeUndefined();
   });
 });

@@ -308,3 +308,72 @@ export async function getQuestionsForExport(db: Db, locale: Locale): Promise<Que
     };
   });
 }
+
+export interface AdminQuestionEditTranslation {
+  promptMdx: string;
+  resolutionMdx: string;
+  options: { id: number; textMdx: string; isCorrect: boolean; order: number }[];
+  matchingPairs: { id: number; leftMdx: string; rightMdx: string; order: number }[];
+}
+
+export interface AdminQuestionEdit {
+  id: number;
+  type: QuestionExport['type'];
+  difficulty: QuestionExport['difficulty'];
+  correctAnswer: string | null;
+  answerFormat: 'text' | 'math';
+  tagIds: number[];
+  translations: Partial<Record<Locale, AdminQuestionEditTranslation>>;
+  acceptedAnswersShared: string[];
+  acceptedAnswersByLocale: Partial<Record<Locale, string[]>>;
+}
+
+export async function getQuestionForAdminEdit(db: Db, id: number): Promise<AdminQuestionEdit | undefined> {
+  const typedDb = db as BetterSQLite3Database<Record<string, unknown>>;
+  const question = await typedDb.select().from(questions).where(eq(questions.id, id)).get();
+  if (!question) return undefined;
+
+  const promptRows = await typedDb.select().from(questionTranslations).where(eq(questionTranslations.questionId, id)).all();
+  const options = await typedDb.select().from(questionOptions).where(eq(questionOptions.questionId, id)).orderBy(questionOptions.order).all();
+  const optionTranslationRows = await typedDb.select().from(questionOptionTranslations).all();
+  const pairs = await typedDb.select().from(questionMatchingPairs).where(eq(questionMatchingPairs.questionId, id)).orderBy(questionMatchingPairs.order).all();
+  const pairTranslationRows = await typedDb.select().from(questionMatchingPairTranslations).all();
+  const acceptedAnswerRows = await typedDb.select().from(questionAcceptedAnswers).where(eq(questionAcceptedAnswers.questionId, id)).all();
+  const questionTagRows = await typedDb.select().from(questionTags).where(eq(questionTags.questionId, id)).all();
+
+  const translations: Partial<Record<Locale, AdminQuestionEditTranslation>> = {};
+  for (const promptRow of promptRows) {
+    const locale = promptRow.locale as Locale;
+    translations[locale] = {
+      promptMdx: promptRow.promptMdx,
+      resolutionMdx: promptRow.resolutionMdx,
+      options: options.map((option) => {
+        const t = optionTranslationRows.find((ot) => ot.optionId === option.id && ot.locale === locale);
+        return { id: option.id, textMdx: t?.textMdx ?? '', isCorrect: option.isCorrect, order: option.order };
+      }),
+      matchingPairs: pairs.map((pair) => {
+        const t = pairTranslationRows.find((pt) => pt.pairId === pair.id && pt.locale === locale);
+        return { id: pair.id, leftMdx: t?.leftMdx ?? '', rightMdx: t?.rightMdx ?? '', order: pair.order };
+      }),
+    };
+  }
+
+  const acceptedAnswersByLocale: Partial<Record<Locale, string[]>> = {};
+  for (const answer of acceptedAnswerRows) {
+    if (answer.locale === null) continue;
+    const locale = answer.locale as Locale;
+    acceptedAnswersByLocale[locale] = [...(acceptedAnswersByLocale[locale] ?? []), answer.text];
+  }
+
+  return {
+    id: question.id,
+    type: question.type,
+    difficulty: question.difficulty,
+    correctAnswer: question.correctAnswer,
+    answerFormat: question.answerFormat,
+    tagIds: questionTagRows.map((qt) => qt.tagId),
+    translations,
+    acceptedAnswersShared: acceptedAnswerRows.filter((a) => a.locale === null).map((a) => a.text),
+    acceptedAnswersByLocale,
+  };
+}
