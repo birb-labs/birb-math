@@ -36,6 +36,7 @@ export interface ExportedQuestion {
   matchingPairs: ExportedMatchingPair[];
   correctAnswer: string | null;
   answerFormat: 'text' | 'math';
+  isFallback: boolean;
   resolutionHtml: string;
   tagIds: number[];
 }
@@ -118,6 +119,7 @@ export async function compileQuestionForExport(question: QuestionExport): Promis
     matchingPairs,
     correctAnswer: question.correctAnswer,
     answerFormat: question.answerFormat,
+    isFallback: question.isFallback,
     resolutionHtml,
     tagIds: question.tagIds,
   };

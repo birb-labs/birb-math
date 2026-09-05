@@ -22,6 +22,7 @@ const mcQuestion: QuestionExport = {
   acceptedAnswers: [],
   matchingPairs: [],
   answerFormat: 'text',
+  isFallback: false,
   tagIds: [5],
 };
 
@@ -36,6 +37,7 @@ const numericQuestion: QuestionExport = {
   acceptedAnswers: [],
   matchingPairs: [],
   answerFormat: 'text',
+  isFallback: false,
   tagIds: [5, 6],
 };
 
@@ -54,6 +56,7 @@ const multiResponseQuestion: QuestionExport = {
   acceptedAnswers: [],
   matchingPairs: [],
   answerFormat: 'text',
+  isFallback: false,
   tagIds: [7],
 };
 
@@ -68,6 +71,7 @@ const trueFalseQuestion: QuestionExport = {
   acceptedAnswers: [],
   matchingPairs: [],
   answerFormat: 'text',
+  isFallback: false,
   tagIds: [],
 };
 
@@ -85,6 +89,7 @@ const shortTextQuestion: QuestionExport = {
   ],
   matchingPairs: [],
   answerFormat: 'text',
+  isFallback: false,
   tagIds: [],
 };
 
@@ -96,6 +101,7 @@ const mathShortTextQuestion: QuestionExport = {
   resolutionMdx: 'Substituição direta.',
   correctAnswer: null,
   answerFormat: 'math',
+  isFallback: false,
   options: [],
   acceptedAnswers: [{ id: 3, text: '7' }],
   matchingPairs: [],
@@ -116,6 +122,7 @@ const orderingQuestion: QuestionExport = {
   acceptedAnswers: [],
   matchingPairs: [],
   answerFormat: 'text',
+  isFallback: false,
   tagIds: [],
 };
 
@@ -133,6 +140,7 @@ const matchingQuestion: QuestionExport = {
     { id: 61, leftMdx: 'Gato', rightMdx: 'Mia' },
   ],
   answerFormat: 'text',
+  isFallback: false,
   tagIds: [],
 };
 
@@ -217,6 +225,25 @@ describe('compileQuestionForExport', () => {
     const exported = await compileQuestionForExport(shortTextQuestion);
 
     expect(exported.answerFormat).toBe('text');
+  });
+
+  it('passes isFallback through unchanged', async () => {
+    const exported = await compileQuestionForExport({
+      id: 1,
+      type: 'true_false',
+      difficulty: 'easy',
+      promptMdx: 'Verdadeiro?',
+      resolutionMdx: 'Sim.',
+      isFallback: true,
+      correctAnswer: 'true',
+      answerFormat: 'text',
+      options: [],
+      acceptedAnswers: [],
+      matchingPairs: [],
+      tagIds: [],
+    });
+
+    expect(exported.isFallback).toBe(true);
   });
 });
 
