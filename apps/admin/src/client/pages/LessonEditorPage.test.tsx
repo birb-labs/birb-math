@@ -12,7 +12,9 @@ describe('LessonEditorPage', () => {
     const fetchSpy = vi
       .spyOn(globalThis, 'fetch')
       .mockResolvedValueOnce(
-        new Response(JSON.stringify({ id: 1, title: 'Título', bodyMdx: '# Corpo' }), { status: 200 }),
+        new Response(JSON.stringify({ translations: { 'pt-BR': { title: 'Título', bodyMdx: '# Corpo' } } }), {
+          status: 200,
+        }),
       )
       .mockResolvedValueOnce(new Response(JSON.stringify({ html: '<h1>Corpo</h1>' }), { status: 200 }))
       .mockResolvedValueOnce(new Response(JSON.stringify({ ok: true }), { status: 200 }));

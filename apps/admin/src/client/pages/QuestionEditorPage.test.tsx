@@ -66,8 +66,9 @@ describe('QuestionEditorPage', () => {
     expect(postCall).toBeDefined();
     const body = JSON.parse((postCall![1] as RequestInit).body as string);
     expect(body.correctAnswer).toBe('true');
-    expect(body.acceptedAnswers).toEqual([]);
-    expect(body.matchingPairs).toEqual([]);
+    expect(body.acceptedAnswersShared).toEqual([]);
+    expect(body.acceptedAnswersByLocale).toEqual({});
+    expect(body.translations['pt-BR'].matchingPairs).toEqual([]);
   });
 
   it('creates a new short_text question via POST', async () => {
@@ -95,9 +96,10 @@ describe('QuestionEditorPage', () => {
       ([url, init]) => url === '/api/questions' && (init as RequestInit)?.method === 'POST',
     );
     const body = JSON.parse((postCall![1] as RequestInit).body as string);
-    expect(body.acceptedAnswers).toEqual(['Oxigênio']);
+    expect(body.acceptedAnswersByLocale['pt-BR']).toEqual(['Oxigênio']);
+    expect(body.acceptedAnswersShared).toEqual([]);
     expect(body.correctAnswer).toBeNull();
-    expect(body.options).toEqual([]);
+    expect(body.translations['pt-BR'].options).toEqual([]);
   });
 
   it('creates a math-mode short_text question with a LaTeX accepted answer', async () => {
@@ -134,7 +136,8 @@ describe('QuestionEditorPage', () => {
     );
     const body = JSON.parse((postCall![1] as RequestInit).body as string);
     expect(body.answerFormat).toBe('math');
-    expect(body.acceptedAnswers).toEqual(['2x']);
+    expect(body.acceptedAnswersShared).toEqual(['2x']);
+    expect(body.acceptedAnswersByLocale).toEqual({});
   });
 
   it('creates a new ordering question via POST', async () => {
@@ -160,9 +163,10 @@ describe('QuestionEditorPage', () => {
       ([url, init]) => url === '/api/questions' && (init as RequestInit)?.method === 'POST',
     );
     const body = JSON.parse((postCall![1] as RequestInit).body as string);
-    expect(body.options).toHaveLength(2); // the default 2 blank options QuestionEditorPage starts with
-    expect(body.acceptedAnswers).toEqual([]);
-    expect(body.matchingPairs).toEqual([]);
+    expect(body.translations['pt-BR'].options).toHaveLength(2); // the default 2 blank options QuestionEditorPage starts with
+    expect(body.acceptedAnswersShared).toEqual([]);
+    expect(body.acceptedAnswersByLocale).toEqual({});
+    expect(body.translations['pt-BR'].matchingPairs).toEqual([]);
   });
 
   it('creates a new matching question via POST', async () => {
@@ -192,11 +196,54 @@ describe('QuestionEditorPage', () => {
       ([url, init]) => url === '/api/questions' && (init as RequestInit)?.method === 'POST',
     );
     const body = JSON.parse((postCall![1] as RequestInit).body as string);
-    expect(body.matchingPairs).toEqual([
+    expect(body.translations['pt-BR'].matchingPairs).toEqual([
       { leftMdx: 'Cão', rightMdx: 'Late' },
       { leftMdx: 'Gato', rightMdx: 'Mia' },
     ]);
-    expect(body.options).toEqual([]);
-    expect(body.acceptedAnswers).toEqual([]);
+    expect(body.translations['pt-BR'].options).toEqual([]);
+    expect(body.acceptedAnswersShared).toEqual([]);
+    expect(body.acceptedAnswersByLocale).toEqual({});
+  });
+
+  it('loads an existing question into the pt-BR tab and switches to en-US without losing the pt-BR draft', async () => {
+    vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(new Response(JSON.stringify([]), { status: 200 })) // GET /api/tags
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            type: 'multiple_choice',
+            difficulty: 'easy',
+            correctAnswer: null,
+            answerFormat: 'text',
+            tagIds: [],
+            translations: {
+              'pt-BR': {
+                promptMdx: 'Qual é o valor de 1 + 1?',
+                resolutionMdx: 'A soma é 2.',
+                options: [
+                  { id: 1, textMdx: '1', isCorrect: false, order: 1 },
+                  { id: 2, textMdx: '2', isCorrect: true, order: 2 },
+                ],
+                matchingPairs: [],
+              },
+            },
+            acceptedAnswersShared: [],
+            acceptedAnswersByLocale: {},
+          }),
+          { status: 200 },
+        ),
+      ) // GET /api/questions/:id
+      .mockResolvedValue(new Response(JSON.stringify({ html: '<p></p>' }), { status: 200 })); // preview requests
+
+    const user = userEvent.setup();
+    render(<QuestionEditorPage questionId={1} onDone={() => {}} />);
+
+    expect(await screen.findByDisplayValue('Qual é o valor de 1 + 1?')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'en-US' }));
+    expect(screen.getByLabelText('Enunciado')).toHaveValue('');
+
+    await user.click(screen.getByRole('button', { name: 'pt-BR' }));
+    expect(screen.getByLabelText('Enunciado')).toHaveValue('Qual é o valor de 1 + 1?');
   });
 });

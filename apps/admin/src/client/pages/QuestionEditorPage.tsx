@@ -18,22 +18,38 @@ type QuestionType =
   | 'matching';
 type Difficulty = 'easy' | 'medium' | 'hard';
 
+type Locale = 'pt-BR' | 'en-US' | 'es';
+const LOCALES: Locale[] = ['pt-BR', 'en-US', 'es'];
+
+interface QuestionTranslation {
+  promptMdx: string;
+  resolutionMdx: string;
+  options: EditableOption[];
+  matchingPairs: EditableMatchingPair[];
+}
+
+const DEFAULT_TRANSLATION: QuestionTranslation = {
+  promptMdx: '',
+  resolutionMdx: '',
+  options: [
+    { textMdx: '', isCorrect: false },
+    { textMdx: '', isCorrect: false },
+  ],
+  matchingPairs: [
+    { leftMdx: '', rightMdx: '' },
+    { leftMdx: '', rightMdx: '' },
+  ],
+};
+
 export function QuestionEditorPage({ questionId, onDone }: { questionId: number | null; onDone: () => void }) {
+  const [activeLocale, setActiveLocale] = useState<Locale>('pt-BR');
   const [type, setType] = useState<QuestionType>('multiple_choice');
   const [difficulty, setDifficulty] = useState<Difficulty>('easy');
-  const [promptMdx, setPromptMdx] = useState('');
-  const [resolutionMdx, setResolutionMdx] = useState('');
   const [correctAnswer, setCorrectAnswer] = useState('');
-  const [options, setOptions] = useState<EditableOption[]>([
-    { textMdx: '', isCorrect: false },
-    { textMdx: '', isCorrect: false },
-  ]);
-  const [acceptedAnswers, setAcceptedAnswers] = useState<string[]>(['']);
   const [answerFormat, setAnswerFormat] = useState<'text' | 'math'>('text');
-  const [matchingPairs, setMatchingPairs] = useState<EditableMatchingPair[]>([
-    { leftMdx: '', rightMdx: '' },
-    { leftMdx: '', rightMdx: '' },
-  ]);
+  const [translations, setTranslations] = useState<Partial<Record<Locale, QuestionTranslation>>>({});
+  const [acceptedAnswersShared, setAcceptedAnswersShared] = useState<string[]>(['']);
+  const [acceptedAnswersByLocale, setAcceptedAnswersByLocale] = useState<Partial<Record<Locale, string[]>>>({});
   const [tagTree, setTagTree] = useState<TopicNode[]>([]);
   const [selectedTagIds, setSelectedTagIds] = useState<number[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -51,45 +67,63 @@ export function QuestionEditorPage({ questionId, onDone }: { questionId: number 
         response.json<{
           type: QuestionType;
           difficulty: Difficulty;
-          promptMdx: string;
-          resolutionMdx: string;
           correctAnswer: string | null;
           answerFormat: 'text' | 'math';
-          options: EditableOption[];
-          acceptedAnswers: { text: string }[];
-          matchingPairs: EditableMatchingPair[];
           tagIds: number[];
+          translations: Partial<Record<Locale, QuestionTranslation>>;
+          acceptedAnswersShared: string[];
+          acceptedAnswersByLocale: Partial<Record<Locale, string[]>>;
         }>(),
       )
-      .then(
-        (question) => {
-          setType(question.type);
-          setDifficulty(question.difficulty);
-          setPromptMdx(question.promptMdx);
-          setResolutionMdx(question.resolutionMdx);
-          setCorrectAnswer(question.correctAnswer ?? '');
-          setAnswerFormat(question.answerFormat);
-          setOptions(question.options);
-          setAcceptedAnswers(question.acceptedAnswers.map((a) => a.text));
-          setMatchingPairs(question.matchingPairs);
-          setSelectedTagIds(question.tagIds);
-        },
-      );
+      .then((question) => {
+        setType(question.type);
+        setDifficulty(question.difficulty);
+        setCorrectAnswer(question.correctAnswer ?? '');
+        setAnswerFormat(question.answerFormat);
+        setSelectedTagIds(question.tagIds);
+        setTranslations(question.translations);
+        setAcceptedAnswersShared(question.acceptedAnswersShared.length > 0 ? question.acceptedAnswersShared : ['']);
+        setAcceptedAnswersByLocale(question.acceptedAnswersByLocale);
+      });
   }, [questionId]);
+
+  const current: QuestionTranslation = translations[activeLocale] ?? DEFAULT_TRANSLATION;
+
+  function updateCurrent(patch: Partial<QuestionTranslation>) {
+    setTranslations((prev) => ({ ...prev, [activeLocale]: { ...current, ...patch } }));
+  }
+
+  const currentAcceptedAnswers = answerFormat === 'math' ? acceptedAnswersShared : (acceptedAnswersByLocale[activeLocale] ?? ['']);
+
+  function setCurrentAcceptedAnswers(answers: string[]) {
+    if (answerFormat === 'math') {
+      setAcceptedAnswersShared(answers);
+    } else {
+      setAcceptedAnswersByLocale((prev) => ({ ...prev, [activeLocale]: answers }));
+    }
+  }
 
   async function handleSave() {
     setError(null);
     const body = {
       type,
       difficulty,
-      promptMdx,
-      resolutionMdx,
       correctAnswer: type === 'numeric' || type === 'true_false' ? correctAnswer : null,
       answerFormat: type === 'short_text' ? answerFormat : 'text',
-      options: type === 'multiple_choice' || type === 'multiple_response' || type === 'ordering' ? options : [],
-      acceptedAnswers: type === 'short_text' ? acceptedAnswers : [],
-      matchingPairs: type === 'matching' ? matchingPairs : [],
       tagIds: selectedTagIds,
+      translations: {
+        [activeLocale]: {
+          promptMdx: current.promptMdx,
+          resolutionMdx: current.resolutionMdx,
+          options: type === 'multiple_choice' || type === 'multiple_response' || type === 'ordering' ? current.options : [],
+          matchingPairs: type === 'matching' ? current.matchingPairs : [],
+        },
+      },
+      acceptedAnswersShared: type === 'short_text' && answerFormat === 'math' ? acceptedAnswersShared : [],
+      acceptedAnswersByLocale:
+        type === 'short_text' && answerFormat === 'text'
+          ? { [activeLocale]: acceptedAnswersByLocale[activeLocale] ?? [''] }
+          : {},
     };
 
     const response =
@@ -116,6 +150,19 @@ export function QuestionEditorPage({ questionId, onDone }: { questionId: number 
 
   return (
     <div className={styles.form}>
+      <div className={styles.localeTabs}>
+        {LOCALES.map((locale) => (
+          <button
+            key={locale}
+            type="button"
+            className={locale === activeLocale ? styles.localeTabActive : styles.localeTab}
+            onClick={() => setActiveLocale(locale)}
+          >
+            {locale}
+          </button>
+        ))}
+      </div>
+
       <label htmlFor="type">Tipo</label>
       <select
         id="type"
@@ -144,13 +191,15 @@ export function QuestionEditorPage({ questionId, onDone }: { questionId: number 
         <option value="hard">Difícil</option>
       </select>
 
-      <MdxEditor label="Enunciado" value={promptMdx} onChange={setPromptMdx} />
+      <MdxEditor label="Enunciado" value={current.promptMdx} onChange={(promptMdx) => updateCurrent({ promptMdx })} />
 
       {(type === 'multiple_choice' || type === 'multiple_response') && (
-        <OptionsEditor type={type} options={options} onChange={setOptions} />
+        <OptionsEditor type={type} options={current.options} onChange={(options) => updateCurrent({ options })} />
       )}
 
-      {type === 'ordering' && <OrderingItemsEditor items={options} onChange={setOptions} />}
+      {type === 'ordering' && (
+        <OrderingItemsEditor items={current.options} onChange={(options) => updateCurrent({ options })} />
+      )}
 
       {(type === 'numeric' || type === 'true_false') && (
         <>
@@ -189,15 +238,25 @@ export function QuestionEditorPage({ questionId, onDone }: { questionId: number 
             <option value="text">Texto</option>
             <option value="math">Matemática</option>
           </select>
-          <AcceptedAnswersEditor answers={acceptedAnswers} onChange={setAcceptedAnswers} answerFormat={answerFormat} />
+          <AcceptedAnswersEditor
+            answers={currentAcceptedAnswers}
+            onChange={setCurrentAcceptedAnswers}
+            answerFormat={answerFormat}
+          />
         </>
       )}
 
-      {type === 'matching' && <MatchingPairsEditor pairs={matchingPairs} onChange={setMatchingPairs} />}
+      {type === 'matching' && (
+        <MatchingPairsEditor pairs={current.matchingPairs} onChange={(matchingPairs) => updateCurrent({ matchingPairs })} />
+      )}
 
       <TagPicker tagTree={tagTree} selectedTagIds={selectedTagIds} onChange={setSelectedTagIds} />
 
-      <MdxEditor label="Resolução" value={resolutionMdx} onChange={setResolutionMdx} />
+      <MdxEditor
+        label="Resolução"
+        value={current.resolutionMdx}
+        onChange={(resolutionMdx) => updateCurrent({ resolutionMdx })}
+      />
 
       {error && <p className={styles.error}>{error}</p>}
 

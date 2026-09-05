@@ -20,11 +20,27 @@ beforeEach(async () => {
   cookie = response.headers.get('set-cookie')!.split(';')[0];
 });
 
-function authed(body: unknown) {
+function authed(body: unknown, method = 'POST') {
   return {
-    method: 'POST',
+    method,
     headers: { 'Content-Type': 'application/json', Cookie: cookie },
     body: JSON.stringify(body),
+  };
+}
+
+function pt(translation: {
+  promptMdx: string;
+  resolutionMdx: string;
+  options?: { textMdx: string; isCorrect: boolean }[];
+  matchingPairs?: { leftMdx: string; rightMdx: string }[];
+}) {
+  return {
+    'pt-BR': {
+      promptMdx: translation.promptMdx,
+      resolutionMdx: translation.resolutionMdx,
+      options: translation.options ?? [],
+      matchingPairs: translation.matchingPairs ?? [],
+    },
   };
 }
 
@@ -35,15 +51,18 @@ describe('question-bank CRUD', () => {
       authed({
         type: 'multiple_choice',
         difficulty: 'easy',
-        promptMdx: 'P?',
-        resolutionMdx: 'R.',
         correctAnswer: null,
-        options: [
-          { textMdx: 'A', isCorrect: true },
-          { textMdx: 'B', isCorrect: true },
-        ],
-        acceptedAnswers: [],
-        matchingPairs: [],
+        answerFormat: 'text',
+        translations: pt({
+          promptMdx: 'P?',
+          resolutionMdx: 'R.',
+          options: [
+            { textMdx: 'A', isCorrect: true },
+            { textMdx: 'B', isCorrect: true },
+          ],
+        }),
+        acceptedAnswersShared: [],
+        acceptedAnswersByLocale: {},
         tagIds: [],
       }),
     );
@@ -56,16 +75,19 @@ describe('question-bank CRUD', () => {
       authed({
         type: 'multiple_response',
         difficulty: 'hard',
-        promptMdx: 'Quais são verdadeiras?',
-        resolutionMdx: 'A e C.',
         correctAnswer: null,
-        options: [
-          { textMdx: 'A', isCorrect: true },
-          { textMdx: 'B', isCorrect: false },
-          { textMdx: 'C', isCorrect: true },
-        ],
-        acceptedAnswers: [],
-        matchingPairs: [],
+        answerFormat: 'text',
+        translations: pt({
+          promptMdx: 'Quais são verdadeiras?',
+          resolutionMdx: 'A e C.',
+          options: [
+            { textMdx: 'A', isCorrect: true },
+            { textMdx: 'B', isCorrect: false },
+            { textMdx: 'C', isCorrect: true },
+          ],
+        }),
+        acceptedAnswersShared: [],
+        acceptedAnswersByLocale: {},
         tagIds: [],
       }),
     );
@@ -75,8 +97,8 @@ describe('question-bank CRUD', () => {
     const getResponse = await SELF.fetch(`https://admin.test/api/questions/${created.id}`, {
       headers: { Cookie: cookie },
     });
-    const question = await getResponse.json<{ options: { isCorrect: boolean }[] }>();
-    expect(question.options.filter((o) => o.isCorrect)).toHaveLength(2);
+    const question = await getResponse.json<{ translations: Record<string, { options: { isCorrect: boolean }[] }> }>();
+    expect(question.translations['pt-BR'].options.filter((o) => o.isCorrect)).toHaveLength(2);
   });
 
   it('rejects a numeric question with a comma-formatted correctAnswer', async () => {
@@ -85,12 +107,11 @@ describe('question-bank CRUD', () => {
       authed({
         type: 'numeric',
         difficulty: 'medium',
-        promptMdx: 'Quanto é 3/2?',
-        resolutionMdx: '1.5.',
         correctAnswer: '1,5',
-        options: [],
-        acceptedAnswers: [],
-        matchingPairs: [],
+        answerFormat: 'text',
+        translations: pt({ promptMdx: 'Quanto é 3/2?', resolutionMdx: '1.5.' }),
+        acceptedAnswersShared: [],
+        acceptedAnswersByLocale: {},
         tagIds: [],
       }),
     );
@@ -125,12 +146,11 @@ describe('question-bank CRUD', () => {
       authed({
         type: 'true_false',
         difficulty: 'easy',
-        promptMdx: 'P?',
-        resolutionMdx: 'R.',
         correctAnswer: 'sim',
-        options: [],
-        acceptedAnswers: [],
-        matchingPairs: [],
+        answerFormat: 'text',
+        translations: pt({ promptMdx: 'P?', resolutionMdx: 'R.' }),
+        acceptedAnswersShared: [],
+        acceptedAnswersByLocale: {},
         tagIds: [],
       }),
     );
@@ -143,12 +163,11 @@ describe('question-bank CRUD', () => {
       authed({
         type: 'true_false',
         difficulty: 'easy',
-        promptMdx: 'O céu é azul?',
-        resolutionMdx: 'Sim.',
         correctAnswer: 'true',
-        options: [],
-        acceptedAnswers: [],
-        matchingPairs: [],
+        answerFormat: 'text',
+        translations: pt({ promptMdx: 'O céu é azul?', resolutionMdx: 'Sim.' }),
+        acceptedAnswersShared: [],
+        acceptedAnswersByLocale: {},
         tagIds: [],
       }),
     );
@@ -168,13 +187,11 @@ describe('question-bank CRUD', () => {
       authed({
         type: 'short_text',
         difficulty: 'medium',
-        promptMdx: 'P?',
-        resolutionMdx: 'R.',
         correctAnswer: null,
-        options: [],
-        acceptedAnswers: [],
-        matchingPairs: [],
         answerFormat: 'text',
+        translations: pt({ promptMdx: 'P?', resolutionMdx: 'R.' }),
+        acceptedAnswersShared: [],
+        acceptedAnswersByLocale: {},
         tagIds: [],
       }),
     );
@@ -187,13 +204,14 @@ describe('question-bank CRUD', () => {
       authed({
         type: 'short_text',
         difficulty: 'medium',
-        promptMdx: 'Qual gás as plantas liberam na fotossíntese?',
-        resolutionMdx: 'Oxigênio.',
         correctAnswer: null,
-        options: [],
-        acceptedAnswers: ['Oxigênio', 'O2', 'O₂'],
-        matchingPairs: [],
         answerFormat: 'text',
+        translations: pt({
+          promptMdx: 'Qual gás as plantas liberam na fotossíntese?',
+          resolutionMdx: 'Oxigênio.',
+        }),
+        acceptedAnswersShared: [],
+        acceptedAnswersByLocale: { 'pt-BR': ['Oxigênio', 'O2', 'O₂'] },
         tagIds: [],
       }),
     );
@@ -203,8 +221,8 @@ describe('question-bank CRUD', () => {
     const getResponse = await SELF.fetch(`https://admin.test/api/questions/${created.id}`, {
       headers: { Cookie: cookie },
     });
-    const question = await getResponse.json<{ acceptedAnswers: { text: string }[] }>();
-    expect(question.acceptedAnswers.map((a) => a.text)).toEqual(['Oxigênio', 'O2', 'O₂']);
+    const question = await getResponse.json<{ acceptedAnswersByLocale: Record<string, string[]> }>();
+    expect(question.acceptedAnswersByLocale['pt-BR']).toEqual(['Oxigênio', 'O2', 'O₂']);
   });
 
   it('rejects a short_text question with an invalid answerFormat', async () => {
@@ -213,13 +231,11 @@ describe('question-bank CRUD', () => {
       authed({
         type: 'short_text',
         difficulty: 'medium',
-        promptMdx: 'P?',
-        resolutionMdx: 'R.',
         correctAnswer: null,
-        options: [],
-        acceptedAnswers: ['R'],
-        matchingPairs: [],
         answerFormat: 'latex',
+        translations: pt({ promptMdx: 'P?', resolutionMdx: 'R.' }),
+        acceptedAnswersShared: [],
+        acceptedAnswersByLocale: { 'pt-BR': ['R'] },
         tagIds: [],
       }),
     );
@@ -232,13 +248,11 @@ describe('question-bank CRUD', () => {
       authed({
         type: 'short_text',
         difficulty: 'hard',
-        promptMdx: 'Calcule a derivada de $x^2$.',
-        resolutionMdx: '$2x$.',
         correctAnswer: null,
-        options: [],
-        acceptedAnswers: ['2x'],
-        matchingPairs: [],
         answerFormat: 'math',
+        translations: pt({ promptMdx: 'Calcule a derivada de $x^2$.', resolutionMdx: '$2x$.' }),
+        acceptedAnswersShared: ['2x'],
+        acceptedAnswersByLocale: {},
         tagIds: [],
       }),
     );
@@ -248,8 +262,9 @@ describe('question-bank CRUD', () => {
     const getResponse = await SELF.fetch(`https://admin.test/api/questions/${created.id}`, {
       headers: { Cookie: cookie },
     });
-    const question = await getResponse.json<{ answerFormat: string }>();
+    const question = await getResponse.json<{ answerFormat: string; acceptedAnswersShared: string[] }>();
     expect(question.answerFormat).toBe('math');
+    expect(question.acceptedAnswersShared).toEqual(['2x']);
   });
 
   it('creates an ordering question, preserving entry order as the correct order', async () => {
@@ -258,16 +273,19 @@ describe('question-bank CRUD', () => {
       authed({
         type: 'ordering',
         difficulty: 'medium',
-        promptMdx: 'Ordene os passos.',
-        resolutionMdx: 'Ver resolução.',
         correctAnswer: null,
-        options: [
-          { textMdx: 'Primeiro', isCorrect: false },
-          { textMdx: 'Segundo', isCorrect: false },
-          { textMdx: 'Terceiro', isCorrect: false },
-        ],
-        acceptedAnswers: [],
-        matchingPairs: [],
+        answerFormat: 'text',
+        translations: pt({
+          promptMdx: 'Ordene os passos.',
+          resolutionMdx: 'Ver resolução.',
+          options: [
+            { textMdx: 'Primeiro', isCorrect: false },
+            { textMdx: 'Segundo', isCorrect: false },
+            { textMdx: 'Terceiro', isCorrect: false },
+          ],
+        }),
+        acceptedAnswersShared: [],
+        acceptedAnswersByLocale: {},
         tagIds: [],
       }),
     );
@@ -277,8 +295,12 @@ describe('question-bank CRUD', () => {
     const getResponse = await SELF.fetch(`https://admin.test/api/questions/${created.id}`, {
       headers: { Cookie: cookie },
     });
-    const question = await getResponse.json<{ options: { textMdx: string }[] }>();
-    expect(question.options.map((o) => o.textMdx)).toEqual(['Primeiro', 'Segundo', 'Terceiro']);
+    const question = await getResponse.json<{ translations: Record<string, { options: { textMdx: string }[] }> }>();
+    expect(question.translations['pt-BR'].options.map((o) => o.textMdx)).toEqual([
+      'Primeiro',
+      'Segundo',
+      'Terceiro',
+    ]);
   });
 
   it('rejects a matching question with fewer than 2 pairs', async () => {
@@ -287,12 +309,15 @@ describe('question-bank CRUD', () => {
       authed({
         type: 'matching',
         difficulty: 'hard',
-        promptMdx: 'P?',
-        resolutionMdx: 'R.',
         correctAnswer: null,
-        options: [],
-        acceptedAnswers: [],
-        matchingPairs: [{ leftMdx: 'A', rightMdx: 'B' }],
+        answerFormat: 'text',
+        translations: pt({
+          promptMdx: 'P?',
+          resolutionMdx: 'R.',
+          matchingPairs: [{ leftMdx: 'A', rightMdx: 'B' }],
+        }),
+        acceptedAnswersShared: [],
+        acceptedAnswersByLocale: {},
         tagIds: [],
       }),
     );
@@ -305,15 +330,18 @@ describe('question-bank CRUD', () => {
       authed({
         type: 'matching',
         difficulty: 'hard',
-        promptMdx: 'Associe.',
-        resolutionMdx: 'Ver resolução.',
         correctAnswer: null,
-        options: [],
-        acceptedAnswers: [],
-        matchingPairs: [
-          { leftMdx: 'Cão', rightMdx: 'Late' },
-          { leftMdx: 'Gato', rightMdx: 'Mia' },
-        ],
+        answerFormat: 'text',
+        translations: pt({
+          promptMdx: 'Associe.',
+          resolutionMdx: 'Ver resolução.',
+          matchingPairs: [
+            { leftMdx: 'Cão', rightMdx: 'Late' },
+            { leftMdx: 'Gato', rightMdx: 'Mia' },
+          ],
+        }),
+        acceptedAnswersShared: [],
+        acceptedAnswersByLocale: {},
         tagIds: [],
       }),
     );
@@ -323,8 +351,12 @@ describe('question-bank CRUD', () => {
     const getResponse = await SELF.fetch(`https://admin.test/api/questions/${created.id}`, {
       headers: { Cookie: cookie },
     });
-    const question = await getResponse.json<{ matchingPairs: { leftMdx: string; rightMdx: string }[] }>();
-    expect(question.matchingPairs.map((p) => ({ leftMdx: p.leftMdx, rightMdx: p.rightMdx }))).toEqual([
+    const question = await getResponse.json<{
+      translations: Record<string, { matchingPairs: { leftMdx: string; rightMdx: string }[] }>;
+    }>();
+    expect(
+      question.translations['pt-BR'].matchingPairs.map((p) => ({ leftMdx: p.leftMdx, rightMdx: p.rightMdx })),
+    ).toEqual([
       { leftMdx: 'Cão', rightMdx: 'Late' },
       { leftMdx: 'Gato', rightMdx: 'Mia' },
     ]);
@@ -336,15 +368,18 @@ describe('question-bank CRUD', () => {
       authed({
         type: 'matching',
         difficulty: 'hard',
-        promptMdx: 'Associe.',
-        resolutionMdx: 'Ver resolução.',
         correctAnswer: null,
-        options: [],
-        acceptedAnswers: [],
-        matchingPairs: [
-          { leftMdx: 'A', rightMdx: 'B' },
-          { leftMdx: 'C', rightMdx: 'D' },
-        ],
+        answerFormat: 'text',
+        translations: pt({
+          promptMdx: 'Associe.',
+          resolutionMdx: 'Ver resolução.',
+          matchingPairs: [
+            { leftMdx: 'A', rightMdx: 'B' },
+            { leftMdx: 'C', rightMdx: 'D' },
+          ],
+        }),
+        acceptedAnswersShared: [],
+        acceptedAnswersByLocale: {},
         tagIds: [],
       }),
     );
@@ -388,5 +423,79 @@ describe('question-bank CRUD', () => {
       body: JSON.stringify({ translations: { 'en-US': { name: 'Integrals' } } }),
     });
     expect(patched.status).toBe(200);
+  });
+});
+
+describe('question translations', () => {
+  async function createQuestion(): Promise<number> {
+    const response = await SELF.fetch(
+      'https://admin.test/api/questions',
+      authed({
+        type: 'multiple_choice',
+        difficulty: 'easy',
+        correctAnswer: null,
+        answerFormat: 'text',
+        translations: pt({
+          promptMdx: 'Qual gás as plantas absorvem?',
+          resolutionMdx: 'CO2.',
+          options: [
+            { textMdx: 'Oxigênio', isCorrect: false },
+            { textMdx: 'Dióxido de carbono', isCorrect: true },
+          ],
+        }),
+        acceptedAnswersShared: [],
+        acceptedAnswersByLocale: {},
+        tagIds: [],
+      }),
+    );
+    const created = await response.json<{ id: number }>();
+    return created.id;
+  }
+
+  it('GET /api/questions/:id returns translations keyed by locale plus shared/per-locale accepted answers', async () => {
+    const questionId = await createQuestion();
+
+    const response = await SELF.fetch(`https://admin.test/api/questions/${questionId}`, {
+      headers: { Cookie: cookie },
+    });
+    expect(response.status).toBe(200);
+    const data = await response.json<{ translations: Record<string, { promptMdx: string }> }>();
+    expect(data.translations['pt-BR']).toBeDefined();
+  });
+
+  it('PATCH /api/questions/:id upserts only the given locale and leaves structural fields alone when omitted', async () => {
+    const questionId = await createQuestion();
+
+    const response = await SELF.fetch(`https://admin.test/api/questions/${questionId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Cookie: cookie },
+      body: JSON.stringify({
+        translations: {
+          'en-US': {
+            promptMdx: 'Which gas?',
+            resolutionMdx: 'Oxygen.',
+            options: [
+              { textMdx: 'Oxygen', isCorrect: false },
+              { textMdx: 'Carbon dioxide', isCorrect: true },
+            ],
+            matchingPairs: [],
+          },
+        },
+      }),
+    });
+    expect(response.status).toBe(200);
+
+    const getResponse = await SELF.fetch(`https://admin.test/api/questions/${questionId}`, {
+      headers: { Cookie: cookie },
+    });
+    const data = await getResponse.json<{
+      type: string;
+      translations: Record<string, { promptMdx: string; options: { textMdx: string }[] }>;
+    }>();
+    expect(data.translations['en-US'].promptMdx).toBe('Which gas?');
+    expect(data.translations['en-US'].options.map((o) => o.textMdx)).toEqual(['Oxygen', 'Carbon dioxide']);
+    expect(data.translations['pt-BR']).toBeDefined();
+    // Structural fields omitted from the PATCH body must be left untouched.
+    expect(data.type).toBe('multiple_choice');
   });
 });
