@@ -61,9 +61,10 @@ describe('lesson hierarchy CRUD', () => {
       body: JSON.stringify({
         sectionId: section.id,
         slug: 'o-que-e-um-limite',
-        title: 'O que é um limite?',
-        bodyMdx: '# Título',
         order: 1,
+        translations: {
+          'pt-BR': { title: 'O que é um limite?', bodyMdx: '# Título' },
+        },
       }),
     });
     expect(lessonResponse.status).toBe(201);
@@ -76,5 +77,77 @@ describe('lesson hierarchy CRUD', () => {
   it('updates a lesson body and rejects unauthenticated requests', async () => {
     const unauthed = await SELF.fetch('https://admin.test/api/lessons/tree');
     expect(unauthed.status).toBe(401);
+  });
+});
+
+describe('lesson translations', () => {
+  async function createLesson(): Promise<number> {
+    const headers = { 'Content-Type': 'application/json', Cookie: sessionCookie };
+
+    const subjectResponse = await SELF.fetch('https://admin.test/api/lessons/subjects', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ slug: `calculo-${Date.now()}-${Math.random()}`, name: 'Cálculo', order: 1 }),
+    });
+    const subject = await subjectResponse.json<{ id: number }>();
+
+    const topicResponse = await SELF.fetch('https://admin.test/api/lessons/topics', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ subjectId: subject.id, slug: `limites-${Date.now()}-${Math.random()}`, name: 'Limites', order: 1 }),
+    });
+    const topic = await topicResponse.json<{ id: number }>();
+
+    const sectionResponse = await SELF.fetch('https://admin.test/api/lessons/sections', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ topicId: topic.id, slug: `intro-${Date.now()}-${Math.random()}`, name: 'Introdução', order: 1 }),
+    });
+    const section = await sectionResponse.json<{ id: number }>();
+
+    const lessonResponse = await SELF.fetch('https://admin.test/api/lessons/lessons', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        sectionId: section.id,
+        slug: `o-que-e-um-limite-${Date.now()}-${Math.random()}`,
+        order: 1,
+        translations: {
+          'pt-BR': { title: 'O que é um limite?', bodyMdx: '# Título' },
+        },
+      }),
+    });
+    const lesson = await lessonResponse.json<{ id: number }>();
+    return lesson.id;
+  }
+
+  it('GET /api/lessons/lessons/:id returns translations keyed by locale', async () => {
+    const lessonId = await createLesson();
+
+    const response = await SELF.fetch(`https://admin.test/api/lessons/lessons/${lessonId}`, {
+      headers: { Cookie: sessionCookie },
+    });
+
+    expect(response.status).toBe(200);
+    const data = await response.json<{ translations: Record<string, { title: string; bodyMdx: string }> }>();
+    expect(data.translations['pt-BR']).toBeDefined();
+  });
+
+  it('PATCH /api/lessons/lessons/:id upserts only the locale included in the request', async () => {
+    const lessonId = await createLesson();
+
+    const response = await SELF.fetch(`https://admin.test/api/lessons/lessons/${lessonId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Cookie: sessionCookie },
+      body: JSON.stringify({ translations: { 'en-US': { title: 'Limit Definition', bodyMdx: '# Definition' } } }),
+    });
+    expect(response.status).toBe(200);
+
+    const getResponse = await SELF.fetch(`https://admin.test/api/lessons/lessons/${lessonId}`, {
+      headers: { Cookie: sessionCookie },
+    });
+    const data = await getResponse.json<{ translations: Record<string, { title: string; bodyMdx: string }> }>();
+    expect(data.translations['en-US'].title).toBe('Limit Definition');
+    expect(data.translations['pt-BR']).toBeDefined();
   });
 });

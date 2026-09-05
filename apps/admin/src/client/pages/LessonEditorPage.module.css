@@ -4,6 +4,27 @@
   gap: 1rem;
 }
 
+.localeTabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.localeTab,
+.localeTabActive {
+  padding: 0.25rem 0.75rem;
+  border: 1px solid #ccc;
+  border-radius: 0.25rem;
+  background: white;
+  cursor: pointer;
+}
+
+.localeTabActive {
+  background: #1a1a2e;
+  color: white;
+  border-color: #1a1a2e;
+}
+
 .titleInput {
   border: 1px solid var(--color-border);
   background: transparent;
