@@ -332,34 +332,43 @@ describe('content-schema queries', () => {
     seedFixture(db);
   });
 
-  it('getContentTree returns the full nested hierarchy', async () => {
-    const tree = await getContentTree(db);
+  it('getContentTree returns the full nested hierarchy in the requested locale', async () => {
+    const tree = await getContentTree(db, 'pt-BR');
 
     expect(tree).toHaveLength(1);
     expect(tree[0].slug).toBe('calculo');
+    expect(tree[0].name).toBe('Cálculo');
     expect(typeof tree[0].id).toBe('number');
     expect(tree[0].topics).toHaveLength(1);
     expect(tree[0].topics[0].slug).toBe('limites');
-    expect(typeof tree[0].topics[0].id).toBe('number');
+    expect(tree[0].topics[0].name).toBe('Limites');
     expect(tree[0].topics[0].sections).toHaveLength(1);
     expect(tree[0].topics[0].sections[0].slug).toBe('limites-laterais');
-    expect(typeof tree[0].topics[0].sections[0].id).toBe('number');
+    expect(tree[0].topics[0].sections[0].name).toBe('Limites Laterais');
     expect(tree[0].topics[0].sections[0].lessons).toHaveLength(2);
     expect(tree[0].topics[0].sections[0].lessons.map((l) => l.slug)).toEqual([
       'definicao-de-limite',
       'limites-laterais-exemplo',
     ]);
+    expect(tree[0].topics[0].sections[0].lessons[0].title).toBe('Definição de Limite');
     // The tree payload must not carry full lesson bodies.
     expect(tree[0].topics[0].sections[0].lessons[0]).not.toHaveProperty('bodyMdx');
   });
 
-  it('getAllLessonSlugs returns every lesson slug', async () => {
+  it('getContentTree falls back to pt-BR names when a locale has no translation', async () => {
+    const tree = await getContentTree(db, 'en-US');
+
+    expect(tree[0].name).toBe('Cálculo');
+    expect(tree[0].topics[0].name).toBe('Limites');
+  });
+
+  it('getAllLessonSlugs returns every lesson slug regardless of locale', async () => {
     const slugs = await getAllLessonSlugs(db);
     expect(slugs.sort()).toEqual(['definicao-de-limite', 'limites-laterais-exemplo']);
   });
 
-  it('getLessonBySlug returns the lesson with its ancestor chain', async () => {
-    const lesson = await getLessonBySlug(db, 'definicao-de-limite');
+  it('getLessonBySlug returns the lesson with its ancestor chain in the requested locale', async () => {
+    const lesson = await getLessonBySlug(db, 'definicao-de-limite', 'pt-BR');
 
     expect(lesson).toBeDefined();
     expect(lesson!.title).toBe('Definição de Limite');
@@ -367,23 +376,46 @@ describe('content-schema queries', () => {
     expect(lesson!.section).toEqual({ slug: 'limites-laterais', name: 'Limites Laterais' });
     expect(lesson!.topic).toEqual({ slug: 'limites', name: 'Limites' });
     expect(lesson!.subject).toEqual({ slug: 'calculo', name: 'Cálculo' });
+    expect(lesson!.isFallback).toBe(false);
+  });
+
+  it('getLessonBySlug falls back to pt-BR and sets isFallback when untranslated', async () => {
+    const lesson = await getLessonBySlug(db, 'definicao-de-limite', 'es');
+
+    expect(lesson).toBeDefined();
+    expect(lesson!.title).toBe('Definição de Limite');
+    expect(lesson!.isFallback).toBe(true);
+  });
+
+  it('getLessonBySlug prefers the real translation over the fallback when one exists', async () => {
+    const lessonRow = db.select().from(schema.lessons).where(eq(schema.lessons.slug, 'definicao-de-limite')).get()!;
+    db.insert(schema.lessonTranslations)
+      .values({ lessonId: lessonRow.id, locale: 'en-US', title: 'Definition of Limit', bodyMdx: '# Definition\n\nSample content.' })
+      .run();
+
+    const lesson = await getLessonBySlug(db, 'definicao-de-limite', 'en-US');
+
+    expect(lesson!.title).toBe('Definition of Limit');
+    expect(lesson!.isFallback).toBe(false);
   });
 
   it('getLessonBySlug returns undefined for an unknown slug', async () => {
-    expect(await getLessonBySlug(db, 'does-not-exist')).toBeUndefined();
+    expect(await getLessonBySlug(db, 'does-not-exist', 'pt-BR')).toBeUndefined();
   });
 
-  it('getTagTree returns topics with their subtopics nested', async () => {
-    const tree = await getTagTree(db);
+  it('getTagTree returns topics with their subtopics nested in the requested locale', async () => {
+    const tree = await getTagTree(db, 'pt-BR');
 
     expect(tree).toHaveLength(1);
     expect(tree[0].slug).toBe('limites');
+    expect(tree[0].name).toBe('Limites');
     expect(tree[0].subtopics).toHaveLength(1);
     expect(tree[0].subtopics[0].slug).toBe('limites-laterais');
+    expect(tree[0].subtopics[0].name).toBe('Limites Laterais');
   });
 
-  it('getQuestionsForExport returns every question with its options and tags', async () => {
-    const exported = await getQuestionsForExport(db);
+  it('getQuestionsForExport returns every question with its options and tags in the requested locale', async () => {
+    const exported = await getQuestionsForExport(db, 'pt-BR');
 
     expect(exported).toHaveLength(8);
 
@@ -393,6 +425,7 @@ describe('content-schema queries', () => {
     expect(mc.options.find((o) => o.isCorrect)?.textMdx).toBe('2');
     expect(mc.correctAnswer).toBeNull();
     expect(mc.tagIds).toHaveLength(1);
+    expect(mc.isFallback).toBe(false);
 
     const numeric = exported.find((q) => q.type === 'numeric')!;
     expect(numeric).toBeDefined();
@@ -408,8 +441,16 @@ describe('content-schema queries', () => {
     expect(multiResponse.tagIds).toHaveLength(1);
   });
 
+  it('getQuestionsForExport falls back to pt-BR and sets isFallback for an untranslated question', async () => {
+    const exported = await getQuestionsForExport(db, 'en-US');
+    const mc = exported.find((q) => q.type === 'multiple_choice')!;
+
+    expect(mc.promptMdx).toBe('Qual é o valor de $1 + 1$?');
+    expect(mc.isFallback).toBe(true);
+  });
+
   it('getQuestionsForExport returns a true_false question with its correctAnswer', async () => {
-    const exported = await getQuestionsForExport(db);
+    const exported = await getQuestionsForExport(db, 'pt-BR');
     const trueFalse = exported.find((q) => q.type === 'true_false')!;
 
     expect(trueFalse).toBeDefined();
@@ -419,29 +460,47 @@ describe('content-schema queries', () => {
     expect(trueFalse.matchingPairs).toHaveLength(0);
   });
 
-  it('getQuestionsForExport returns a short_text question with its accepted answers', async () => {
-    const exported = await getQuestionsForExport(db);
-    const shortText = exported.find((q) => q.type === 'short_text')!;
+  it('getQuestionsForExport returns a short_text question with its pt-BR-locale accepted answers', async () => {
+    const exported = await getQuestionsForExport(db, 'pt-BR');
+    const shortText = exported.find((q) => q.type === 'short_text' && q.answerFormat === 'text')!;
 
     expect(shortText).toBeDefined();
-    expect(shortText.acceptedAnswers.map((a) => a.text)).toEqual([
-      'Teorema do Valor Intermediário',
-      'TVI',
-    ]);
+    expect(shortText.acceptedAnswers.map((a) => a.text).sort()).toEqual(
+      ['TVI', 'Teorema do Valor Intermediário'].sort(),
+    );
   });
 
-  it('getQuestionsForExport returns a math-mode short_text question with answerFormat "math"', async () => {
-    const exported = await getQuestionsForExport(db);
-    const mathShortText = exported.find(
-      (q) => q.type === 'short_text' && q.answerFormat === 'math',
-    );
+  it('getQuestionsForExport excludes text-mode accepted answers authored for a different locale', async () => {
+    const shortTextQuestion = db
+      .select()
+      .from(schema.questions)
+      .all()
+      .find((q) => q.type === 'short_text' && q.answerFormat === 'text')!;
+    db.insert(schema.questionAcceptedAnswers)
+      .values({ questionId: shortTextQuestion.id, text: 'Intermediate Value Theorem', locale: 'en-US' })
+      .run();
 
-    expect(mathShortText).toBeDefined();
-    expect(mathShortText!.acceptedAnswers.map((a) => a.text)).toEqual(['7']);
+    const exportedPtBr = await getQuestionsForExport(db, 'pt-BR');
+    const shortTextPtBr = exportedPtBr.find((q) => q.id === shortTextQuestion.id)!;
+    expect(shortTextPtBr.acceptedAnswers.map((a) => a.text)).not.toContain('Intermediate Value Theorem');
+
+    const exportedEnUs = await getQuestionsForExport(db, 'en-US');
+    const shortTextEnUs = exportedEnUs.find((q) => q.id === shortTextQuestion.id)!;
+    expect(shortTextEnUs.acceptedAnswers.map((a) => a.text)).toContain('Intermediate Value Theorem');
+  });
+
+  it('getQuestionsForExport includes a math-mode accepted answer (locale NULL) in every locale', async () => {
+    const exportedPtBr = await getQuestionsForExport(db, 'pt-BR');
+    const exportedEnUs = await getQuestionsForExport(db, 'en-US');
+    const mathPtBr = exportedPtBr.find((q) => q.answerFormat === 'math')!;
+    const mathEnUs = exportedEnUs.find((q) => q.answerFormat === 'math')!;
+
+    expect(mathPtBr.acceptedAnswers.map((a) => a.text)).toEqual(['7']);
+    expect(mathEnUs.acceptedAnswers.map((a) => a.text)).toEqual(['7']);
   });
 
   it('getQuestionsForExport returns "text" as the default answerFormat for a plain short_text question', async () => {
-    const exported = await getQuestionsForExport(db);
+    const exported = await getQuestionsForExport(db, 'pt-BR');
     const plainShortText = exported.find(
       (q) => q.type === 'short_text' && q.promptMdx.includes('garante uma raiz'),
     );
@@ -451,7 +510,7 @@ describe('content-schema queries', () => {
   });
 
   it('getQuestionsForExport returns an ordering question with its options in correct order', async () => {
-    const exported = await getQuestionsForExport(db);
+    const exported = await getQuestionsForExport(db, 'pt-BR');
     const ordering = exported.find((q) => q.type === 'ordering')!;
 
     expect(ordering).toBeDefined();
@@ -463,7 +522,7 @@ describe('content-schema queries', () => {
   });
 
   it('getQuestionsForExport returns a matching question with its pairs', async () => {
-    const exported = await getQuestionsForExport(db);
+    const exported = await getQuestionsForExport(db, 'pt-BR');
     const matching = exported.find((q) => q.type === 'matching')!;
 
     expect(matching).toBeDefined();
