@@ -7,6 +7,7 @@ import { parseSelectedOptionIds } from '@/lib/multi-response-answer';
 import { parseOrderingAnswer } from '@/lib/ordering-answer';
 import { parseMatchingAnswer } from '@/lib/matching-answer';
 import { renderMathAnswer } from '@/lib/render-math-answer';
+import { FallbackNotice } from './fallback-notice';
 import styles from './simulado-results.module.css';
 
 // Question types whose "your answer"/"correct answer" value is pre-compiled,
@@ -130,6 +131,7 @@ export function SimuladoResults({
               <p className={isCorrect ? `${styles.status} ${styles.statusCorrect}` : `${styles.status} ${styles.statusIncorrect}`}>
                 {isCorrect ? t('correct') : t('incorrect')}
               </p>
+              {question.isFallback && <FallbackNotice />}
               {/* eslint-disable-next-line react/no-danger -- pre-rendered at build time from our own MDX */}
               <div dangerouslySetInnerHTML={{ __html: question.promptHtml }} />
 

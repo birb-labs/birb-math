@@ -1,0 +1,8 @@
+.notice {
+  margin: 0 0 1.5rem;
+  padding: 0.5rem 0.75rem;
+  border-left: 3px solid var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 10%, transparent);
+  color: var(--color-muted);
+  font-size: 0.875rem;
+}

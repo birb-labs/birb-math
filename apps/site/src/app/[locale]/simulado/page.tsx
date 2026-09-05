@@ -1,5 +1,5 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server';
-import { getTagTree } from '@birb-math/content-schema';
+import { getTagTree, type Locale } from '@birb-math/content-schema';
 import { getDb } from '@birb-math/content-schema/src/client';
 import { SimuladoPageClient } from '@/components/simulado-page-client';
 import styles from '@/styles/page.module.css';
@@ -7,12 +7,12 @@ import styles from '@/styles/page.module.css';
 export default async function SimuladoPage({
   params,
 }: {
-  params: Promise<{ locale: string }>;
+  params: Promise<{ locale: Locale }>;
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations('simulado');
-  const tagTree = await getTagTree(getDb());
+  const tagTree = await getTagTree(getDb(), locale);
 
   return (
     <main className={styles.main}>

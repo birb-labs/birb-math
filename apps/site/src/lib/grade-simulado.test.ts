@@ -16,6 +16,7 @@ const mcQuestion: ExportedQuestion = {
   correctAnswer: null,
   resolutionHtml: '<p>R</p>',
   answerFormat: 'text',
+  isFallback: false,
   tagIds: [],
 };
 
@@ -34,6 +35,7 @@ const multiResponseQuestion: ExportedQuestion = {
   correctAnswer: null,
   resolutionHtml: '<p>R</p>',
   answerFormat: 'text',
+  isFallback: false,
   tagIds: [],
 };
 
@@ -48,6 +50,7 @@ const numericQuestion: ExportedQuestion = {
   correctAnswer: '1',
   resolutionHtml: '<p>R</p>',
   answerFormat: 'text',
+  isFallback: false,
   tagIds: [],
 };
 
@@ -131,6 +134,7 @@ describe('gradeSimulado', () => {
       correctAnswer: 'true',
       resolutionHtml: '<p>R.</p>',
       answerFormat: 'text',
+      isFallback: false,
       tagIds: [],
     };
 
@@ -156,6 +160,7 @@ describe('gradeSimulado', () => {
       correctAnswer: null,
       resolutionHtml: '<p>R.</p>',
       answerFormat: 'text',
+      isFallback: false,
       tagIds: [],
     };
 
@@ -178,6 +183,7 @@ describe('gradeSimulado', () => {
       correctAnswer: null,
       answerFormat: 'math',
       resolutionHtml: '<p>R.</p>',
+      isFallback: false,
       tagIds: [],
     };
 
@@ -200,6 +206,7 @@ describe('gradeSimulado', () => {
       correctAnswer: null,
       answerFormat: 'math',
       resolutionHtml: '<p>R.</p>',
+      isFallback: false,
       tagIds: [],
     };
 
@@ -223,6 +230,7 @@ describe('gradeSimulado', () => {
       correctAnswer: null,
       resolutionHtml: '<p>R.</p>',
       answerFormat: 'text',
+      isFallback: false,
       tagIds: [],
     };
 
@@ -245,6 +253,7 @@ describe('gradeSimulado', () => {
       correctAnswer: null,
       resolutionHtml: '<p>R.</p>',
       answerFormat: 'text',
+      isFallback: false,
       tagIds: [],
     };
 

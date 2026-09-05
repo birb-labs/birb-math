@@ -15,6 +15,7 @@ function makeQuestion(overrides: Partial<ExportedQuestion>): ExportedQuestion {
     correctAnswer: '1',
     resolutionHtml: '<p>resolution</p>',
     answerFormat: 'text',
+    isFallback: false,
     tagIds: [],
     ...overrides,
   };

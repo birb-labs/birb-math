@@ -38,7 +38,8 @@
     "empty": "Ainda não há conteúdos publicados. Volte em breve!",
     "lessonsCompleted": "{completed} de {total} lições concluídas",
     "breadcrumbSeparator": "›",
-    "breadcrumbLabel": "Trilha de navegação"
+    "breadcrumbLabel": "Trilha de navegação",
+    "notTranslatedYet": "Este conteúdo ainda não foi traduzido para o seu idioma. Mostrando em português."
   },
   "simulado": {
     "title": "Simulado",

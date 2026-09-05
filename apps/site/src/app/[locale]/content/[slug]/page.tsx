@@ -1,10 +1,11 @@
 import { setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
-import { getAllLessonSlugs, getLessonBySlug } from '@birb-math/content-schema';
+import { getAllLessonSlugs, getLessonBySlug, type Locale } from '@birb-math/content-schema';
 import { getDb } from '@birb-math/content-schema/src/client';
 import { compileLessonMdx } from '@/lib/compile-lesson-mdx';
 import { LessonBreadcrumb } from '@/components/lesson-breadcrumb';
 import { ReadingProgressTracker } from '@/components/reading-progress-tracker';
+import { FallbackNotice } from '@/components/fallback-notice';
 import styles from '@/styles/lesson.module.css';
 
 // `output: 'export'` requires this to return at least one entry, or the
@@ -21,12 +22,12 @@ export async function generateStaticParams() {
 export default async function LessonPage({
   params,
 }: {
-  params: Promise<{ locale: string; slug: string }>;
+  params: Promise<{ locale: Locale; slug: string }>;
 }) {
   const { locale, slug } = await params;
   setRequestLocale(locale);
 
-  const lesson = await getLessonBySlug(getDb(), slug);
+  const lesson = await getLessonBySlug(getDb(), slug, locale);
   if (!lesson) notFound();
 
   let body;
@@ -39,6 +40,7 @@ export default async function LessonPage({
   return (
     <main className={styles.article}>
       <LessonBreadcrumb subject={lesson.subject} topic={lesson.topic} section={lesson.section} />
+      {lesson.isFallback && <FallbackNotice />}
       {body}
       <ReadingProgressTracker lessonSlug={lesson.slug} />
     </main>

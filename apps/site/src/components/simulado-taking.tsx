@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import type { ExportedQuestion } from '@/lib/simulado-selection';
 import { parseSelectedOptionIds, toggleOptionId } from '@/lib/multi-response-answer';
+import { FallbackNotice } from './fallback-notice';
 import { NumericAnswerInput } from './numeric-answer-input';
 import { TrueFalseInput } from './true-false-input';
 import { ShortTextAnswerInput } from './short-text-answer-input';
@@ -38,6 +39,7 @@ export function SimuladoTaking({
     <div className={styles.list}>
       {questions.map((question) => (
         <div key={question.id} className={styles.question}>
+          {question.isFallback && <FallbackNotice />}
           {/* eslint-disable-next-line react/no-danger -- pre-rendered at build time from our own MDX, not user input */}
           <div dangerouslySetInnerHTML={{ __html: question.promptHtml }} />
 

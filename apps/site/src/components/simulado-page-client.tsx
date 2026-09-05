@@ -32,9 +32,9 @@ export function SimuladoPageClient({ tagTree, locale }: { tagTree: TopicNode[]; 
 
     let allQuestions: ExportedQuestion[];
     try {
-      const response = await fetch('/data/questions.json');
+      const response = await fetch(`/data/questions.${locale}.json`);
       if (!response.ok) {
-        throw new Error(`Failed to fetch questions.json: ${response.status}`);
+        throw new Error(`Failed to fetch questions.${locale}.json: ${response.status}`);
       }
       allQuestions = await response.json();
     } catch {

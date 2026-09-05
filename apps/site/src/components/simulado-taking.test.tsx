@@ -21,6 +21,7 @@ const fixtureQuestions: ExportedQuestion[] = [
     correctAnswer: null,
     resolutionHtml: '<p>É 2.</p>',
     answerFormat: 'text',
+    isFallback: false,
     tagIds: [],
   },
   {
@@ -34,6 +35,7 @@ const fixtureQuestions: ExportedQuestion[] = [
     correctAnswer: '1',
     resolutionHtml: '<p>Vale 1.</p>',
     answerFormat: 'text',
+    isFallback: false,
     tagIds: [],
   },
   {
@@ -51,6 +53,7 @@ const fixtureQuestions: ExportedQuestion[] = [
     correctAnswer: null,
     resolutionHtml: '<p>A e C.</p>',
     answerFormat: 'text',
+    isFallback: false,
     tagIds: [],
   },
   {
@@ -64,6 +67,7 @@ const fixtureQuestions: ExportedQuestion[] = [
     correctAnswer: 'true',
     resolutionHtml: '<p>Sim.</p>',
     answerFormat: 'text',
+    isFallback: false,
     tagIds: [],
   },
   {
@@ -80,6 +84,7 @@ const fixtureQuestions: ExportedQuestion[] = [
     correctAnswer: null,
     resolutionHtml: '<p>Teorema do Valor Intermediário.</p>',
     answerFormat: 'text',
+    isFallback: false,
     tagIds: [],
   },
   {
@@ -97,6 +102,7 @@ const fixtureQuestions: ExportedQuestion[] = [
     correctAnswer: null,
     resolutionHtml: '<p>Ver resolução.</p>',
     answerFormat: 'text',
+    isFallback: false,
     tagIds: [],
   },
   {
@@ -113,6 +119,7 @@ const fixtureQuestions: ExportedQuestion[] = [
     correctAnswer: null,
     resolutionHtml: '<p>Ver resolução.</p>',
     answerFormat: 'text',
+    isFallback: false,
     tagIds: [],
   },
 ];

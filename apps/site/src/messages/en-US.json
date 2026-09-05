@@ -38,7 +38,8 @@
     "empty": "No content has been published yet. Check back soon!",
     "lessonsCompleted": "{completed} of {total} lessons completed",
     "breadcrumbSeparator": "›",
-    "breadcrumbLabel": "Breadcrumb"
+    "breadcrumbLabel": "Breadcrumb",
+    "notTranslatedYet": "This content hasn't been translated into your language yet. Showing it in Portuguese."
   },
   "simulado": {
     "title": "Practice test",

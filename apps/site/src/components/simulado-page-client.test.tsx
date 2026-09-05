@@ -24,6 +24,7 @@ const fixtureQuestions: ExportedQuestion[] = [
     correctAnswer: null,
     resolutionHtml: '<p>É 2.</p>',
     answerFormat: 'text',
+    isFallback: false,
     tagIds: [1],
   },
 ];
@@ -45,6 +46,7 @@ const mathModeFixtureQuestions: ExportedQuestion[] = [
     correctAnswer: null,
     resolutionHtml: '<p>x = 1</p>',
     answerFormat: 'math',
+    isFallback: false,
     tagIds: [1],
   },
 ];
