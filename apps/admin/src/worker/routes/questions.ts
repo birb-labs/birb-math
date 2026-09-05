@@ -11,6 +11,8 @@ import {
   questions,
   questionTags,
   tags,
+  tagTranslations,
+  type Locale,
 } from '@birb-math/content-schema';
 import type { Env } from '../env';
 
@@ -233,7 +235,43 @@ tagsRoutes.get('/', async (c) => {
 
 tagsRoutes.post('/', async (c) => {
   const db = getD1Db(c.env.DB);
-  const body = await c.req.json<{ slug: string; name: string; parentTagId?: number }>();
-  const [row] = await db.insert(tags).values(body).returning();
+  const body = await c.req.json<{
+    slug: string;
+    parentTagId?: number;
+    translations: Partial<Record<Locale, { name: string }>>;
+  }>();
+  const locales = Object.keys(body.translations) as Locale[];
+  if (locales.length === 0) return c.json({ error: 'At least one locale translation is required.' }, 400);
+
+  const [row] = await db.insert(tags).values({ slug: body.slug, parentTagId: body.parentTagId }).returning();
+  await db
+    .insert(tagTranslations)
+    .values(locales.map((locale) => ({ tagId: row.id, locale, name: body.translations[locale]!.name })))
+    .run();
   return c.json(row, 201);
+});
+
+tagsRoutes.patch('/:id', async (c) => {
+  const db = getD1Db(c.env.DB);
+  const id = Number(c.req.param('id'));
+  const body = await c.req.json<
+    Partial<{ slug: string; parentTagId: number; translations: Partial<Record<Locale, { name: string }>> }>
+  >();
+  const { translations, ...structuralFields } = body;
+  if (Object.keys(structuralFields).length > 0) {
+    await db.update(tags).set(structuralFields).where(eq(tags.id, id)).run();
+  }
+  if (translations) {
+    for (const locale of Object.keys(translations) as Locale[]) {
+      await db
+        .insert(tagTranslations)
+        .values({ tagId: id, locale, name: translations[locale]!.name })
+        .onConflictDoUpdate({
+          target: [tagTranslations.tagId, tagTranslations.locale],
+          set: { name: translations[locale]!.name },
+        })
+        .run();
+    }
+  }
+  return c.json({ ok: true });
 });

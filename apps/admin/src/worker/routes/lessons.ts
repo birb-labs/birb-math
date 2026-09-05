@@ -4,8 +4,11 @@ import {
   getD1Db,
   getContentTree,
   subjects,
+  subjectTranslations,
   topics,
+  topicTranslations,
   sections,
+  sectionTranslations,
   lessons,
   lessonTranslations,
   type Locale,
@@ -36,23 +39,113 @@ lessonsRoutes.get('/tree', async (c) => {
 
 lessonsRoutes.post('/subjects', async (c) => {
   const db = getD1Db(c.env.DB);
-  const body = await c.req.json<{ slug: string; name: string; order: number }>();
-  const [row] = await db.insert(subjects).values(body).returning();
+  const body = await c.req.json<{ slug: string; order: number; translations: Partial<Record<Locale, { name: string }>> }>();
+  const locales = Object.keys(body.translations) as Locale[];
+  if (locales.length === 0) return c.json({ error: 'At least one locale translation is required.' }, 400);
+
+  const [row] = await db.insert(subjects).values({ slug: body.slug, order: body.order }).returning();
+  await db
+    .insert(subjectTranslations)
+    .values(locales.map((locale) => ({ subjectId: row.id, locale, name: body.translations[locale]!.name })))
+    .run();
   return c.json(row, 201);
+});
+
+lessonsRoutes.patch('/subjects/:id', async (c) => {
+  const db = getD1Db(c.env.DB);
+  const id = Number(c.req.param('id'));
+  const body = await c.req.json<Partial<{ slug: string; order: number; translations: Partial<Record<Locale, { name: string }>> }>>();
+  const { translations, ...structuralFields } = body;
+  if (Object.keys(structuralFields).length > 0) {
+    await db.update(subjects).set(structuralFields).where(eq(subjects.id, id)).run();
+  }
+  if (translations) {
+    for (const locale of Object.keys(translations) as Locale[]) {
+      await db
+        .insert(subjectTranslations)
+        .values({ subjectId: id, locale, name: translations[locale]!.name })
+        .onConflictDoUpdate({
+          target: [subjectTranslations.subjectId, subjectTranslations.locale],
+          set: { name: translations[locale]!.name },
+        })
+        .run();
+    }
+  }
+  return c.json({ ok: true });
 });
 
 lessonsRoutes.post('/topics', async (c) => {
   const db = getD1Db(c.env.DB);
-  const body = await c.req.json<{ subjectId: number; slug: string; name: string; order: number }>();
-  const [row] = await db.insert(topics).values(body).returning();
+  const body = await c.req.json<{ subjectId: number; slug: string; order: number; translations: Partial<Record<Locale, { name: string }>> }>();
+  const locales = Object.keys(body.translations) as Locale[];
+  if (locales.length === 0) return c.json({ error: 'At least one locale translation is required.' }, 400);
+
+  const [row] = await db.insert(topics).values({ subjectId: body.subjectId, slug: body.slug, order: body.order }).returning();
+  await db
+    .insert(topicTranslations)
+    .values(locales.map((locale) => ({ topicId: row.id, locale, name: body.translations[locale]!.name })))
+    .run();
   return c.json(row, 201);
+});
+
+lessonsRoutes.patch('/topics/:id', async (c) => {
+  const db = getD1Db(c.env.DB);
+  const id = Number(c.req.param('id'));
+  const body = await c.req.json<Partial<{ subjectId: number; slug: string; order: number; translations: Partial<Record<Locale, { name: string }>> }>>();
+  const { translations, ...structuralFields } = body;
+  if (Object.keys(structuralFields).length > 0) {
+    await db.update(topics).set(structuralFields).where(eq(topics.id, id)).run();
+  }
+  if (translations) {
+    for (const locale of Object.keys(translations) as Locale[]) {
+      await db
+        .insert(topicTranslations)
+        .values({ topicId: id, locale, name: translations[locale]!.name })
+        .onConflictDoUpdate({
+          target: [topicTranslations.topicId, topicTranslations.locale],
+          set: { name: translations[locale]!.name },
+        })
+        .run();
+    }
+  }
+  return c.json({ ok: true });
 });
 
 lessonsRoutes.post('/sections', async (c) => {
   const db = getD1Db(c.env.DB);
-  const body = await c.req.json<{ topicId: number; slug: string; name: string; order: number }>();
-  const [row] = await db.insert(sections).values(body).returning();
+  const body = await c.req.json<{ topicId: number; slug: string; order: number; translations: Partial<Record<Locale, { name: string }>> }>();
+  const locales = Object.keys(body.translations) as Locale[];
+  if (locales.length === 0) return c.json({ error: 'At least one locale translation is required.' }, 400);
+
+  const [row] = await db.insert(sections).values({ topicId: body.topicId, slug: body.slug, order: body.order }).returning();
+  await db
+    .insert(sectionTranslations)
+    .values(locales.map((locale) => ({ sectionId: row.id, locale, name: body.translations[locale]!.name })))
+    .run();
   return c.json(row, 201);
+});
+
+lessonsRoutes.patch('/sections/:id', async (c) => {
+  const db = getD1Db(c.env.DB);
+  const id = Number(c.req.param('id'));
+  const body = await c.req.json<Partial<{ topicId: number; slug: string; order: number; translations: Partial<Record<Locale, { name: string }>> }>>();
+  const { translations, ...structuralFields } = body;
+  if (Object.keys(structuralFields).length > 0) {
+    await db.update(sections).set(structuralFields).where(eq(sections.id, id)).run();
+  }
+  if (translations) {
+    for (const locale of Object.keys(translations) as Locale[]) {
+      await db
+        .insert(sectionTranslations)
+        .values({ sectionId: id, locale, name: translations[locale]!.name })
+        .onConflictDoUpdate({
+          target: [sectionTranslations.sectionId, sectionTranslations.locale],
+          set: { name: translations[locale]!.name },
+        })
+        .run();
+    }
+  }
+  return c.json({ ok: true });
 });
 
 lessonsRoutes.post('/lessons', async (c) => {

@@ -98,12 +98,19 @@ describe('question-bank CRUD', () => {
   });
 
   it('creates a tag and a subtopic under it', async () => {
-    const topicResponse = await SELF.fetch('https://admin.test/api/tags', authed({ slug: 'limites', name: 'Limites' }));
+    const topicResponse = await SELF.fetch(
+      'https://admin.test/api/tags',
+      authed({ slug: 'limites', translations: { 'pt-BR': { name: 'Limites' } } }),
+    );
     const topic = await topicResponse.json<{ id: number }>();
 
     const subtopicResponse = await SELF.fetch(
       'https://admin.test/api/tags',
-      authed({ slug: 'limites-laterais', name: 'Limites Laterais', parentTagId: topic.id }),
+      authed({
+        slug: 'limites-laterais',
+        parentTagId: topic.id,
+        translations: { 'pt-BR': { name: 'Limites Laterais' } },
+      }),
     );
     expect(subtopicResponse.status).toBe(201);
 
@@ -353,5 +360,33 @@ describe('question-bank CRUD', () => {
       headers: { Cookie: cookie },
     });
     expect(getResponse.status).toBe(404);
+  });
+
+  it('POST /api/tags requires at least one translation', async () => {
+    const response = await SELF.fetch('https://admin.test/api/tags', authed({ slug: 'no-name', translations: {} }));
+    expect(response.status).toBe(400);
+  });
+
+  it('POST /api/tags creates translation rows', async () => {
+    const response = await SELF.fetch(
+      'https://admin.test/api/tags',
+      authed({ slug: 'derivadas', translations: { 'pt-BR': { name: 'Derivadas' } } }),
+    );
+    expect(response.status).toBe(201);
+  });
+
+  it('PATCH /api/tags/:id upserts a translation for a new locale', async () => {
+    const created = await SELF.fetch(
+      'https://admin.test/api/tags',
+      authed({ slug: 'integrais', translations: { 'pt-BR': { name: 'Integrais' } } }),
+    );
+    const { id } = await created.json<{ id: number }>();
+
+    const patched = await SELF.fetch(`https://admin.test/api/tags/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Cookie: cookie },
+      body: JSON.stringify({ translations: { 'en-US': { name: 'Integrals' } } }),
+    });
+    expect(patched.status).toBe(200);
   });
 });

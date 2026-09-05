@@ -36,7 +36,7 @@ describe('lesson hierarchy CRUD', () => {
     const subjectResponse = await SELF.fetch('https://admin.test/api/lessons/subjects', {
       method: 'POST',
       headers,
-      body: JSON.stringify({ slug: 'calculo', name: 'Cálculo', order: 1 }),
+      body: JSON.stringify({ slug: 'calculo', order: 1, translations: { 'pt-BR': { name: 'Cálculo' } } }),
     });
     expect(subjectResponse.status).toBe(201);
     const subject = await subjectResponse.json<{ id: number }>();
@@ -44,14 +44,24 @@ describe('lesson hierarchy CRUD', () => {
     const topicResponse = await SELF.fetch('https://admin.test/api/lessons/topics', {
       method: 'POST',
       headers,
-      body: JSON.stringify({ subjectId: subject.id, slug: 'limites', name: 'Limites', order: 1 }),
+      body: JSON.stringify({
+        subjectId: subject.id,
+        slug: 'limites',
+        order: 1,
+        translations: { 'pt-BR': { name: 'Limites' } },
+      }),
     });
     const topic = await topicResponse.json<{ id: number }>();
 
     const sectionResponse = await SELF.fetch('https://admin.test/api/lessons/sections', {
       method: 'POST',
       headers,
-      body: JSON.stringify({ topicId: topic.id, slug: 'intro', name: 'Introdução', order: 1 }),
+      body: JSON.stringify({
+        topicId: topic.id,
+        slug: 'intro',
+        order: 1,
+        translations: { 'pt-BR': { name: 'Introdução' } },
+      }),
     });
     const section = await sectionResponse.json<{ id: number }>();
 
@@ -87,21 +97,35 @@ describe('lesson translations', () => {
     const subjectResponse = await SELF.fetch('https://admin.test/api/lessons/subjects', {
       method: 'POST',
       headers,
-      body: JSON.stringify({ slug: `calculo-${Date.now()}-${Math.random()}`, name: 'Cálculo', order: 1 }),
+      body: JSON.stringify({
+        slug: `calculo-${Date.now()}-${Math.random()}`,
+        order: 1,
+        translations: { 'pt-BR': { name: 'Cálculo' } },
+      }),
     });
     const subject = await subjectResponse.json<{ id: number }>();
 
     const topicResponse = await SELF.fetch('https://admin.test/api/lessons/topics', {
       method: 'POST',
       headers,
-      body: JSON.stringify({ subjectId: subject.id, slug: `limites-${Date.now()}-${Math.random()}`, name: 'Limites', order: 1 }),
+      body: JSON.stringify({
+        subjectId: subject.id,
+        slug: `limites-${Date.now()}-${Math.random()}`,
+        order: 1,
+        translations: { 'pt-BR': { name: 'Limites' } },
+      }),
     });
     const topic = await topicResponse.json<{ id: number }>();
 
     const sectionResponse = await SELF.fetch('https://admin.test/api/lessons/sections', {
       method: 'POST',
       headers,
-      body: JSON.stringify({ topicId: topic.id, slug: `intro-${Date.now()}-${Math.random()}`, name: 'Introdução', order: 1 }),
+      body: JSON.stringify({
+        topicId: topic.id,
+        slug: `intro-${Date.now()}-${Math.random()}`,
+        order: 1,
+        translations: { 'pt-BR': { name: 'Introdução' } },
+      }),
     });
     const section = await sectionResponse.json<{ id: number }>();
 
@@ -149,5 +173,41 @@ describe('lesson translations', () => {
     const data = await getResponse.json<{ translations: Record<string, { title: string; bodyMdx: string }> }>();
     expect(data.translations['en-US'].title).toBe('Limit Definition');
     expect(data.translations['pt-BR']).toBeDefined();
+  });
+});
+
+describe('subject translations', () => {
+  it('POST /api/lessons/subjects requires at least one translation', async () => {
+    const response = await SELF.fetch('https://admin.test/api/lessons/subjects', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Cookie: sessionCookie },
+      body: JSON.stringify({ slug: 'no-name', order: 99, translations: {} }),
+    });
+    expect(response.status).toBe(400);
+  });
+
+  it('POST /api/lessons/subjects creates translation rows', async () => {
+    const response = await SELF.fetch('https://admin.test/api/lessons/subjects', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Cookie: sessionCookie },
+      body: JSON.stringify({ slug: 'fisica', order: 2, translations: { 'pt-BR': { name: 'Física' } } }),
+    });
+    expect(response.status).toBe(201);
+  });
+
+  it('PATCH /api/lessons/subjects/:id upserts a translation for a new locale', async () => {
+    const created = await SELF.fetch('https://admin.test/api/lessons/subjects', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Cookie: sessionCookie },
+      body: JSON.stringify({ slug: 'quimica', order: 3, translations: { 'pt-BR': { name: 'Química' } } }),
+    });
+    const { id } = await created.json<{ id: number }>();
+
+    const patched = await SELF.fetch(`https://admin.test/api/lessons/subjects/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Cookie: sessionCookie },
+      body: JSON.stringify({ translations: { 'en-US': { name: 'Chemistry' } } }),
+    });
+    expect(patched.status).toBe(200);
   });
 });
