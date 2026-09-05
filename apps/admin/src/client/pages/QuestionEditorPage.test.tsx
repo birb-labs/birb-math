@@ -246,4 +246,64 @@ describe('QuestionEditorPage', () => {
     await user.click(screen.getByRole('button', { name: 'pt-BR' }));
     expect(screen.getByLabelText('Enunciado')).toHaveValue('Qual é o valor de 1 + 1?');
   });
+
+  it('saving one locale tab of a short_text question preserves the other locale\'s accepted answers', async () => {
+    vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(new Response(JSON.stringify([]), { status: 200 })) // GET /api/tags
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            type: 'short_text',
+            difficulty: 'easy',
+            correctAnswer: null,
+            answerFormat: 'text',
+            tagIds: [],
+            translations: {
+              'pt-BR': {
+                promptMdx: 'Qual gás?',
+                resolutionMdx: 'Oxigênio.',
+                options: [],
+                matchingPairs: [],
+              },
+              'en-US': {
+                promptMdx: 'Which gas?',
+                resolutionMdx: 'Oxygen.',
+                options: [],
+                matchingPairs: [],
+              },
+            },
+            acceptedAnswersShared: [],
+            acceptedAnswersByLocale: {
+              'pt-BR': ['resposta'],
+              'en-US': ['answer'],
+            },
+          }),
+          { status: 200 },
+        ),
+      ) // GET /api/questions/:id
+      .mockResolvedValue(new Response(JSON.stringify({ html: '<p></p>' }), { status: 200 })); // preview + PATCH
+
+    const onDone = vi.fn();
+    const user = userEvent.setup();
+    render(<QuestionEditorPage questionId={1} onDone={onDone} />);
+
+    await screen.findByDisplayValue('Qual gás?');
+
+    // Switch to the en-US tab (do not touch the accepted answers there) and save.
+    await user.click(screen.getByRole('button', { name: 'en-US' }));
+    expect(screen.getByDisplayValue('Which gas?')).toBeInTheDocument();
+
+    const fetchSpy = vi.spyOn(globalThis, 'fetch');
+    await user.click(screen.getByRole('button', { name: 'Salvar' }));
+
+    await waitFor(() => expect(onDone).toHaveBeenCalledOnce());
+
+    const patchCall = fetchSpy.mock.calls.find(
+      ([url, init]) => url === '/api/questions/1' && (init as RequestInit)?.method === 'PATCH',
+    );
+    expect(patchCall).toBeDefined();
+    const body = JSON.parse((patchCall![1] as RequestInit).body as string);
+    expect(body.acceptedAnswersByLocale['pt-BR']).toEqual(['resposta']);
+    expect(body.acceptedAnswersByLocale['en-US']).toEqual(['answer']);
+  });
 });

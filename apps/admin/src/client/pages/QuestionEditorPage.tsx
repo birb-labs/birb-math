@@ -105,6 +105,19 @@ export function QuestionEditorPage({ questionId, onDone }: { questionId: number 
 
   async function handleSave() {
     setError(null);
+
+    // Merge the active locale's in-progress accepted-answers draft back into the full
+    // per-locale map before sending: the backend's writeAcceptedAnswers deletes ALL
+    // questionAcceptedAnswers rows for the question before reinserting only what it's
+    // given, so sending just `{ [activeLocale]: ... }` here would silently wipe out
+    // every other locale's accepted answers on save.
+    const fullAcceptedAnswersByLocale: Partial<Record<Locale, string[]>> = {
+      ...acceptedAnswersByLocale,
+      ...(type === 'short_text' && answerFormat === 'text'
+        ? { [activeLocale]: acceptedAnswersByLocale[activeLocale] ?? [''] }
+        : {}),
+    };
+
     const body = {
       type,
       difficulty,
@@ -120,10 +133,7 @@ export function QuestionEditorPage({ questionId, onDone }: { questionId: number 
         },
       },
       acceptedAnswersShared: type === 'short_text' && answerFormat === 'math' ? acceptedAnswersShared : [],
-      acceptedAnswersByLocale:
-        type === 'short_text' && answerFormat === 'text'
-          ? { [activeLocale]: acceptedAnswersByLocale[activeLocale] ?? [''] }
-          : {},
+      acceptedAnswersByLocale: type === 'short_text' && answerFormat === 'text' ? fullAcceptedAnswersByLocale : {},
     };
 
     const response =
