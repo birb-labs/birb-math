@@ -1,3 +1,18 @@
+-- NOTE: D1 does not run a migration file's statements inside a single
+-- transaction, so a partial application of this file (e.g. it fails midway
+-- through) could leave the database with the new `*_translations` tables
+-- partially backfilled but the old source columns not yet dropped, or vice
+-- versa, with no automated verification that backfilled row counts match
+-- their source tables before the subsequent `DROP COLUMN` statements run.
+-- This residual risk is accepted for this migration rather than adding
+-- runtime `RAISE`-based row-count guards (a bigger change than fits this
+-- pass) because every column being backfilled below (`subjects.name`,
+-- `topics.name`, `sections.name`, `tags.name`, `lessons.title`/`body_mdx`,
+-- `questions.prompt_mdx`/`resolution_mdx`, `question_options.text_mdx`,
+-- `question_matching_pairs.left_mdx`/`right_mdx`) was `NOT NULL`, so every
+-- existing row is guaranteed to produce exactly one backfilled translation
+-- row -- there is no plausible partial-backfill outcome from the `INSERT
+-- ... SELECT` statements themselves succeeding.
 CREATE TABLE `subject_translations` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
 	`subject_id` integer NOT NULL,
@@ -81,6 +96,13 @@ CREATE TABLE `question_matching_pair_translations` (
 --> statement-breakpoint
 CREATE UNIQUE INDEX `question_matching_pair_translations_pair_id_locale_unique` ON `question_matching_pair_translations` (`pair_id`,`locale`);
 --> statement-breakpoint
+-- Existing rows are backfilled with `locale = NULL` (the "shared across all
+-- locales" bucket), which is correct for math-mode answers but would be
+-- wrong for a pre-existing TEXT-mode question's accepted answers (those are
+-- meant to be locale-specific); this has zero production impact today since
+-- 0 questions exist in production, but a future reader with real question
+-- data should be aware of this before assuming all-NULL means "no locale
+-- distinction was ever needed."
 ALTER TABLE `question_accepted_answers` ADD `locale` text;
 --> statement-breakpoint
 INSERT INTO `subject_translations` (`subject_id`, `locale`, `name`) SELECT `id`, 'pt-BR', `name` FROM `subjects`;

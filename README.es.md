@@ -57,11 +57,12 @@ pnpm --filter @birb-math/content-schema run db:reset     # aplica migraciones + 
 El banco de preguntas (utilizado para generar simulacros) vive en las mismas
 migraciones y en la misma base de datos SQLite que el contenido de lecciones.
 Un paso adicional de compilación (`export-questions`) compila cada pregunta a HTML
-estático y genera `apps/site/public/data/questions.json`, consumido por el simulacro
-completamente en el navegador — no hay backend de simulacro.
+estático y genera un archivo por idioma en `apps/site/public/data/`
+(`questions.pt-BR.json`, `questions.en-US.json`, `questions.es.json`), consumidos
+por el simulacro completamente en el navegador — no hay backend de simulacro.
 
 ```bash
-pnpm --filter site run export-questions  # genera public/data/questions.json a partir de la base de datos actual
+pnpm --filter site run export-questions  # genera questions.<locale>.json (uno por idioma) a partir de la base de datos actual
 ```
 
 El contenido y el banco de preguntas se gestionan mediante un panel de
