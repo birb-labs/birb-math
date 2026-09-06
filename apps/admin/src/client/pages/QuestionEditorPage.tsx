@@ -118,20 +118,48 @@ export function QuestionEditorPage({ questionId, onDone }: { questionId: number 
         : {}),
     };
 
+    // Same reasoning as `fullAcceptedAnswersByLocale` above, one level deeper: the
+    // backend rebuilds the shared question option/matching-pair rows from scratch
+    // (with new ids) whenever `translations` is present, so any locale missing from
+    // the request loses its option/pair text — and a missing `pt-BR` breaks every
+    // later read of the question, including the site build. Send every locale the
+    // component holds, with the active tab's in-progress edits merged in.
+    //
+    // Option/pair *structure* (how many there are, which are correct) is shared
+    // across locales rather than translated, so the active tab's structure is
+    // applied to every locale and only the text stays per-locale — that way the
+    // backend gets the same shape no matter which locale it reads structure from.
+    const usesOptions = type === 'multiple_choice' || type === 'multiple_response' || type === 'ordering';
+    const fullTranslations: Partial<Record<Locale, QuestionTranslation>> = {};
+    for (const locale of LOCALES) {
+      const translation = locale === activeLocale ? current : translations[locale];
+      if (!translation) continue;
+      fullTranslations[locale] = {
+        promptMdx: translation.promptMdx,
+        resolutionMdx: translation.resolutionMdx,
+        options: usesOptions
+          ? current.options.map((option, index) => ({
+              textMdx: (translation.options[index] ?? option).textMdx,
+              isCorrect: option.isCorrect,
+            }))
+          : [],
+        matchingPairs:
+          type === 'matching'
+            ? current.matchingPairs.map((pair, index) => ({
+                leftMdx: (translation.matchingPairs[index] ?? pair).leftMdx,
+                rightMdx: (translation.matchingPairs[index] ?? pair).rightMdx,
+              }))
+            : [],
+      };
+    }
+
     const body = {
       type,
       difficulty,
       correctAnswer: type === 'numeric' || type === 'true_false' ? correctAnswer : null,
       answerFormat: type === 'short_text' ? answerFormat : 'text',
       tagIds: selectedTagIds,
-      translations: {
-        [activeLocale]: {
-          promptMdx: current.promptMdx,
-          resolutionMdx: current.resolutionMdx,
-          options: type === 'multiple_choice' || type === 'multiple_response' || type === 'ordering' ? current.options : [],
-          matchingPairs: type === 'matching' ? current.matchingPairs : [],
-        },
-      },
+      translations: fullTranslations,
       acceptedAnswersShared: type === 'short_text' && answerFormat === 'math' ? acceptedAnswersShared : [],
       acceptedAnswersByLocale: type === 'short_text' && answerFormat === 'text' ? fullAcceptedAnswersByLocale : {},
     };

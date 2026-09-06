@@ -306,4 +306,150 @@ describe('QuestionEditorPage', () => {
     expect(body.acceptedAnswersByLocale['pt-BR']).toEqual(['resposta']);
     expect(body.acceptedAnswersByLocale['en-US']).toEqual(['answer']);
   });
+
+  it("saving one locale tab preserves the other locale's option text", async () => {
+    vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(new Response(JSON.stringify([]), { status: 200 })) // GET /api/tags
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            type: 'multiple_choice',
+            difficulty: 'easy',
+            correctAnswer: null,
+            answerFormat: 'text',
+            tagIds: [],
+            translations: {
+              'pt-BR': {
+                promptMdx: 'Qual gás as plantas absorvem?',
+                resolutionMdx: 'CO2.',
+                options: [
+                  { id: 1, textMdx: 'Oxigênio', isCorrect: false, order: 1 },
+                  { id: 2, textMdx: 'Dióxido de carbono', isCorrect: true, order: 2 },
+                ],
+                matchingPairs: [],
+              },
+              'en-US': {
+                promptMdx: 'Which gas do plants absorb?',
+                resolutionMdx: 'CO2.',
+                options: [
+                  { id: 1, textMdx: 'Oxygen', isCorrect: false, order: 1 },
+                  { id: 2, textMdx: 'Carbon dioxide', isCorrect: true, order: 2 },
+                ],
+                matchingPairs: [],
+              },
+            },
+            acceptedAnswersShared: [],
+            acceptedAnswersByLocale: {},
+          }),
+          { status: 200 },
+        ),
+      ) // GET /api/questions/:id
+      .mockResolvedValue(new Response(JSON.stringify({ html: '<p></p>' }), { status: 200 })); // preview + PATCH
+
+    const onDone = vi.fn();
+    const user = userEvent.setup();
+    render(<QuestionEditorPage questionId={1} onDone={onDone} />);
+
+    await screen.findByDisplayValue('Qual gás as plantas absorvem?');
+
+    // Edit only the en-US tab, then save.
+    await user.click(screen.getByRole('button', { name: 'en-US' }));
+    expect(screen.getByDisplayValue('Which gas do plants absorb?')).toBeInTheDocument();
+    await user.type(screen.getByLabelText('Enunciado'), '!');
+
+    const fetchSpy = vi.spyOn(globalThis, 'fetch');
+    await user.click(screen.getByRole('button', { name: 'Salvar' }));
+
+    await waitFor(() => expect(onDone).toHaveBeenCalledOnce());
+
+    const patchCall = fetchSpy.mock.calls.find(
+      ([url, init]) => url === '/api/questions/1' && (init as RequestInit)?.method === 'PATCH',
+    );
+    expect(patchCall).toBeDefined();
+    const body = JSON.parse((patchCall![1] as RequestInit).body as string);
+
+    // The backend rebuilds the shared option rows from scratch whenever
+    // `translations` is present, so every locale must be in the body or its
+    // option text is lost — and a missing pt-BR breaks every later read.
+    expect(Object.keys(body.translations)).toEqual(['pt-BR', 'en-US']);
+    expect(body.translations['pt-BR'].promptMdx).toBe('Qual gás as plantas absorvem?');
+    expect(body.translations['pt-BR'].options.map((o: { textMdx: string }) => o.textMdx)).toEqual([
+      'Oxigênio',
+      'Dióxido de carbono',
+    ]);
+    expect(body.translations['en-US'].promptMdx).toBe('Which gas do plants absorb?!');
+    expect(body.translations['en-US'].options.map((o: { textMdx: string }) => o.textMdx)).toEqual([
+      'Oxygen',
+      'Carbon dioxide',
+    ]);
+    // `isCorrect` is structural (shared across locales), so it must agree everywhere.
+    expect(body.translations['pt-BR'].options.map((o: { isCorrect: boolean }) => o.isCorrect)).toEqual([false, true]);
+    expect(body.translations['en-US'].options.map((o: { isCorrect: boolean }) => o.isCorrect)).toEqual([false, true]);
+  });
+
+  it("toggling an option's correctness on a non-pt-BR tab applies to every locale", async () => {
+    vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(new Response(JSON.stringify([]), { status: 200 })) // GET /api/tags
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            type: 'multiple_choice',
+            difficulty: 'easy',
+            correctAnswer: null,
+            answerFormat: 'text',
+            tagIds: [],
+            translations: {
+              'pt-BR': {
+                promptMdx: 'Qual gás?',
+                resolutionMdx: 'CO2.',
+                options: [
+                  { id: 1, textMdx: 'Oxigênio', isCorrect: false, order: 1 },
+                  { id: 2, textMdx: 'Dióxido de carbono', isCorrect: true, order: 2 },
+                ],
+                matchingPairs: [],
+              },
+              'en-US': {
+                promptMdx: 'Which gas?',
+                resolutionMdx: 'CO2.',
+                options: [
+                  { id: 1, textMdx: 'Oxygen', isCorrect: false, order: 1 },
+                  { id: 2, textMdx: 'Carbon dioxide', isCorrect: true, order: 2 },
+                ],
+                matchingPairs: [],
+              },
+            },
+            acceptedAnswersShared: [],
+            acceptedAnswersByLocale: {},
+          }),
+          { status: 200 },
+        ),
+      ) // GET /api/questions/:id
+      .mockResolvedValue(new Response(JSON.stringify({ html: '<p></p>' }), { status: 200 }));
+
+    const onDone = vi.fn();
+    const user = userEvent.setup();
+    render(<QuestionEditorPage questionId={1} onDone={onDone} />);
+
+    await screen.findByDisplayValue('Qual gás?');
+    await user.click(screen.getByRole('button', { name: 'en-US' }));
+
+    // Move the correct answer to the first option from the en-US tab.
+    await user.click(screen.getAllByRole('radio')[0]);
+
+    const fetchSpy = vi.spyOn(globalThis, 'fetch');
+    await user.click(screen.getByRole('button', { name: 'Salvar' }));
+    await waitFor(() => expect(onDone).toHaveBeenCalledOnce());
+
+    const patchCall = fetchSpy.mock.calls.find(
+      ([url, init]) => url === '/api/questions/1' && (init as RequestInit)?.method === 'PATCH',
+    );
+    const body = JSON.parse((patchCall![1] as RequestInit).body as string);
+    expect(body.translations['en-US'].options.map((o: { isCorrect: boolean }) => o.isCorrect)).toEqual([true, false]);
+    expect(body.translations['pt-BR'].options.map((o: { isCorrect: boolean }) => o.isCorrect)).toEqual([true, false]);
+    // ...without disturbing pt-BR's own text.
+    expect(body.translations['pt-BR'].options.map((o: { textMdx: string }) => o.textMdx)).toEqual([
+      'Oxigênio',
+      'Dióxido de carbono',
+    ]);
+  });
 });
