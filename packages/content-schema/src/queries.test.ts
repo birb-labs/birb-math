@@ -556,3 +556,19 @@ describe('content-schema queries', () => {
     expect(await getQuestionForAdminEdit(db, 999999)).toBeUndefined();
   });
 });
+
+describe('isValidLocale', () => {
+  it('accepts every supported locale', () => {
+    for (const locale of schema.LOCALES) {
+      expect(schema.isValidLocale(locale)).toBe(true);
+    }
+  });
+
+  it('rejects near-miss and unknown locale strings', () => {
+    // `resolveTranslation` only ever looks for the requested locale or `pt-BR`, so a
+    // value like `en` written to a `locale` column would be invisible forever.
+    for (const value of ['en', 'pt', 'es-ES', 'pt-br', 'EN-US', '']) {
+      expect(schema.isValidLocale(value)).toBe(false);
+    }
+  });
+});

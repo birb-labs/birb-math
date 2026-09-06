@@ -19,6 +19,7 @@ import {
   type Locale,
 } from '@birb-math/content-schema';
 import type { Env } from '../env';
+import { validateTranslationLocales } from './translationInput';
 
 interface QuestionInput {
   type:
@@ -106,9 +107,27 @@ interface QuestionStructuralInput {
   acceptedAnswersByLocale: Partial<Record<Locale, string[]>>;
 }
 
+/**
+ * The `pt-BR` translation is the structural authority: option/pair counts and
+ * `isCorrect` flags live on the shared `questionOptions`/`questionMatchingPairs`
+ * rows, and `pt-BR` is the one locale guaranteed to exist for every question, so
+ * reading structure from it keeps validation and the subsequent writes agreeing
+ * regardless of which locale tab the editor happened to be on.
+ */
+function structuralTranslation(
+  translations: Partial<Record<Locale, QuestionTranslationInput>>,
+): QuestionTranslationInput | undefined {
+  return translations['pt-BR'] ?? Object.values(translations)[0];
+}
+
 function validateStructuralInput(body: QuestionStructuralInput): string | null {
-  const anyTranslation = Object.values(body.translations)[0];
-  if (!anyTranslation) return 'At least one locale translation is required.';
+  const localeError = validateTranslationLocales(body.translations, { requirePtBr: true });
+  if (localeError) return localeError;
+
+  const acceptedAnswersLocaleError = validateTranslationLocales(body.acceptedAnswersByLocale, { requirePtBr: false });
+  if (acceptedAnswersLocaleError) return acceptedAnswersLocaleError;
+
+  const anyTranslation = structuralTranslation(body.translations)!;
   return validateQuestionInput({
     type: body.type,
     difficulty: body.difficulty,
@@ -150,15 +169,15 @@ questionsRoutes.post('/', async (c) => {
     .values({ type: body.type, difficulty: body.difficulty, correctAnswer: body.correctAnswer, answerFormat: body.answerFormat })
     .returning();
 
-  const firstTranslation = Object.values(body.translations)[0]!;
-  if (firstTranslation.options.length > 0) {
+  const structural = structuralTranslation(body.translations)!;
+  if (structural.options.length > 0) {
     await db.insert(questionOptions).values(
-      firstTranslation.options.map((option, index) => ({ questionId: question.id, isCorrect: option.isCorrect, order: index + 1 })),
+      structural.options.map((option, index) => ({ questionId: question.id, isCorrect: option.isCorrect, order: index + 1 })),
     ).run();
   }
-  if (firstTranslation.matchingPairs.length > 0) {
+  if (structural.matchingPairs.length > 0) {
     await db.insert(questionMatchingPairs).values(
-      firstTranslation.matchingPairs.map((_, index) => ({ questionId: question.id, order: index + 1 })),
+      structural.matchingPairs.map((_, index) => ({ questionId: question.id, order: index + 1 })),
     ).run();
   }
 
@@ -178,40 +197,72 @@ questionsRoutes.patch('/:id', async (c) => {
 
   const db = getD1Db(c.env.DB);
 
+  const current = await getQuestionForAdminEdit(db, id);
+  if (!current) return c.json({ error: 'Not found' }, 404);
+
   const { translations, acceptedAnswersShared, acceptedAnswersByLocale, tagIds, ...structuralFields } = body;
+
+  // A PATCH body carries only the locales it wants to change, but the writes
+  // below rebuild the shared option/pair rows from scratch with new ids, which
+  // orphans every locale whose text is not re-written in the same request —
+  // including `pt-BR`, whose absence makes `resolveTranslation` throw on every
+  // subsequent read (the admin question list and the site build both read
+  // `pt-BR`). Merging the incoming locales over the stored ones keeps the
+  // per-locale wholesale-replace semantics while never dropping a locale that
+  // simply was not mentioned.
+  const mergedTranslations: Partial<Record<Locale, QuestionTranslationInput>> = {
+    ...current.translations,
+    ...translations,
+  };
+
+  // PATCH bodies are partial, so validate the *effective* post-patch state
+  // rather than the body alone: without this a PATCH could set a
+  // multiple_choice question to zero correct options or a short_text question
+  // to zero accepted answers, and the failure would only surface much later as
+  // a thrown error during the site's production question export.
+  const validationError = validateStructuralInput({
+    type: body.type ?? current.type,
+    difficulty: body.difficulty ?? current.difficulty,
+    correctAnswer: body.correctAnswer !== undefined ? body.correctAnswer : current.correctAnswer,
+    answerFormat: body.answerFormat ?? current.answerFormat,
+    tagIds: tagIds ?? current.tagIds,
+    translations: mergedTranslations,
+    acceptedAnswersShared: acceptedAnswersShared ?? current.acceptedAnswersShared,
+    acceptedAnswersByLocale: acceptedAnswersByLocale ?? current.acceptedAnswersByLocale,
+  });
+  if (validationError) return c.json({ error: validationError }, 400);
+
   if (Object.keys(structuralFields).length > 0) {
     await db.update(questions).set(structuralFields).where(eq(questions.id, id)).run();
   }
 
   if (translations) {
-    const anyTranslation = Object.values(translations)[0]!;
+    const structural = structuralTranslation(mergedTranslations)!;
 
     await deleteOptionsAndPairs(db, id);
 
-    if (anyTranslation.options.length > 0) {
+    if (structural.options.length > 0) {
       await db.insert(questionOptions).values(
-        anyTranslation.options.map((option, index) => ({ questionId: id, isCorrect: option.isCorrect, order: index + 1 })),
+        structural.options.map((option, index) => ({ questionId: id, isCorrect: option.isCorrect, order: index + 1 })),
       ).run();
     }
 
-    if (anyTranslation.matchingPairs.length > 0) {
+    if (structural.matchingPairs.length > 0) {
       await db.insert(questionMatchingPairs).values(
-        anyTranslation.matchingPairs.map((_, index) => ({ questionId: id, order: index + 1 })),
+        structural.matchingPairs.map((_, index) => ({ questionId: id, order: index + 1 })),
       ).run();
     }
 
-    await writeQuestionTranslations(db, id, translations);
+    await writeQuestionTranslations(db, id, mergedTranslations);
   }
 
   if (acceptedAnswersShared !== undefined || acceptedAnswersByLocale !== undefined) {
-    const current = await getQuestionForAdminEdit(db, id);
-    const answerFormat = body.answerFormat ?? current?.answerFormat ?? 'text';
     await writeAcceptedAnswers(
       db,
       id,
-      answerFormat,
-      acceptedAnswersShared ?? current?.acceptedAnswersShared ?? [],
-      acceptedAnswersByLocale ?? current?.acceptedAnswersByLocale ?? {},
+      body.answerFormat ?? current.answerFormat,
+      acceptedAnswersShared ?? current.acceptedAnswersShared,
+      acceptedAnswersByLocale ?? current.acceptedAnswersByLocale,
     );
   }
 
@@ -344,8 +395,9 @@ tagsRoutes.post('/', async (c) => {
     parentTagId?: number;
     translations: Partial<Record<Locale, { name: string }>>;
   }>();
+  const localeError = validateTranslationLocales(body.translations, { requirePtBr: true });
+  if (localeError) return c.json({ error: localeError }, 400);
   const locales = Object.keys(body.translations) as Locale[];
-  if (locales.length === 0) return c.json({ error: 'At least one locale translation is required.' }, 400);
 
   const [row] = await db.insert(tags).values({ slug: body.slug, parentTagId: body.parentTagId }).returning();
   await db
@@ -362,6 +414,10 @@ tagsRoutes.patch('/:id', async (c) => {
     Partial<{ slug: string; parentTagId: number; translations: Partial<Record<Locale, { name: string }>> }>
   >();
   const { translations, ...structuralFields } = body;
+  if (translations) {
+    const localeError = validateTranslationLocales(translations, { requirePtBr: false });
+    if (localeError) return c.json({ error: localeError }, 400);
+  }
   if (Object.keys(structuralFields).length > 0) {
     await db.update(tags).set(structuralFields).where(eq(tags.id, id)).run();
   }

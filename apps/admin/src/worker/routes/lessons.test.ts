@@ -211,3 +211,247 @@ describe('subject translations', () => {
     expect(patched.status).toBe(200);
   });
 });
+
+describe('required pt-BR translation and locale-key validation', () => {
+  const creationRoutes = [
+    { name: 'subjects', url: 'https://admin.test/api/lessons/subjects', body: { slug: 'x-no-pt', order: 90 } },
+    {
+      name: 'topics',
+      url: 'https://admin.test/api/lessons/topics',
+      body: { subjectId: 1, slug: 'x-no-pt', order: 90 },
+    },
+    {
+      name: 'sections',
+      url: 'https://admin.test/api/lessons/sections',
+      body: { topicId: 1, slug: 'x-no-pt', order: 90 },
+    },
+  ] as const;
+
+  for (const route of creationRoutes) {
+    it(`POST /api/lessons/${route.name} rejects a body without a pt-BR translation`, async () => {
+      const response = await SELF.fetch(route.url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Cookie: sessionCookie },
+        body: JSON.stringify({ ...route.body, translations: { 'en-US': { name: 'No Portuguese' } } }),
+      });
+      expect(response.status).toBe(400);
+      const { error } = await response.json<{ error: string }>();
+      expect(error).toBe('A pt-BR translation is required.');
+    });
+
+    it(`POST /api/lessons/${route.name} rejects an unrecognised locale key`, async () => {
+      const response = await SELF.fetch(route.url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Cookie: sessionCookie },
+        body: JSON.stringify({
+          ...route.body,
+          translations: { 'pt-BR': { name: 'Válido' }, en: { name: 'Bogus locale' } },
+        }),
+      });
+      expect(response.status).toBe(400);
+      const { error } = await response.json<{ error: string }>();
+      expect(error).toContain('Unsupported locale');
+    });
+  }
+
+  it('POST /api/lessons/lessons rejects a body without a pt-BR translation', async () => {
+    const response = await SELF.fetch('https://admin.test/api/lessons/lessons', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Cookie: sessionCookie },
+      body: JSON.stringify({
+        sectionId: 1,
+        slug: 'lesson-no-pt',
+        order: 90,
+        translations: { 'en-US': { title: 'No Portuguese', bodyMdx: '# Body' } },
+      }),
+    });
+    expect(response.status).toBe(400);
+    const { error } = await response.json<{ error: string }>();
+    expect(error).toBe('A pt-BR translation is required.');
+  });
+
+  it('PATCH /api/lessons/subjects/:id rejects an unrecognised locale key without writing anything', async () => {
+    const created = await SELF.fetch('https://admin.test/api/lessons/subjects', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Cookie: sessionCookie },
+      body: JSON.stringify({ slug: 'bad-locale-patch', order: 91, translations: { 'pt-BR': { name: 'Original' } } }),
+    });
+    const { id } = await created.json<{ id: number }>();
+
+    const patched = await SELF.fetch(`https://admin.test/api/lessons/subjects/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Cookie: sessionCookie },
+      body: JSON.stringify({ slug: 'changed-slug', translations: { en: { name: 'Bogus locale' } } }),
+    });
+    expect(patched.status).toBe(400);
+
+    // Validation runs before any write, so the structural field must be untouched too.
+    const row = await env.DB.prepare('SELECT slug FROM subjects WHERE id = ?').bind(id).first<{ slug: string }>();
+    expect(row?.slug).toBe('bad-locale-patch');
+  });
+});
+
+describe('deleting a translated entity', () => {
+  const headers = () => ({ 'Content-Type': 'application/json', Cookie: sessionCookie });
+
+  async function countRows(table: string, column: string, id: number): Promise<number> {
+    const row = await env.DB.prepare(`SELECT COUNT(*) AS total FROM ${table} WHERE ${column} = ?`)
+      .bind(id)
+      .first<{ total: number }>();
+    return row?.total ?? 0;
+  }
+
+  it('DELETE /api/lessons/subjects/:id removes the subject and its translation rows', async () => {
+    const created = await SELF.fetch('https://admin.test/api/lessons/subjects', {
+      method: 'POST',
+      headers: headers(),
+      body: JSON.stringify({ slug: 'to-delete-subject', order: 80, translations: { 'pt-BR': { name: 'Apagar' } } }),
+    });
+    const { id } = await created.json<{ id: number }>();
+    expect(await countRows('subject_translations', 'subject_id', id)).toBe(1);
+
+    const response = await SELF.fetch(`https://admin.test/api/lessons/subjects/${id}`, {
+      method: 'DELETE',
+      headers: { Cookie: sessionCookie },
+    });
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ ok: true });
+
+    expect(await countRows('subjects', 'id', id)).toBe(0);
+    expect(await countRows('subject_translations', 'subject_id', id)).toBe(0);
+  });
+
+  it('DELETE /api/lessons/topics/:id removes the topic and its translation rows', async () => {
+    const subjectResponse = await SELF.fetch('https://admin.test/api/lessons/subjects', {
+      method: 'POST',
+      headers: headers(),
+      body: JSON.stringify({ slug: 'parent-of-topic', order: 81, translations: { 'pt-BR': { name: 'Pai' } } }),
+    });
+    const subject = await subjectResponse.json<{ id: number }>();
+
+    const created = await SELF.fetch('https://admin.test/api/lessons/topics', {
+      method: 'POST',
+      headers: headers(),
+      body: JSON.stringify({
+        subjectId: subject.id,
+        slug: 'to-delete-topic',
+        order: 80,
+        translations: { 'pt-BR': { name: 'Apagar' } },
+      }),
+    });
+    const { id } = await created.json<{ id: number }>();
+    expect(await countRows('topic_translations', 'topic_id', id)).toBe(1);
+
+    const response = await SELF.fetch(`https://admin.test/api/lessons/topics/${id}`, {
+      method: 'DELETE',
+      headers: { Cookie: sessionCookie },
+    });
+    expect(response.status).toBe(200);
+
+    expect(await countRows('topics', 'id', id)).toBe(0);
+    expect(await countRows('topic_translations', 'topic_id', id)).toBe(0);
+  });
+
+  it('DELETE /api/lessons/sections/:id removes the section and its translation rows', async () => {
+    const subjectResponse = await SELF.fetch('https://admin.test/api/lessons/subjects', {
+      method: 'POST',
+      headers: headers(),
+      body: JSON.stringify({ slug: 'parent-of-section', order: 82, translations: { 'pt-BR': { name: 'Pai' } } }),
+    });
+    const subject = await subjectResponse.json<{ id: number }>();
+
+    const topicResponse = await SELF.fetch('https://admin.test/api/lessons/topics', {
+      method: 'POST',
+      headers: headers(),
+      body: JSON.stringify({
+        subjectId: subject.id,
+        slug: 'parent-topic-of-section',
+        order: 82,
+        translations: { 'pt-BR': { name: 'Pai' } },
+      }),
+    });
+    const topic = await topicResponse.json<{ id: number }>();
+
+    const created = await SELF.fetch('https://admin.test/api/lessons/sections', {
+      method: 'POST',
+      headers: headers(),
+      body: JSON.stringify({
+        topicId: topic.id,
+        slug: 'to-delete-section',
+        order: 80,
+        translations: { 'pt-BR': { name: 'Apagar' } },
+      }),
+    });
+    const { id } = await created.json<{ id: number }>();
+    expect(await countRows('section_translations', 'section_id', id)).toBe(1);
+
+    const response = await SELF.fetch(`https://admin.test/api/lessons/sections/${id}`, {
+      method: 'DELETE',
+      headers: { Cookie: sessionCookie },
+    });
+    expect(response.status).toBe(200);
+
+    expect(await countRows('sections', 'id', id)).toBe(0);
+    expect(await countRows('section_translations', 'section_id', id)).toBe(0);
+  });
+
+  it('DELETE /api/lessons/lessons/:id removes the lesson and its translation rows', async () => {
+    const subjectResponse = await SELF.fetch('https://admin.test/api/lessons/subjects', {
+      method: 'POST',
+      headers: headers(),
+      body: JSON.stringify({ slug: 'parent-of-lesson', order: 83, translations: { 'pt-BR': { name: 'Pai' } } }),
+    });
+    const subject = await subjectResponse.json<{ id: number }>();
+
+    const topicResponse = await SELF.fetch('https://admin.test/api/lessons/topics', {
+      method: 'POST',
+      headers: headers(),
+      body: JSON.stringify({
+        subjectId: subject.id,
+        slug: 'parent-topic-of-lesson',
+        order: 83,
+        translations: { 'pt-BR': { name: 'Pai' } },
+      }),
+    });
+    const topic = await topicResponse.json<{ id: number }>();
+
+    const sectionResponse = await SELF.fetch('https://admin.test/api/lessons/sections', {
+      method: 'POST',
+      headers: headers(),
+      body: JSON.stringify({
+        topicId: topic.id,
+        slug: 'parent-section-of-lesson',
+        order: 83,
+        translations: { 'pt-BR': { name: 'Pai' } },
+      }),
+    });
+    const section = await sectionResponse.json<{ id: number }>();
+
+    const created = await SELF.fetch('https://admin.test/api/lessons/lessons', {
+      method: 'POST',
+      headers: headers(),
+      body: JSON.stringify({
+        sectionId: section.id,
+        slug: 'to-delete-lesson',
+        order: 80,
+        translations: { 'pt-BR': { title: 'Apagar', bodyMdx: '# Apagar' } },
+      }),
+    });
+    const { id } = await created.json<{ id: number }>();
+    expect(await countRows('lesson_translations', 'lesson_id', id)).toBe(1);
+
+    const response = await SELF.fetch(`https://admin.test/api/lessons/lessons/${id}`, {
+      method: 'DELETE',
+      headers: { Cookie: sessionCookie },
+    });
+    expect(response.status).toBe(200);
+
+    expect(await countRows('lessons', 'id', id)).toBe(0);
+    expect(await countRows('lesson_translations', 'lesson_id', id)).toBe(0);
+
+    const getResponse = await SELF.fetch(`https://admin.test/api/lessons/lessons/${id}`, {
+      headers: { Cookie: sessionCookie },
+    });
+    expect(getResponse.status).toBe(404);
+  });
+});

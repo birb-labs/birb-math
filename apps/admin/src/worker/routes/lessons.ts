@@ -14,6 +14,7 @@ import {
   type Locale,
 } from '@birb-math/content-schema';
 import type { Env } from '../env';
+import { validateTranslationLocales } from './translationInput';
 
 export const lessonsRoutes = new Hono<{ Bindings: Env }>();
 
@@ -40,8 +41,9 @@ lessonsRoutes.get('/tree', async (c) => {
 lessonsRoutes.post('/subjects', async (c) => {
   const db = getD1Db(c.env.DB);
   const body = await c.req.json<{ slug: string; order: number; translations: Partial<Record<Locale, { name: string }>> }>();
+  const localeError = validateTranslationLocales(body.translations, { requirePtBr: true });
+  if (localeError) return c.json({ error: localeError }, 400);
   const locales = Object.keys(body.translations) as Locale[];
-  if (locales.length === 0) return c.json({ error: 'At least one locale translation is required.' }, 400);
 
   const [row] = await db.insert(subjects).values({ slug: body.slug, order: body.order }).returning();
   await db
@@ -56,6 +58,10 @@ lessonsRoutes.patch('/subjects/:id', async (c) => {
   const id = Number(c.req.param('id'));
   const body = await c.req.json<Partial<{ slug: string; order: number; translations: Partial<Record<Locale, { name: string }>> }>>();
   const { translations, ...structuralFields } = body;
+  if (translations) {
+    const localeError = validateTranslationLocales(translations, { requirePtBr: false });
+    if (localeError) return c.json({ error: localeError }, 400);
+  }
   if (Object.keys(structuralFields).length > 0) {
     await db.update(subjects).set(structuralFields).where(eq(subjects.id, id)).run();
   }
@@ -77,8 +83,9 @@ lessonsRoutes.patch('/subjects/:id', async (c) => {
 lessonsRoutes.post('/topics', async (c) => {
   const db = getD1Db(c.env.DB);
   const body = await c.req.json<{ subjectId: number; slug: string; order: number; translations: Partial<Record<Locale, { name: string }>> }>();
+  const localeError = validateTranslationLocales(body.translations, { requirePtBr: true });
+  if (localeError) return c.json({ error: localeError }, 400);
   const locales = Object.keys(body.translations) as Locale[];
-  if (locales.length === 0) return c.json({ error: 'At least one locale translation is required.' }, 400);
 
   const [row] = await db.insert(topics).values({ subjectId: body.subjectId, slug: body.slug, order: body.order }).returning();
   await db
@@ -93,6 +100,10 @@ lessonsRoutes.patch('/topics/:id', async (c) => {
   const id = Number(c.req.param('id'));
   const body = await c.req.json<Partial<{ subjectId: number; slug: string; order: number; translations: Partial<Record<Locale, { name: string }>> }>>();
   const { translations, ...structuralFields } = body;
+  if (translations) {
+    const localeError = validateTranslationLocales(translations, { requirePtBr: false });
+    if (localeError) return c.json({ error: localeError }, 400);
+  }
   if (Object.keys(structuralFields).length > 0) {
     await db.update(topics).set(structuralFields).where(eq(topics.id, id)).run();
   }
@@ -114,8 +125,9 @@ lessonsRoutes.patch('/topics/:id', async (c) => {
 lessonsRoutes.post('/sections', async (c) => {
   const db = getD1Db(c.env.DB);
   const body = await c.req.json<{ topicId: number; slug: string; order: number; translations: Partial<Record<Locale, { name: string }>> }>();
+  const localeError = validateTranslationLocales(body.translations, { requirePtBr: true });
+  if (localeError) return c.json({ error: localeError }, 400);
   const locales = Object.keys(body.translations) as Locale[];
-  if (locales.length === 0) return c.json({ error: 'At least one locale translation is required.' }, 400);
 
   const [row] = await db.insert(sections).values({ topicId: body.topicId, slug: body.slug, order: body.order }).returning();
   await db
@@ -130,6 +142,10 @@ lessonsRoutes.patch('/sections/:id', async (c) => {
   const id = Number(c.req.param('id'));
   const body = await c.req.json<Partial<{ topicId: number; slug: string; order: number; translations: Partial<Record<Locale, { name: string }>> }>>();
   const { translations, ...structuralFields } = body;
+  if (translations) {
+    const localeError = validateTranslationLocales(translations, { requirePtBr: false });
+    if (localeError) return c.json({ error: localeError }, 400);
+  }
   if (Object.keys(structuralFields).length > 0) {
     await db.update(sections).set(structuralFields).where(eq(sections.id, id)).run();
   }
@@ -156,10 +172,9 @@ lessonsRoutes.post('/lessons', async (c) => {
     order: number;
     translations: Partial<Record<Locale, { title: string; bodyMdx: string }>>;
   }>();
+  const localeError = validateTranslationLocales(body.translations, { requirePtBr: true });
+  if (localeError) return c.json({ error: localeError }, 400);
   const locales = Object.keys(body.translations) as Locale[];
-  if (locales.length === 0) {
-    return c.json({ error: 'At least one locale translation is required.' }, 400);
-  }
 
   const [row] = await db
     .insert(lessons)
@@ -209,6 +224,10 @@ lessonsRoutes.patch('/lessons/:id', async (c) => {
   >();
 
   const { translations, ...structuralFields } = body;
+  if (translations) {
+    const localeError = validateTranslationLocales(translations, { requirePtBr: false });
+    if (localeError) return c.json({ error: localeError }, 400);
+  }
   if (Object.keys(structuralFields).length > 0) {
     await db.update(lessons).set(structuralFields).where(eq(lessons.id, id)).run();
   }
@@ -230,22 +249,39 @@ lessonsRoutes.patch('/lessons/:id', async (c) => {
   return c.json({ ok: true });
 });
 
+// Every subject/topic/section/lesson has at least one `*_translations` child row
+// pointing at it through a foreign key declared with `ON DELETE no action`, so the
+// child rows must be deleted before the parent or D1 rejects the delete with a
+// foreign-key-constraint error — same delete-children-then-parent shape as
+// `deleteOptionsAndPairs` in `questions.ts`.
 lessonsRoutes.delete('/subjects/:id', async (c) => {
-  await getD1Db(c.env.DB).delete(subjects).where(eq(subjects.id, Number(c.req.param('id')))).run();
+  const db = getD1Db(c.env.DB);
+  const id = Number(c.req.param('id'));
+  await db.delete(subjectTranslations).where(eq(subjectTranslations.subjectId, id)).run();
+  await db.delete(subjects).where(eq(subjects.id, id)).run();
   return c.json({ ok: true });
 });
 
 lessonsRoutes.delete('/topics/:id', async (c) => {
-  await getD1Db(c.env.DB).delete(topics).where(eq(topics.id, Number(c.req.param('id')))).run();
+  const db = getD1Db(c.env.DB);
+  const id = Number(c.req.param('id'));
+  await db.delete(topicTranslations).where(eq(topicTranslations.topicId, id)).run();
+  await db.delete(topics).where(eq(topics.id, id)).run();
   return c.json({ ok: true });
 });
 
 lessonsRoutes.delete('/sections/:id', async (c) => {
-  await getD1Db(c.env.DB).delete(sections).where(eq(sections.id, Number(c.req.param('id')))).run();
+  const db = getD1Db(c.env.DB);
+  const id = Number(c.req.param('id'));
+  await db.delete(sectionTranslations).where(eq(sectionTranslations.sectionId, id)).run();
+  await db.delete(sections).where(eq(sections.id, id)).run();
   return c.json({ ok: true });
 });
 
 lessonsRoutes.delete('/lessons/:id', async (c) => {
-  await getD1Db(c.env.DB).delete(lessons).where(eq(lessons.id, Number(c.req.param('id')))).run();
+  const db = getD1Db(c.env.DB);
+  const id = Number(c.req.param('id'));
+  await db.delete(lessonTranslations).where(eq(lessonTranslations.lessonId, id)).run();
+  await db.delete(lessons).where(eq(lessons.id, id)).run();
   return c.json({ ok: true });
 });

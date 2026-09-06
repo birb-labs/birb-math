@@ -10,6 +10,19 @@ import {
 export const LOCALES = ['pt-BR', 'en-US', 'es'] as const;
 export type Locale = (typeof LOCALES)[number];
 
+/**
+ * Runtime guard for `Locale` — the Drizzle `text(..., { enum: LOCALES })`
+ * option is TypeScript-only and is not enforced by a database constraint,
+ * so a bogus locale key (e.g. `"en"` instead of `"en-US"`) coming from an
+ * untyped request body would otherwise silently write to the `locale`
+ * column and be invisible to every reader (`resolveTranslation` only ever
+ * looks up `'pt-BR'` or the requested `Locale`). Use this to validate keys
+ * of an incoming translation map before writing them.
+ */
+export function isValidLocale(value: string): value is Locale {
+  return (LOCALES as readonly string[]).includes(value);
+}
+
 export const subjects = sqliteTable('subjects', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   slug: text('slug').notNull().unique(),
